@@ -1,0 +1,7 @@
+# Ignore vim swap files
+.*.swp
+
+# Ignore latex output files
+*.aux
+*.log
+*.out
