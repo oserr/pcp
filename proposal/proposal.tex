@@ -1,0 +1,188 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{backnaur}
+\usepackage[scaled]{beramono}
+\usepackage{bm}
+\usepackage[small,bf]{caption}
+\usepackage[strict]{changepage}
+\usepackage{cite}
+\usepackage{dblfloatfix}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{flushend}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{ifsym}
+\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{makeidx}
+\usepackage{mathrsfs}
+\usepackage{multirow}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage[hyphens]{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+\usepackage{wrapfig}
+\usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{shapes,decorations}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+\pgfplotsset{compat=1.14}
+\usepackage{bm}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.8in}
+\addtolength{\topmargin}{-.4in}
+\newcommand{\hw}{4}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{\vspace{-25pt}
+\huge CS 15-618\hfill Project Proposal}
+\author{
+    Patricio Chilano (pchilano) \\
+    Omar Serrano (oserrano)
+}
+\date{\today}
+
+\begin{document}
+
+\definecolor{beaublue}{rgb}{0.74, 0.83, 0.9}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{orange}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true
+}
+
+\maketitle
+
+\section*{Project Ideas}
+
+We haven't decided on a project idea yet, but have an idea that we want to
+explore in more depth this week before making a decision. Our goal is to make a
+decision and commit to a project idea by Friday, April 6. Our project ideas are:
+
+\begin{enumerate}
+\item Parallelizing \texttt{libtomcrypt}.
+\item Having more fun with GraphRats!
+\end{enumerate}
+
+We haven't yet commited ourselves to one of these two ideas, but our focus for
+this week is to become more familiar with \texttt{libtomcrypt} to determine if
+making it parallel is viable. We like GraphRats, but don't like the fact that
+it's not a practical application and hence would be awkward to put the project
+in our resumes, and are therefore treating it like a backup idea.
+
+\section*{Parallel libtomcrypt}
+
+\href{https://github.com/libtom/libtomcrypt}{libtomcrypt} is a popular open
+source cryptographic library, and our goal would be to parallelize one or more
+encryption algorithms in the library.
+
+% What's interesting about it?
+This project would be interesting because encryption is a prevalent component in
+many computer systems and applications, so there is practical benefit to
+speeding up these algorithms. For example, many online services rely on SSL/TLS
+for secure communication, and these rely on encryption algorithms. Thus,
+speeding up the encryption algorithms can lead to lower-latency service.
+Furthermore, it would be particularly satisfying to be able to apply the
+concepts we've learned in class to speed-up a popular library that is used in
+practice.
+
+% Why is it a suitable project?
+One key aspect about this idea that makes it suitable to be a project is the
+fact that the performance of the library can be used as a base benchmark,
+allowing us to measure our performance by simply measuring the speedup. However,
+there are many encryption libraries, so we could also compare the performance of
+the algorithms we modify with those of other libraries. Furthermore, encryption
+algorithms are not embarrassignly parallel, as can be seen in the small snippted
+of code below, which is part of the logic in the AES encryption algorithm, with
+clear dependencies between the variables inside the \texttt{for} loop. Parallelizing
+these encryption algorithms is very likely not going to be trivial.
+
+\begin{lstlisting}
+for (;;) {
+    t0 = Te0(byte(s0, 3)) ^ Te1(byte(s1, 2)) ^ Te2(byte(s2, 1)) ^ Te3(byte(s3, 0)) ^ rk[4];
+    t1 = Te0(byte(s1, 3)) ^ Te1(byte(s2, 2)) ^ Te2(byte(s3, 1)) ^ Te3(byte(s0, 0)) ^ rk[5];
+    t2 = Te0(byte(s2, 3)) ^ Te1(byte(s3, 2)) ^ Te2(byte(s0, 1)) ^ Te3(byte(s1, 0)) ^ rk[6];
+    t3 = Te0(byte(s3, 3)) ^ Te1(byte(s0, 2)) ^ Te2(byte(s1, 1)) ^ Te3(byte(s2, 0)) ^ rk[7];
+
+    rk += 8;
+    if (--r == 0) {
+        break;
+    }
+
+    s0 = Te0(byte(t0, 3)) ^ Te1(byte(t1, 2)) ^ Te2(byte(t2, 1)) ^ Te3(byte(t3, 0)) ^ rk[0];
+    s1 = Te0(byte(t1, 3)) ^ Te1(byte(t2, 2)) ^ Te2(byte(t3, 1)) ^ Te3(byte(t0, 0)) ^ rk[1];
+    s2 = Te0(byte(t2, 3)) ^ Te1(byte(t3, 2)) ^ Te2(byte(t0, 1)) ^ Te3(byte(t1, 0)) ^ rk[2];
+    s3 = Te0(byte(t3, 3)) ^ Te1(byte(t0, 2)) ^ Te2(byte(t1, 1)) ^ Te3(byte(t2, 0)) ^ rk[3];
+}
+\end{lstlisting}
+
+% What we need to resolve before deciding
+Before committing ourselves to this project, we want to determine that there are
+one or more encryption algorithms amenable to parallelization, and that we can
+familiarize ourselves with the code well enough quickly in order to be able to
+focus on parallelizing the algorithms rather than simply understanding what is
+happening in the code.
+
+Note that we may decide to proceed with the topic of encryption, but to do so
+with another library, or to simply create a small library of a few parallel
+encryption algorithms that we can then compare with another library.
+
+% Any literatur consulted?
+
+\section*{More fun with GraphRats!}
+
+We like GraphRats because there are a lot of different parallelization avenues
+we can explore. We almost certainly would map GraphRats to the GPU, but we would
+also be interested in doing any of the following:
+
+\begin{itemize}
+\item
+Map GraphRats to the Xeon Phi cores.
+\item
+Map GraphRats to ISPC.
+\item
+Use MPI on more than one machine, in combination with multi-threading, with the
+possibility of exploring performance on larger workloads (i.e., larger graphs
+with more rats).
+\item Extreme speedup: combine MPI, multi-threading, and vector instructions.
+\end{itemize}
+
+% What's interesting about it?
+% What we need to resolve before deciding
+% Any literatur consulted?
+% Why is it a suitable project?
+% Any literatur consulted?
+One of the benefits of working on GraphRats is that we are already familiar with
+the code, so we can jump directly into mapping the code to GPU, or to exploit
+some other parallelization technique. Furthermore, we would be able to dive
+deeper into why some changes work and others don't, allowing us to produce a
+final report with more empirical analysis.
+
+\end{document}
