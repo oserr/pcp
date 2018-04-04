@@ -93,20 +93,21 @@ We haven't decided on a project idea yet, but have a few ideas that we want to
 explore in more depth this week before making a decision. Our goal is to make a
 decision and commit to a project idea by Friday, April 6. Our project ideas are:
 
-\begin{enumerate}
+\begin{itemize}
 \item
-Parallelizing \texttt{libtomcrypt}.
+Parallelizing \texttt{libtomcrypt}
 \item
-Compare synchronization mechanisms: locking, fine-grained locking, and lock-free
-multi-threading.
+Synchronization mechanisms
 \item
-Having more fun with GraphRats!
-\end{enumerate}
+Deep learning
+\item
+GraphRats
+\end{itemize}
 
 We haven't yet commited ourselves to one of these ideas, but our focus for this
-week is to do some research to flesh out the ideas more fully, determine
-viability of project given the amount of time we have, whether we'll enjoy
-working on it, and gage what we'll get out of the experience.
+week is to do some research to flesh out the ideas, determine viability given
+the amount of time we have, whether we'll enjoy working on it, and gage what
+we'll get out of the experience.
 
 \section*{Parallel libtomcrypt}
 
@@ -189,7 +190,7 @@ map too slow. How can we improve its performance?
 
 This project will prepare us to answer these questions, and will provide an
 opportunity to enhance our skills to analyze multi-threading synchronization
-problems, and to developing high performing concurrent data structures.
+problems, and to develop high performing concurrent data structures.
 
 If we were to go this route, our tentative plan is to implement a few concurrent
 data structures with coarse and fine-grained locking, and lock-free
@@ -213,6 +214,52 @@ can use to guide our implementation, experimentation, and analysis. We'll
 probably look at these papers more this week before making a decision, but we'll
 rely on them if we decide to pursue this project.
 
+\section*{Deep learning}
+
+We are interested in learning to implement parallel deep learning algorithms,
+learning how different forms of parallelism affect performance, and how parallel
+deep learning compares with sequential deep learning.
+
+This is an interesting project because deep learning techniques have achieved
+unprecedented success in machine learning tasks within the last few years, and
+the problem of deep learning presents both opportunities, and challenges, for
+parallelization. There are aspects of deep learning, such as operations accross
+different units of a layer, that are easily parallelized, but there are other
+aspects that present serious challenges, including the fact that stochastic
+gradient descent, the optimization algorithm used to learn the parameters of a
+neural network, is inherently sequential, i.e., the computation at step $t+1$
+depends on the results of the computation at step $t$. And even though it is
+well understood that state of the art implementations of deep learning use GPUs
+and cluster computing, there is still a compelling incentive to find
+implementations of deep learning that work in single node mode, and that are
+parallel and efficient, given the trend toward edge-computing, where more of the
+computing moves from the cloud to the edge, close to the source of data.
+
+If we decide to go this route, our tentative plan is to implement a serial
+convolution neural network (CNN), a multi-threaded version, and a GPU version,
+making use of \href{https://developer.nvidia.com/cudnn}{cuDNN}, CUDA's deep
+neural network library. We wouldn't simply implement a CNN, but rather a
+\href{https://research.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html}
+{DeepDream} CNN. Ultimately, we would compare the performance of these
+implementations, in terms of speed and accuracy. Some nice to {\it have}s would
+be:
+
+\begin{itemize}
+\item
+Implementing a distributed version of the CNN.
+\item
+For a given CNN architecture, to compare the performance of our implementation
+with that of an open source library, e.g., \href{http://pytorch.org/}{PyTorch}.
+\end{itemize}
+
+One of us has experience with neural networks, but neither one of us have
+experience with CNNs in particular, so we would consult \cite{DL,PDDL,DBLP,Dean}
+to learn how to implement CNNs, and to do so in parallel. This project idea is
+very interesting, but it contains some serious challenges, so we'll spend some
+time in the next few days trying to determine the viability of the project, in
+particular understanding the challenge of implementing a CNN for the CPU and
+GPU.
+
 \section*{More fun with GraphRats!}
 
 We like GraphRats because there are a lot of different parallelization avenues
@@ -226,23 +273,18 @@ Map GraphRats to the Xeon Phi cores.
 Map GraphRats to ISPC.
 \item
 Use MPI on more than one machine, in combination with multi-threading, with the
-possibility of exploring performance on larger workloads (i.e., larger graphs
-with more rats).
-\item Extreme speedup: combine MPI, multi-threading, and vector instructions.
+possibility of exploring performance on larger workloads, e.g., larger graphs
+with more rats.
+\item
+Extreme speedup: combine MPI, multi-threading, and vector instructions.
 \end{itemize}
 
-% What's interesting about it?
-% What we need to resolve before deciding
-% Any literatur consulted?
-% Why is it a suitable project?
-% Any literatur consulted?
 One of the benefits of working on GraphRats is that we are already familiar with
 the code, so we can jump directly into mapping the code to GPU, or to exploit
 some other parallelization technique. Furthermore, we would be able to dive
 deeper into why some changes work and others don't, allowing us to produce a
 final report with more empirical analysis.
 
-%\bibliography{references.bib}
 \printbibliography
 
 \end{document}
