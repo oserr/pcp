@@ -1,4 +1,5 @@
 \documentclass[11pt]{article}
+%\documentclass[journal]{IEEEtran}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -9,7 +10,7 @@
 \usepackage{bm}
 \usepackage[small,bf]{caption}
 \usepackage[strict]{changepage}
-\usepackage{cite}
+%\usepackage{cite}
 \usepackage{dblfloatfix}
 \usepackage{enumerate}
 \usepackage{enumitem}
@@ -39,6 +40,10 @@
 \usepgfplotslibrary{units}
 \pgfplotsset{compat=1.14}
 \usepackage{bm}
+\usepackage[
+backend=biber,
+style=ieee
+]{biblatex}
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
@@ -46,13 +51,15 @@
     filecolor=magenta,
     urlcolor=cyan,
 }
+%\bibliographystyle{IEEEtran}
+%\bibliographystyle{acm}
+\addbibresource{references.bib}
 
 \addtolength{\evensidemargin}{-.5in}
 \addtolength{\oddsidemargin}{-.5in}
 \addtolength{\textwidth}{0.8in}
 \addtolength{\textheight}{0.8in}
 \addtolength{\topmargin}{-.4in}
-\newcommand{\hw}{4}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -82,20 +89,24 @@
 
 \section*{Project Ideas}
 
-We haven't decided on a project idea yet, but have an idea that we want to
+We haven't decided on a project idea yet, but have a few ideas that we want to
 explore in more depth this week before making a decision. Our goal is to make a
 decision and commit to a project idea by Friday, April 6. Our project ideas are:
 
 \begin{enumerate}
-\item Parallelizing \texttt{libtomcrypt}.
-\item Having more fun with GraphRats!
+\item
+Parallelizing \texttt{libtomcrypt}.
+\item
+Compare synchronization mechanisms: locking, fine-grained locking, and lock-free
+multi-threading.
+\item
+Having more fun with GraphRats!
 \end{enumerate}
 
-We haven't yet commited ourselves to one of these two ideas, but our focus for
-this week is to become more familiar with \texttt{libtomcrypt} to determine if
-making it parallel is viable. We like GraphRats, but don't like the fact that
-it's not a practical application and hence would be awkward to put the project
-in our resumes, and are therefore treating it like a backup idea.
+We haven't yet commited ourselves to one of these ideas, but our focus for this
+week is to do some research to flesh out the ideas more fully, determine
+viability of project given the amount of time we have, whether we'll enjoy
+working on it, and gage what we'll get out of the experience.
 
 \section*{Parallel libtomcrypt}
 
@@ -156,6 +167,52 @@ encryption algorithms that we can then compare with another library.
 
 % Any literatur consulted?
 
+\section*{Synchronization mechanisms}
+
+We are interested in studying and comparing different multi-threading
+synchronization mechanisms, including coarse locking, fine-grained locking, and
+lock-free techniques.
+
+Out of all the ideas, this is arguably the most likely to have the biggest
+payout for us in the long term. As computer engineers, we are bound to face
+questions of synchronization at the general purpose CPU level on a weekly, if
+not daily, basis. Two examples of questions that we forsee are:
+
+\begin{itemize}
+\item
+Can we speed up how a server pocesses connections by using a producer-consumer
+model with a pool of threads?
+\item
+We need a thread-safe hash map for the job, but coarse grained locks make the
+map too slow. How can we improve its performance?
+\end{itemize}
+
+This project will prepare us to answer these questions, and will provide an
+opportunity to enhance our skills to analyze multi-threading synchronization
+problems, and to developing high performing concurrent data structures.
+
+If we were to go this route, our tentative plan is to implement a few concurrent
+data structures with coarse and fine-grained locking, and lock-free
+synchronization mechanisms, to compare the performance of these techniques, and
+to compare the performance of our data structures with another library, or
+programming language. We would probably implement a singly linked list, doubly
+linked list, and hash map, but would also be interested in looking at other
+data structures, such as a self-balancing binary tree (e.g., red-black tree).
+
+In our analysis, we would look at how the different techniques compare with each
+other. To do this, we would create tests that use different numbers of threads,
+and possibly run the expriments on different machines. We would also compare our
+implementation with another library, or programming language. For example, we
+would probably create some tests to compare with Java's concurrent data
+structures, but in addition maybe also another library (e.g.,
+\href{https://github.com/khizmax/libcds}{libcds}, which claims to use concurrent
+lock-free data structures).
+
+We are currently aware of three papers \cite{Harris, Fomitchev, Maged} that we
+can use to guide our implementation, experimentation, and analysis. We'll
+probably look at these papers more this week before making a decision, but we'll
+rely on them if we decide to pursue this project.
+
 \section*{More fun with GraphRats!}
 
 We like GraphRats because there are a lot of different parallelization avenues
@@ -184,5 +241,8 @@ the code, so we can jump directly into mapping the code to GPU, or to exploit
 some other parallelization technique. Furthermore, we would be able to dive
 deeper into why some changes work and others don't, allowing us to produce a
 final report with more empirical analysis.
+
+%\bibliography{references.bib}
+\printbibliography
 
 \end{document}
