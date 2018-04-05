@@ -1,5 +1,4 @@
-\documentclass[11pt]{article}
-%\documentclass[journal]{IEEEtran}
+\documentclass[11pt]{article} %\documentclass[journal]{IEEEtran}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -154,6 +153,16 @@ for (;;) {
     s3 = Te0(byte(t3, 3)) ^ Te1(byte(t0, 2)) ^ Te2(byte(t1, 1)) ^ Te3(byte(t2, 0)) ^ rk[3];
 }
 \end{lstlisting}
+
+In the case of block ciphers, one clear dimension of parallelization could be
+with respect of the mode of operation . The library supports many modes (CBC,
+CTR, CFB, ECB, XTS, etc) and some of them present characteristics that make them
+suitable for parallelizing encryption/decryption of blocks.  Another important
+cryptosystem that could be parallelized is the RSA public-key cryptosystem.
+Since it involves modular exponentiation it’s not suitable for fast computation
+in the CPU, but its performance could be improved by mapping it to a GPU. This will not be an
+original project though since many attempts have already been made to
+parallelize the RSA algorithm. \cite{Saxena}
 
 % What we need to resolve before deciding
 Before committing ourselves to this project, we want to determine that there are
