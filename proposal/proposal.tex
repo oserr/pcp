@@ -1,0 +1,147 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{backnaur}
+\usepackage[scaled]{beramono}
+\usepackage{bm}
+\usepackage[small,bf]{caption}
+\usepackage[strict]{changepage}
+\usepackage{dblfloatfix}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{flushend}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{ifsym}
+\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{makeidx}
+\usepackage{mathrsfs}
+\usepackage{multirow}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage[hyphens]{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+\usepackage{wrapfig}
+\usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{shapes,decorations}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+\pgfplotsset{compat=1.14}
+\usepackage{bm}
+\usepackage[
+backend=biber,
+style=ieee
+]{biblatex}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+%\bibliographystyle{IEEEtran}
+%\bibliographystyle{acm}
+\addbibresource{references.bib}
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.8in}
+\addtolength{\topmargin}{-.4in}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{\vspace{-25pt}
+\huge CS 15-618 Project Proposal \\
+\huge Synchrony
+}
+\author{
+    Patricio Chilano (pchilano) \\
+    Omar Serrano (oserrano)
+}
+\date{\today}
+
+\begin{document}
+
+\definecolor{beaublue}{rgb}{0.74, 0.83, 0.9}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{orange}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true
+}
+
+\maketitle
+
+\section*{Summary}
+
+\section*{Background}
+
+\section*{Challenge}
+
+\section*{Resources}
+
+\section*{Goals and Deliverables}
+
+\begin{itemize}
+\item Doubly linked list (DLL) with
+\begin{itemize}
+\item coarse-grained locks
+\item fined-grained locks
+\item lock-free
+\end{itemize}
+\item Test harness for linked list
+\item Hash map (HM) with
+\begin{itemize}
+\item coarse-grained locks
+\item fined-grained locks
+\item lock-free
+\end{itemize}
+\item test harness for hash map
+\end{itemize}
+
+\section*{Platform Choice}
+
+\section*{Schedule}
+
+\printbibliography
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\bf Week & \bf Deliverable   \\
+\midrule
+4/9      & DLL with coarse grained locks \\
+         & DLL Test harness \\
+4/16     & Check point 1 \\
+         & DLL fined-grained locks \\
+         & HM coarse-grained locks \\
+         & HM test-harness \\
+4/23     & Check point 2 \\
+         & DLL lock-free \\
+         & HM fine-grained \\
+4/30     & HM lock-free \\
+         & Report \\
+\bottomrule
+\end{tabular}
+\caption{Weekly Schedule}
+\label{table:shedule}
+\end{center}
+\end{table}
+
+\end{document}
