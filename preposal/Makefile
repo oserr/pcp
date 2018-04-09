@@ -1,6 +1,6 @@
 MAC = Darwin
 OS = $(shell uname)
-APP = proposal.pdf
+APP = preposal.pdf
 
 all: $(APP)
 
