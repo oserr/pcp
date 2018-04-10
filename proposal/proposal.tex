@@ -53,6 +53,9 @@ style=ieee
 %\bibliographystyle{acm}
 \addbibresource{references.bib}
 
+\newcommand{\rt}{\textsuperscript{\textregistered}}
+\newcommand{\tm}{\texttrademark}
+
 \addtolength{\evensidemargin}{-.5in}
 \addtolength{\oddsidemargin}{-.5in}
 \addtolength{\textwidth}{0.8in}
@@ -152,6 +155,80 @@ the number of processors and threads used.
 \end{itemize}
 
 \section*{Platform Choice}
+We are using C/C++ to implement the concurrent data structures. We believe this
+is the best choice in terms of the flexibility it gives us in terms of design
+choices, and it is almost a necessary choice when it comes to lock-free
+mechanisms, because the language needs to provide an interface for direct memory
+access. There are other programming languages that will also provide direct
+memory access, such as \href{https://golang.org/}{golang} and
+\href{https://www.rust-lang.org/en-US/}{rust}, but C/C++ also provides a direct
+interface to the OS threading infrastructure, i.e., \texttt{Pthreads}, thus
+allowing us to tinker with the system at the lowest level of the software/hardware
+interface. More specifically, we are planning to use the C++11 standard, which
+introduced threads to C++, and we'll be making heavy use of the tools in
+\href{http://en.cppreference.com/w/cpp/header/thread}{\texttt{<thread>}},
+\href{http://en.cppreference.com/w/cpp/header/mutex}{\texttt{<mutex>}}, and
+\href{http://en.cppreference.com/w/cpp/header/atomic}{\texttt{<atomic>}}.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+\bf Machine(s) & \bf Specs & \bf Cores & \bf Threads   \\
+\midrule
+GHC            & Intel\rt Xeon\rt CPU E5-1660 v4 @ 3.20GHz & 8 & 16 \\
+latedays       & Intel\rt Xeon\rt CPU E5-2620 v3 @ 2.40GHz & 6 & 12 \\
+macOS          & Intel\rt Core\tm i7-7700HQ @ 2.80GHz & 4 & 8 \\
+Phi Cores      & SomeSpecs & Some\# & Some\# \\
+\bottomrule
+\end{tabular}
+\caption{Specs of machines we plan to use for experiments.}
+\label{table:specs}
+\end{center}
+\end{table}
+
+We are planning to run all of our experiments on Posix OSes, such as Linux or
+macOS, running x86\_64. The x86\_64 architecture is more modern than other
+system architectures and we may run into a problem where we need a
+synchronization or memory model feature only found in this architecture. Linux
+and macOS are good choices for us to implement our data structures, because they
+are Posix OSes, provide the familiar \texttt{Pthreads} abstraction/interface,
+and are programmer-friendly. Furthermore, these platforms are the most
+convenient for us, because GHC machines and the latedays cluster are Linux
+x86\_64, and our laptops are macOSes x86\_64. We've yet to choose the machines
+where we'll carry our experiments, but we'll probably settle on one GHC machine,
+a machine on the latedays cluster (via \texttt{qsub -q @server}), one of our
+laptops, and, if time permits, the Phi Cores. These are a good sample of
+machines to test our concurrent data structures, because they have different
+specs and this will allow us to see how the data structures scale and perform
+under different conditions/environments. The specs for these machines are listed
+in Table~\ref{table:specs}. Particular points of interest specific to the specs
+of the machines we are planning to use are:
+
+\begin{itemize}
+\item
+macOS has the least number of cores, but it has the most modern and powerful
+cores. How do our data structures scale from 1 to 8 threads on the macOS
+compared with the other machines?
+\item
+GHC machines have 16 virtual cores, more than the mac, but less than machines in
+the latedays cluster; however, machines in the latedays cluster are dual socket,
+whereas GHC machines are single socket. How does this affect the scaling
+behavior, in particular when ramping up the number of threads from 12 to 16 cores?
+\item
+At 61 cores, the Phi Cores offer, by far, the highest level of parallelism and
+number of threads. How do our data structures scale at this level of parallelism?
+\end{itemize}
+
+%Java for comparison
+We are also planning to use Java in order to compare the performance of our data structures with Java's
+\href{https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html}{ConcurrentHashMap} and
+\href{https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentLinkedDeque.html}{ConcurrentLinkedDeque}.
+Despite the differences between Java and C++, these Java concurrent data
+structures are a good choice to compare with our library, because Java's
+concurrent library is a mature library, is well known, and it is implemented by
+experts in their field.
+
 
 \section*{Schedule}
 
