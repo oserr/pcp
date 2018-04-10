@@ -135,6 +135,37 @@ the number of processors and threads used.
 
 \section*{Resources}
 
+\subsection*{Code/Libraries/Compilers}
+The point of our project is to implement concurrent data structures, so we'll
+build our library from scratch. Given that we'll compare our library with Java's
+concurrent package on our macOSes, the GHC machines, and the latedays cluster,
+we'll use Java 8. To test our data structures for correctness, we will use the
+\href{https://github.com/google/googletest}{GoogleTest} library for unit testing.
+Per Table~\ref{table:compiler}, the machines we'll be using have different
+compiler and Java runtime.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+\bf Machine(s) & \bf C++ & \bf Java \\
+\midrule
+GHC            & gcc 4.9.2 & OpenJDK 8 \\
+latedays       & gcc 4.9.2 & Oracle 8 \\
+macOS          & gcc 6.4 & Oracle 10 \\
+\bottomrule
+\end{tabular}
+\caption{Compiler and Java RE toolchains we will use for our experiments.}
+\label{table:compiler}
+\end{center}
+\end{table}
+
+% machines
+\subsection*{Machines}
+
+% papers/books
+\subsection*{Papers/Book}
+
 \section*{Goals and Deliverables}
 
 \begin{itemize}
@@ -220,7 +251,6 @@ At 61 cores, the Phi Cores offer, by far, the highest level of parallelism and
 number of threads. How do our data structures scale at this level of parallelism?
 \end{itemize}
 
-%Java for comparison
 We are also planning to use Java in order to compare the performance of our data structures with Java's
 \href{https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html}{ConcurrentHashMap} and
 \href{https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentLinkedDeque.html}{ConcurrentLinkedDeque}.
@@ -228,7 +258,6 @@ Despite the differences between Java and C++, these Java concurrent data
 structures are a good choice to compare with our library, because Java's
 concurrent library is a mature library, is well known, and it is implemented by
 experts in their field.
-
 
 \section*{Schedule}
 
