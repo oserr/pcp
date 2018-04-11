@@ -279,7 +279,7 @@ non-blocking data structures.
 Plan to achieve: 
 \begin{itemize} 
 \item
-Implement an ordered concurrent doubly linked list using different
+Implement concurrent doubly linked list using different
 synchronization methods: course- grain locks, fine-grain locks and lock-free
 techniques. 
 \item Compare the performance of each implementation of the doubly
@@ -304,6 +304,10 @@ Desirables:
 Compare fine-grain locking implementations using different locks
 (spinlocks and mutexes) to see how busy-waiting performs against a blocking
 lock.
+\item
+Implement an ordered concurrent doubly linked list using different
+synchronization methods: course- grain locks, fine-grain locks and lock-free
+techniques. Compare its performance with the unordered doubly list link.
 \end{itemize}
 
 Although it’s hard to set a particular speedup goal we expect that the fine-
@@ -316,7 +320,7 @@ increasing number of threads? Which synchronization method is preferred with
 respect to number of threads? What’s the biggest factor that prevents linear
 scaling in each case?
 
-We will create benchmarks that perform a number of insert and delete operations
+We will create benchmarks that perform a number of insert, delete and find operations
 for both data structures. We will measure the time taken to complete all of them
 by each implementation for a given data structure and calculate a speedup with
 respect to the serial version. By varying the number of threads we can create
