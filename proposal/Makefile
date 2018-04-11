@@ -9,8 +9,10 @@ $(APP): $(APP:.pdf=.tex)
 ifneq ($(MAC),$(findstring $(MAC),$(OS)))
 	-rubber --module xelatex $<
 else
-	xelatex $^
-	xelatex $^
+	xelatex $(basename $^)
+	biber $(basename $^)
+	xelatex $(basename $^)
+	xelatex $(basename $^)
 endif
 
 PHONY: clean
