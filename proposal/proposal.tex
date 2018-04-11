@@ -118,7 +118,7 @@ workloads. Even though we are only experimenting with linked lists and hash
 maps, we hope that the insights gained from these experiments can be transferred
 to other problem settings.
 
-\section*{Challenge} 
+\section*{Challenge}
 One of the challenging points about this project is to be
 able to minimize serialization among threads operating on the proposed data
 structures, i.e. double link lists and hash maps, so that performance not only
@@ -275,27 +275,27 @@ focuses explicitly on using the threading primitives provided by C++11 to build
 concurrent applications, and it includes examples of fine-grained blocking and
 non-blocking data structures.
 
-\section*{Goals and Deliverables}  
-Plan to achieve: 
-\begin{itemize} 
+\section*{Goals and Deliverables}
+Plan to achieve:
+\begin{itemize}
 \item
 Implement a concurrent doubly linked list using different
 synchronization methods: course-grain locks, fine-grain locks and lock-free
-techniques. 
+techniques.
 \item Compare the performance of each implementation of the doubly
 linked list against each other and against the serial version with respect to
-the number of threads. 
-\item Use the doubly linked list as a dequeue for each implementation and compare 
-their performance against the Java ConcurrentLinkedDeque data structure. 
-\item Implement a concurrent HashMap using different synchronization methods: 
-course-grain locks, fine-grain locks and lock-free techniques. 
-\item Compare the performance of each implementation of the HashMap against 
-each other and against the serial version with respect to the number of threads. 
-\item Compare the performance of each implementation of the HashMap against 
+the number of threads.
+\item Use the doubly linked list as a dequeue for each implementation and compare
+their performance against the Java ConcurrentLinkedDeque data structure.
+\item Implement a concurrent HashMap using different synchronization methods:
+course-grain locks, fine-grain locks and lock-free techniques.
+\item Compare the performance of each implementation of the HashMap against
+each other and against the serial version with respect to the number of threads.
+\item Compare the performance of each implementation of the HashMap against
 the Java ConcurrentHashMap data structure.
 \end{itemize}
 
-Desirables: 
+Desirables:
 \begin{itemize}
 \item
 Compare fine-grain locking implementations using different locks
