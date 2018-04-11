@@ -131,7 +131,44 @@ application, other factors may affect the behavior of concurrent data structures
 implemented with different synchronizatin mechanisms, such as the workload or
 the number of processors and threads used.
 
-\section*{Challenge}
+\section*{Challenge} 
+One of the challenging points about this project is to be
+able to minimize serialization among threads operating on the proposed data
+structures, i.e. double link lists and hash maps, so that performance not only
+increases with parallelization but also scales as the number of cores used are
+increased. When benchmarking our implementation we will assume each thread will
+have a bunch of operations to perform on a given data structure, independent of
+the other threads, so although no special communication will be needed we will
+have to ensure proper synchronization among them to maintain the invariants of
+each data structure. We will use techniques such as fine grain locking and lock-
+free programming, both of which present its own challenges.
+
+Fine grain locking can reduce contention compared with using a single global
+lock, but complicates correctness of the program, since deadlock, livelock and
+races can be harder to detect. Also techniques such as “hand-over-hand” locking
+not only add additional overhead of taking locks in each step, but could also
+force threads to wait on each other even if they need to modify opposite sides
+of a list. This is particularly true when a thread that acquires a lock close to
+the head of a list is descheduled by the OS, forcing all other threads that
+start a new modification to possibly wait for it. This blocking characteristic
+of locks is a big disadvantage and one of the motivations to use lock-free
+techniques.
+
+In the case of lock-free programming, the main challenge will be ensuring
+correctness of the implementation since it is not only trickier to implement due
+to issues such as the ABA problem or accessing freed memory, but also by having
+to ensure sequential consistency in dealing with the memory model of the CPU
+architecture and compiler optimizations. Also although we are not using locks,
+there is still contention in the memory bus due to loops that use atomic
+operations such as the CAS operation, which can significantly slow down
+performance.
+
+By completing this project we hope to understand the challenges mentioned above
+and be able to gain intuition in which synchronization mechanism is more
+suitable to a particular application, given the workload and number of threads
+involved. This skill will be helpful in future projects in order to decide which
+technique should we used when parallelizing an application in order to achieve
+maximum performance.
 
 \section*{Platform Choice}
 We are using C/C++ to implement the concurrent data structures. We believe this
@@ -251,7 +288,61 @@ focuses explicitly on using the threading primitives provided by C++11 to build
 concurrent application, and it includes examples of fine-grained blocking and
 non-blocking data structures.
 
-\section*{Goals and Deliverables}
+\section*{Goals and Deliverables}  
+Plan to achieve: 
+\begin{itemize} 
+\item
+Implement an ordered concurrent doubly linked list using different
+synchronization methods: course- grain locks, fine-grain locks and lock-free
+techniques. 
+\item Compare the performance of each implementation of the doubly
+linked list against each other and against the serial version with respect to
+the number of threads. 
+\item Compare the performance of each implementation of
+the doubly linked list against the Java implementation(??). 
+\item Implement a
+concurrent HashMap using different synchronization methods: course-grain locks,
+fine-grain locks  and lock-free techniques. 
+\item Compare the performance of
+each implementation of the HashMap against each other and against the serial
+version with respect to the number of threads. 
+\item Compare the performance of
+each implementation of the HashMap against the Java ConcurrentHashMap data
+structure.
+\end{itemize}
+
+\begin{itemize}
+Desirables: 
+\item
+Compare fine-grain locking implementations using different locks
+(spinlocks and mutexes) to see how busy-waiting performs against a blocking
+lock.
+\end{itemize}
+
+Although it’s hard to set a particular speedup goal we expect that the fine-
+grain locking and lock-free implementations provide good performance with
+respect to the serial version, especially the latter one with increasing number
+of threads. The main idea of this project though is to gain insight into which
+of these techniques is better suited for a particular scenario, i.e. some of the
+questions we would like to answer are: How well each of these methods scale with
+increasing number of threads? Which synchronization method is preferred with
+respect to number of threads? What’s the biggest factor that prevents linear
+scaling in each case?
+
+We will create benchmarks that perform a number of insert and delete operations
+for both data structures. We will measure the time taken to complete all of them
+by each implementation for a given data structure and calculate a speedup with
+respect to the serial version. By varying the number of threads we can create
+graphs that tells us how well each of these implementations scale with number of
+threads and how they compare with each other. In order to ensure that insertions
+and deletions do not corrupt the data structures, we will also create harness
+tests that compare the final state of a run with some references created
+earlier.
+
+In terms of presentation, we will create graphs that show how well each of the
+implementations for a given data structure scale with increasing number of
+threads, and how they compare against each other and against the Java
+implementation for that same data structure.
 
 \begin{itemize}
 \item Doubly linked list (DLL) with
