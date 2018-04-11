@@ -344,6 +344,9 @@ implementations for a given data structure scale with increasing number of
 threads, and how they compare against each other and against the Java
 implementation for that same data structure.
 
+\section*{Schedule}
+Our schedule
+
 \begin{table}[t]
 \begin{center}
 \begin{tabular}{ll}
@@ -351,33 +354,37 @@ implementation for that same data structure.
 \bf Week & \bf Deliverable   \\
 \midrule
 4/9      & Project proposal \\
-         & Doubly linked list with coarse-grained locks \\
+         & Doubly-linked list with coarse-grain locks \\
          & Regression unit tests for linked lists \\
-4/16     & Hash map with coarse-grained locks
+4/16     & Hash map with coarse-grain locks
          & Check point 1 \\
-         & Doubly linked-list with fine-grained locks \\
-         & Hash map with fined-grained locks \\
-         & Benchmarking harness \\
+         & Doubly-linked list with fine-grain locks \\
+         & Hash map with fine-grain locks \\
+         & Benchmarking harness for linked-lists \\
+         & Regression unit tests for hash map \\
 4/23     & Check point 2 \\
+         & Benchmarking harness for hash maps \\
+         & Lock-free doubly-linked list \\
+         & Benchmarks for linked lists with coarse- and fine-grain locks \\
+         & Benchmarks for hash maps with coarse- and fine-grain locks \\
+         & Benchmarks for Java ConcurrentLinkedDeque \\
+4/30     & Benchmarks for Java ConcurrentHashMap \\
+         & Final report \\
          & Lock-free doubly-linked list \\
          & Lock-free hash map \\
-         & Benchmark for Java ConcurrentLinkedDeque \\
-4/30     & Benchmark for Java ConcurrentHashMap \\
-         & Report \\
-         & *Lock-free ordered doubly linked list \\
+         & Benchmark for lock-free linked list \\
+         & Benchmark for lock-free hash map \\
+         & *Lock-free ordered doubly-linked list \\
          & *Concurrent data structures with spinning locks \\
 \bottomrule
 \end{tabular}
 \caption{
 Weekly schedule. Check points include the items preceding them. The * on the
-last two items indicate \textit{nice-to-haves}, but we are not commiting to
-them.
+last two items indicate {\it nice-to-haves}, but we are not commiting to them.
 }
 \label{table:shedule}
 \end{center}
 \end{table}
-
-\section*{Schedule}
 
 \printbibliography
 
