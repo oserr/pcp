@@ -279,23 +279,20 @@ non-blocking data structures.
 Plan to achieve: 
 \begin{itemize} 
 \item
-Implement concurrent doubly linked list using different
-synchronization methods: course- grain locks, fine-grain locks and lock-free
+Implement a concurrent doubly linked list using different
+synchronization methods: course-grain locks, fine-grain locks and lock-free
 techniques. 
 \item Compare the performance of each implementation of the doubly
 linked list against each other and against the serial version with respect to
 the number of threads. 
-\item Compare the performance of each implementation of
-the doubly linked list against the Java implementation(??). 
-\item Implement a
-concurrent HashMap using different synchronization methods: course-grain locks,
-fine-grain locks  and lock-free techniques. 
-\item Compare the performance of
-each implementation of the HashMap against each other and against the serial
-version with respect to the number of threads. 
-\item Compare the performance of
-each implementation of the HashMap against the Java ConcurrentHashMap data
-structure.
+\item Use the doubly linked list as a dequeue for each implementation and compare 
+their performance against the Java ConcurrentLinkedDeque data structure. 
+\item Implement a concurrent HashMap using different synchronization methods: 
+course-grain locks, fine-grain locks and lock-free techniques. 
+\item Compare the performance of each implementation of the HashMap against 
+each other and against the serial version with respect to the number of threads. 
+\item Compare the performance of each implementation of the HashMap against 
+the Java ConcurrentHashMap data structure.
 \end{itemize}
 
 Desirables: 
