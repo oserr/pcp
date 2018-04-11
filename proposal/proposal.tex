@@ -345,7 +345,17 @@ threads, and how they compare against each other and against the Java
 implementation for that same data structure.
 
 \section*{Schedule}
-Our schedule
+The detailed weekly schedule that we have planned for now is found in
+Table~\ref{table:schedule}. The schedule includes four weeks, but can also be
+divided into three sections: what we hope to accomplish by each of the first two
+checkpoints, and before submitting the final report. At a high lovel, our goal
+is to have coarse-grain locks tasks by the first checkpoint, fine-grain locks
+tasks by the second checkpoint, and to finish lock-free tasks the last week and
+a half, before the final deadline. Note also that the lock-free list is included
+in the week of 4/23 and 4/30 to reflect our belief that this will be the most
+challening task. The final two items are desirable items, i.e., items marked
+with a star, are tasks that we would be nice to accomplish, but it is unlikely
+that we'll get to them.
 
 \begin{table}[t]
 \begin{center}
@@ -356,17 +366,17 @@ Our schedule
 4/9      & Project proposal \\
          & Doubly-linked list with coarse-grain locks \\
          & Regression unit tests for linked lists \\
-4/16     & Hash map with coarse-grain locks
-         & Check point 1 \\
+4/16     & Hash map with coarse-grain locks \\
+         & {\bf Check point 1} \\
          & Doubly-linked list with fine-grain locks \\
          & Hash map with fine-grain locks \\
          & Benchmarking harness for linked-lists \\
          & Regression unit tests for hash map \\
-4/23     & Check point 2 \\
-         & Benchmarking harness for hash maps \\
-         & Lock-free doubly-linked list \\
+4/23     & Benchmarking harness for hash maps \\
          & Benchmarks for linked lists with coarse- and fine-grain locks \\
          & Benchmarks for hash maps with coarse- and fine-grain locks \\
+         & {\bf Check point 2} \\
+         & Lock-free doubly-linked list \\
          & Benchmarks for Java ConcurrentLinkedDeque \\
 4/30     & Benchmarks for Java ConcurrentHashMap \\
          & Lock-free doubly-linked list \\
