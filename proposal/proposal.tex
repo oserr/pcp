@@ -103,33 +103,21 @@ data structures, arguably the more common paradigm is for threaded applications
 to use them. Work queues, for example, are a good way for a server to model the
 producer-consumer paradigm, as the server puts newly created connections into a
 queue, and a pool of threads take items from the queue as they are added to it.
-A parallel implementation of $A^*$, for example, might need a concurrent
-priority queue for nodes in the frontier, and a concurrent hash set to record
-the nodes that have already been visited.
+A parallel implementation of $A^*$ may need a concurrent hash set to record the
+nodes that have already been visited.
 
 The common theme of these examples is the need for thread-safe data structures,
 yet both present different use cases of concurrency, and hence the best type of
-synchronization mechanism used by each application is different. The server is
-well served by a blocking queue, because it may go through periods without
-client requests. While it waits, the server can free up the CPU for other tasks.
-If it is part of a distributed application, for example, it can send heartbeats
-to other hosts, create a checkpoint, etc.
+synchronization mechanism for a set of applications may be different. The
+server, for example, may be better served by a blocking queue. $A^*$, on the
+other hand, might perform better with a fine-grain or lock-free hash set.
 
-On the other hand, when $A^*$ runs it will simply try to process a graph as
-quickly as possible in order to find the best path from one node to the other.
-Therefore, a parallel version of $A^*$ that uses blocking concurrent data
-structures may perform more poorly than one with lock-free data structures. When
-a thread pops a node from the priority queue of nodes in the frontier, i.e.,
-nodes yet-to-be explored, or inserts a node into the hash set of visited nodes,
-it does quickly. If $A^*$ uses blocking concurrent data structures, then the
-cost of thread preemption and rescheduling by the OS is likely to dominate the
-cost of synchronizing access to the data structures.
-
-As these examples demonstrate, different applications are better suited for
-different forms of synchronization. In addition to the particulars of an
-application, other factors may affect the behavior of concurrent data structures
-implemented with different synchronizatin mechanisms, such as the workload or
-the number of processors and threads used.
+Thus, our goal is to gain experience applying different synchronization
+techniques, and to recognize how these strategies behave with different
+workloads. Even though we are only experimenting with linked lists and hash
+maps, we hope that the insights gained from these experiments will provide us
+with intuition that can be used in different problem settings, and with
+different data structures.
 
 \section*{Challenge} 
 One of the challenging points about this project is to be
