@@ -10,7 +10,7 @@ git config --global clangFormat.binary clang-format
 git config --global clangFormat.style file
 base_path=$(git rev-path --show-toplevel)
 format_path=${base_path}/tools/format
-git config --global --path clangFormat.stylePath ${format_path}/format
+git config --global --path clangFormat.stylePath ${format_path}
 ```
 Note on the first we specify clang-format, however, this is simply the name of
 the clang-format binary in your path. Therefore, if your clang-format binary is
