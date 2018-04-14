@@ -12,7 +12,7 @@
 #
 # Note setup.sh has to be run afresh when a repo is cloned or moved.
 
-base_path=$(git rev-path --show-toplevel)
+base_path=$(git rev-parse --show-toplevel)
 format_path=${base_path}/tools/format
 
 # Configure git

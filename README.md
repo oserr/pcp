@@ -8,7 +8,7 @@ Configuring clang-format:
 ```{bash}
 git config --global clangFormat.binary clang-format
 git config --global clangFormat.style file
-base_path=$(git rev-path --show-toplevel)
+base_path=$(git rev-parse --show-toplevel)
 format_path=${base_path}/tools/format
 git config --global --path clangFormat.stylePath ${format_path}
 ```
@@ -18,7 +18,7 @@ clang-format-3.7, for example, then use that.
 
 Configuring pre-commit hook:
 ```{bash}
-base_path=$(git rev-path --show-toplevel)
+base_path=$(git rev-parse --show-toplevel)
 format_path=${base_path}/tools/format
 chmod +x ${format_path}/pre-commit
 ln -s ${format_path}/pre-commit ${base_path}/.git/hooks/
