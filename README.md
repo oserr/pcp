@@ -24,4 +24,8 @@ chmod +x ${format_path}/pre-commit
 ln -s ${format_path}/pre-commit ${base_path}/.git/hooks/
 ```
 
+Alternatively, to avoid doing all of this manually, you can simply run
+``tools/format/setup.sh``. It will install ``git-clang-format`` in
+``${HOME}/bin``, and setup the configurations.
+
 [1]: http://www.cs.cmu.edu/afs/cs.cmu.edu/academic/class/15418-s18/www/
