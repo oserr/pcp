@@ -4,6 +4,17 @@ Parallel computer project for course [CS 15-618: Parallel Computer Programming
 and Programming][1] at CMU, spring 2018.
 
 ## Environment
+
+### cmake
+If you don't already have one, then install a recent (i.e., >3) version of
+cmake. You can get a tarball and instructions from [here][2]. Alternatively, you
+can run ``tools/cmake/install.sh``, which will by default install cmake in
+``{Home}/local``, but you can pass in a different prefix, e.g., ``./install.sh
+${HOME}/opt``. After installing cmake, make sure the ``bin`` directory of
+installation location is in your path, e.g.,
+``export PATH=${HOME}/local/bin:${PATH}``.
+
+### clang-format
 Configuring clang-format:
 ```{bash}
 git config --global clangFormat.binary clang-format
@@ -29,3 +40,4 @@ Alternatively, to avoid doing all of this manually, you can simply run
 ``${HOME}/bin``, and setup the configurations.
 
 [1]: http://www.cs.cmu.edu/afs/cs.cmu.edu/academic/class/15418-s18/www/
+[2]: https://cmake.org/download/
