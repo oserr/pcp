@@ -9,7 +9,7 @@ and Programming][1] at CMU, spring 2018.
 If you don't already have one, then install a recent (i.e., >3) version of
 cmake. You can get a tarball and instructions from [here][2]. Alternatively, you
 can run ``tools/cmake/install.sh``, which will by default install cmake in
-``{Home}/local``, but you can pass in a different prefix, e.g., ``./install.sh
+``${Home}/local``, but you can pass in a different prefix, e.g., ``./install.sh
 ${HOME}/opt``. After installing cmake, make sure the ``bin`` directory of
 installation location is in your path, e.g.,
 ``export PATH=${HOME}/local/bin:${PATH}``.
