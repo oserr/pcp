@@ -22,14 +22,14 @@ git config --path clangFormat.stylePath ${format_path}
 
 # Put git-clang-format in ${HOME}/bin
 mkdir -p ${HOME}/bin
-if [ ! -f ${HOME}/bin/git-clang-format ]; then
+if [[ ! -f ${HOME}/bin/git-clang-format ]]; then
     cp ${format_path}/git-clang-format ${HOME}/bin
     chmod +x ${HOME}/bin/git-clang-format
 fi
 
 # Create link to pre-commit
 hooks_path=${base_path}/.git/hooks
-if [ -f ${hooks_path}/pre-commit ]; then
+if [[ -f ${hooks_path}/pre-commit ]]; then
     echo "Error: pre-commit already exists. You need to modify your pre-commit"
     echo "       script manually to integrate the clang format pre-commit. One"
     echo "       approach is to create a subdirectory, e.g., hooks/pre, to put"
@@ -40,7 +40,7 @@ fi
 chmod +x ${format_path}/pre-commit
 ln -s ${format_path}/pre-commit ${hooks_path}
 
-if [ ! ":${PATH}:" == *":${HOME}/bin:"* ]; then
+if [[ ":${PATH}:" != *":${HOME}/bin:"* ]]; then
     echo "You need to add ${HOME}/bin to your PATH:"
     echo '    export PATH=${HOME}/bin:${PATH}'
 fi
