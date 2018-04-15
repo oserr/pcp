@@ -6,6 +6,8 @@ and Programming][1] at CMU, spring 2018.
 ## Environment
 
 ### cmake
+
+#### Setup
 If you don't already have one, then install a recent (i.e., >3) version of
 cmake. You can get a tarball and instructions from [here][2]. Alternatively, you
 can run ``tools/cmake/install.sh``, which will by default install cmake in
@@ -13,6 +15,15 @@ can run ``tools/cmake/install.sh``, which will by default install cmake in
 ${HOME}/opt``. After installing cmake, make sure the ``bin`` directory of
 installation location is in your path, e.g.,
 ``export PATH=${HOME}/local/bin:${PATH}``.
+
+#### Building
+At the project root directory, do the following:
+```{bash}
+mkdir build
+cd build # out of source build
+cmake ..
+make
+```
 
 ### clang-format
 Configuring clang-format:
