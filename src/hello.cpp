@@ -8,9 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 
-int
-main()
-{
-    std::cout << "hello, world!" << std::endl;
-    exit(EXIT_SUCCESS);
+int main() {
+  std::cout << "hello, world!" << std::endl;
+  exit(EXIT_SUCCESS);
 }
