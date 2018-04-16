@@ -12,7 +12,7 @@ set -e
 if [[ $# -eq 1 ]]; then
   prefix_dir=$1
 fi
-
+mkdir -p ${prefix_dir}
 minor_ver=3.11
 full_ver=${minor_ver}.0
 fname=cmake-${full_ver}
