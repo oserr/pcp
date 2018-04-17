@@ -1,0 +1,200 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{backnaur}
+\usepackage[scaled]{beramono}
+\usepackage{bm}
+\usepackage[small,bf]{caption}
+\usepackage[strict]{changepage}
+\usepackage{dblfloatfix}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{flushend}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{ifsym}
+\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{makeidx}
+\usepackage{mathrsfs}
+\usepackage{multirow}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage[hyphens]{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+\usepackage{wrapfig}
+\usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{shapes,decorations}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+\pgfplotsset{compat=1.14}
+\usepackage{bm}
+\usepackage[
+backend=biber,
+style=ieee
+]{biblatex}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\newcommand{\rt}{\textsuperscript{\textregistered}}
+\newcommand{\tm}{\texttrademark}
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.8in}
+\addtolength{\topmargin}{-.4in}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{\vspace{-25pt}
+\huge CS 15-618 Project Checkpoint 1 \\
+\huge Synchrony
+}
+\author{
+    Patricio Chilano (pchilano) \\
+    Omar Serrano (oserrano)
+}
+\date{\today}
+
+\begin{document}
+
+\definecolor{beaublue}{rgb}{0.74, 0.83, 0.9}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{orange}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true,
+    morekeywords={nullptr,noexcept}
+}
+
+\maketitle
+
+\section*{Summary}
+We are right on track with our original schedule, and have no concerns with
+respect to our goals.
+
+\begin{figure}
+\begin{center}
+%\begin{tabular}{c}
+\begin{lstlisting}
+/**
+ * A simple doubly linked list with very basic operations:
+ * - inserting at the front of the list
+ * - removing anywhere from the list
+ * - and finding elements
+ */
+template <typename T> struct DlList {
+  DlNode<T> *head{nullptr};
+  unsigned size{0};
+
+  ~DlList();
+  DlNode<T> *Insert(T value);
+  bool Remove(T value);
+  bool Contains(T value) const noexcept;
+  unsigned Size() const noexcept;
+  bool Empty() const noexcept;
+};
+\end{lstlisting}
+\caption{
+This is the single threaded list, but other lists share the same interface.}
+\label{fig:dllist}
+%\end{tabular}
+\end{center}
+\end{figure}
+
+\section*{Work Done}
+We setup our git repo and created a couple scripts to setup our work
+environment: one to setup our git repo to use git-clang-format, and another one
+to install a newer version of cmake on the GHC machines. We also created a basic
+single-threaded doubly-linked list, a coarse-grained multi-threaded
+doubly-linked list, and a hash map that can be configured with different linked
+lists to be used as buckets. We also used GoogleTest to create unit tests for
+the lists and the hash map. Figure~\ref{fig:dllist} shows the interface for our
+lists.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\bf Week & \bf Assigned To  & \bf Deliverable   \\
+\midrule
+4/16     & O,P   & Doubly-linked list with fine-grain locks \\
+         & P     & Hash map with fine-grain locks \\
+         & O     & Benchmarking harness for linked-lists \\
+         & O     & Regression unit tests for hash map \\
+4/23     & P     & Benchmarking harness for hash maps \\
+         & P     & Benchmarks for linked lists with coarse- and fine-grain locks \\
+         & O     & Benchmarks for hash maps with coarse- and fine-grain locks \\
+         & O,P   & {\bf Check point 2} \\
+         & O,P   & Lock-free doubly-linked list \\
+         & O     & Benchmarks for Java ConcurrentLinkedDeque \\
+4/30     & P     & Benchmarks for Java ConcurrentHashMap \\
+         & O,P   & Lock-free doubly-linked list \\
+         & O,P   & Lock-free hash map \\
+         & P     & Benchmark for lock-free linked list \\
+         & O     & Benchmark for lock-free hash map \\
+         & O,P   & Final report \\
+         & *     & *Lock-free ordered doubly-linked list \\
+         & *     & *Concurrent data structures with spinning locks \\
+\bottomrule
+\end{tabular}
+\caption{
+Weekly schedule. Check points include the items preceding them. The * on the
+last two items indicate {\it nice-to-haves}, but we are not commiting to them.
+The {\it Assigned To} column indicates with an O for Omar or a P for Patricio
+who will work on a given task.
+}
+\label{table:sche}
+\end{center}
+\end{table}
+
+\section*{Goals}
+We are still planning to deliver the following:
+\begin{itemize}
+\item
+Implement a concurrent doubly linked list using different
+synchronization methods: course-grain locks, fine-grain locks and lock-free
+techniques.
+\item Compare the performance of each implementation of the doubly
+linked list against each other and against the serial version with respect to
+the number of threads.
+\item Use the doubly linked list as a dequeue for each implementation and compare
+their performance against the Java ConcurrentLinkedDeque data structure.
+\item Implement a concurrent HashMap using different synchronization methods:
+course-grain locks, fine-grain locks and lock-free techniques.
+\item Compare the performance of each implementation of the HashMap against
+each other and against the serial version with respect to the number of threads.
+\item Compare the performance of each implementation of the HashMap against
+the Java ConcurrentHashMap data structure.
+\end{itemize}
+
+We are still including a couple {\it nice-to-haves} in our schedule, per
+Table~\ref{table:sche}, but it seems unlikely that we'll get to them.
+
+\section*{Schedule}
+Table~\ref{table:sche} contains an updated version of the schedule. The new
+schedule is the same as the original, minus completed tasks, all of which we
+expected to completed by this checkpoint. The table contains a column to
+indicate how tasks are assigned. We are currently right on track with our
+original schedule.
+
+\end{document}
