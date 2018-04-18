@@ -24,6 +24,7 @@ template <typename T> struct DlList {
   DlNode<T> *Insert(T value);
   bool Remove(T value);
   bool Contains(T value) const noexcept;
+  T *Find(T value) const noexcept;
   unsigned Size() const noexcept;
   bool Empty() const noexcept;
 };
@@ -105,6 +106,17 @@ template <typename T> bool DlList<T>::Contains(T value) const noexcept {
     node = node->next;
   }
   return false;
+}
+
+template <typename T> T *DlList<T>::Find(T value) const noexcept {
+  auto node = head;
+  while (node) {
+    if (value == node->value){
+      return &node->value;
+    }
+    node = node->next;
+  }
+  return NULL;
 }
 
 /**
