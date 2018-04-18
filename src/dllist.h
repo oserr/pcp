@@ -111,7 +111,7 @@ template <typename T> bool DlList<T>::Contains(T value) const noexcept {
 template <typename T> T *DlList<T>::Find(T value) const noexcept {
   auto node = head;
   while (node) {
-    if (value == node->value){
+    if (value == node->value) {
       return &node->value;
     }
     node = node->next;
