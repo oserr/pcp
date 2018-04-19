@@ -89,17 +89,16 @@ style=ieee
 \maketitle
 
 \section*{Summary}
-We are right on track with our original schedule, but are making some updates to
-our schedule and our plans in response to the feedback we received on our
-proposal, which includes:
+We are right on track with our original schedule, but we are making some updates to 
+our plans in response to the feedback we received on our proposal, which includes:
 
 \begin{itemize}
 \item
 Reframing our approach to the problem to be more purposeful.
 \item
-Substitute the Java concurrent package with a C/C++ multi-threading library.
+Substitute the Java concurrent package with a C/C++ multi-threading library when making comparisons with external libraries.
 \item
-Change our {\it nice-to-have} for a problem or algorithm that can benefit from
+Change our {\it nice-to-have} to include parallelization of a problem or algorithm using
 our concurrent data structures.
 \end{itemize}
 
@@ -112,10 +111,7 @@ tasks that are not affected by them.
 %\begin{tabular}{c}
 \begin{lstlisting}
 /**
- * A simple doubly linked list with very basic operations:
- * - inserting at the front of the list
- * - removing anywhere from the list
- * - and finding elements
+ * A simple doubly linked list with basic operations:
  */
 template <typename T> struct DlList {
   DlNode<T> *head{nullptr};
@@ -125,6 +121,7 @@ template <typename T> struct DlList {
   DlNode<T> *Insert(T value);
   bool Remove(T value);
   bool Contains(T value) const noexcept;
+  T *Find(T value) const noexcept;
   unsigned Size() const noexcept;
   bool Empty() const noexcept;
 };
@@ -136,50 +133,50 @@ This is the single threaded list, but other lists share the same interface.}
 \end{center}
 \end{figure}
 
-\section*{Work Done}
-We setup our git repo and created a couple scripts to setup our work
-environment: one to setup our git repo to use git-clang-format, and another one
-to install a newer version of cmake on the GHC machines. We also created a basic
-single-threaded doubly-linked list, a coarse-grained multi-threaded
-doubly-linked list, and a hash map that can be configured with different linked
-lists to be used as buckets. We also used GoogleTest to create unit tests for
-the lists and the hash map. Figure~\ref{fig:dllist} shows the interface for our
-lists.
-
-\begin{table}[t]
+\begin{figure}
 \begin{center}
-\begin{tabular}{lll}
-\toprule
-\bf Week & \bf Assigned To  & \bf Deliverable   \\
-\midrule
-4/16     & O,P   & Doubly-linked list with fine-grain locks \\
-         & P     & Hash map with fine-grain locks \\
-         & O     & Benchmarking harness for linked-lists \\
-         & O,P   & Find third party C/C++ multi-threading library \\
-         & O     & Regression unit tests for hash map \\
-4/23     & P     & Benchmarking harness for hash maps \\
-         & P     & Benchmarks for linked lists with coarse- and fine-grain locks \\
-         & O     & Benchmarks for hash maps with coarse- and fine-grain locks \\
-         & O,P   & {\bf Check point 2} \\
-         & O,P   & Lock-free doubly-linked list \\
-4/30     & P,O   & Benchmarks for third party C/C++ multi-threading library \\
-         & O,P   & Lock-free doubly-linked list \\
-         & O,P   & Lock-free hash map \\
-         & P     & Benchmark for lock-free linked list \\
-         & O     & Benchmark for lock-free hash map \\
-         & O,P   & Final report \\
-         & *     & *Parallelize algorithm/problem with our data structes \\
-\bottomrule
-\end{tabular}
+%\begin{tabular}{c}
+\begin{lstlisting}
+/**
+ * A simple HashMap with basic operations:
+*/
+template <typename K, typename V> class HashMap {
+  class Element {
+    K key;
+    V value;
+  };
+  DlList<Element> map[MAX_BUCKETS];
+  unsigned size{0};
+
+  void Insert(K key, V value);
+  void Remove(K key);
+  bool Has(K key);
+  unsigned Size() const noexcept;
+  // using subscripts to read or write to the map
+  V &operator[](K key);  
+};
+\end{lstlisting}
 \caption{
-Weekly schedule. Check points include the items preceding them. The * on the
-last means it is a {\it nice-to-have}, but we are not commiting to it.
-The {\it Assigned To} column indicates with an O for Omar or a P for Patricio
-who will work on a given task.
-}
-\label{table:sche}
+This is the HashMap class. It can be easily changed to use any particular list for the buckets}
+\label{fig:hashmap}
+%\end{tabular}
 \end{center}
-\end{table}
+\end{figure}
+
+\section*{Work Done}
+We created our git repo along with a couple of scripts to setup our working
+environment: one script to setup git to use git-clang-format so that uniform
+formatting is maintained among teammates, and another one to install and setup the cmake environment used for
+the building process. 
+
+We implemented a basic single-threaded doubly-linked list and a coarse-grained multi-threaded
+doubly-linked list. We also created a HashMap class that can be changed to use any 
+specific doubly-linked list for implementing the buckets. Since each bucket can be managed 
+independently from the others, once we have a doubly-linked list implemented with some specific 
+synchronization mechanism, implementing the equivalent for the HashMap should be straighforward.  Figure~\ref{fig:dllist} and Figure~\ref{fig:hashmap} show the interface for our list and HashMap respectively.
+
+Finally we used GoogleTest to create unit tests for the lists and the HashMap. As of now we just created
+tests to check for correctness, not benchmarks to measure speedup.
 
 \section*{Goals}
 We are still planning to deliver the following:
@@ -191,14 +188,12 @@ techniques.
 \item Compare the performance of each implementation of the doubly
 linked list against each other and against the serial version with respect to
 the number of threads.
-\item Use the doubly linked list as a dequeue for each implementation and compare
-their performance against the Java ConcurrentLinkedDeque data structure.
 \item Implement a concurrent HashMap using different synchronization methods:
 course-grain locks, fine-grain locks and lock-free techniques.
 \item Compare the performance of each implementation of the HashMap against
 each other and against the serial version with respect to the number of threads.
-\item Compare the performance of each implementation of the HashMap against
-the Java ConcurrentHashMap data structure.
+\item Use some external C/C++ library that implements concurrent lists and
+HashMaps to compare it against our versions.
 \end{itemize}
 
 Instead of trying another data structure as a {\it nice-to-have}, we are now
@@ -206,6 +201,36 @@ looking forward to the opportunity of applying our concurrent data structures to
 an algorithm or problem. We don't have concrete ideas right now, but have
 floated the idea of doing something like a search or graph algorithm, like
 $A^*$, for example.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\bf Week & \bf Assigned To  & \bf Deliverable   \\
+\midrule
+4/16     & O     & Doubly-linked list with fine-grain locks \\
+         & O,P   & Find third party C/C++ multi-threading library \\
+         & P     & Lock-free doubly-linked list \\
+4/23     & O     & Hash map with fine-grain locks \\
+         & P     & Lock-free HashMap \\ 
+         & O,P   & {\bf Check point 2} \\   
+4/30     & O     & Benchmarking harness for linked-lists \\
+         & P     & Benchmarking harness for HashMap \\
+         & P,O   & Benchmarks for third party C/C++ multi-threading library \\
+         & P,O   & Compare results with hypothesis. Identify improvement spots \\
+         & O,P   & Final report \\
+         & *     & *Parallelize algorithm/problem with our data structures \\
+\bottomrule
+\end{tabular}
+\caption{
+Weekly schedule. Check points include the items preceding them. The * on the
+last means it is a {\it nice-to-have}, but we are not commiting to it.
+The {\it Assigned To} column indicates with an O for Omar or a P for Patricio
+who will work on a given task.
+}
+\label{table:sche}
+\end{center}
+\end{table}
 
 \section*{Schedule}
 Table~\ref{table:sche} contains an updated version of the schedule. The new
@@ -225,5 +250,16 @@ to an algorithm or a problem.
 
 The table contains a column to indicate how tasks are assigned. We are currently
 right on track with our original schedule.
+
+\section*{Pending Issues}
+This is a summary of the pending issues we have to resolve:
+\begin{itemize}
+\item
+Define the concrete techniques we are going to use to implement fine-grain locking and lock-free mechanisms.
+\item
+Find a C/C++ library to use for benchmarking.
+\item
+Think of a problem or algorithm that could be parallelized using our data structures.
+\end{itemize}
 
 \end{document}
