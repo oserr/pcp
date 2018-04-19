@@ -9,4 +9,8 @@ add_executable(test_all
     test_dllist.cpp
     # Next unit test file goes here
 )
+add_executable(test_hashmap
+    test_hashmap.cpp
+)
 target_link_libraries(test_all libgtest)
+target_link_libraries(test_hashmap libgtest)
