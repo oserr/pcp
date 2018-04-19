@@ -89,8 +89,23 @@ style=ieee
 \maketitle
 
 \section*{Summary}
-We are right on track with our original schedule, and have no concerns with
-respect to our goals.
+We are right on track with our original schedule, but are making some updates to
+our schedule and our plans in response to the feedback we received on our
+proposal, which includes:
+
+\begin{itemize}
+\item
+Reframing our approach to the problem to be more purposeful.
+\item
+Substitute the Java concurrent package with a C/C++ multi-threading library.
+\item
+Change our {\it nice-to-have} for a problem or algorithm that can benefit from
+our concurrent data structures.
+\end{itemize}
+
+All of these are in a fluid state because we've just received the feedback, but
+these pivots shouldn't affect us negatively, because we are still working on
+tasks that are not affected by them.
 
 \begin{figure}
 \begin{center}
@@ -140,26 +155,25 @@ lists.
 4/16     & O,P   & Doubly-linked list with fine-grain locks \\
          & P     & Hash map with fine-grain locks \\
          & O     & Benchmarking harness for linked-lists \\
+         & O,P   & Find third party C/C++ multi-threading library \\
          & O     & Regression unit tests for hash map \\
 4/23     & P     & Benchmarking harness for hash maps \\
          & P     & Benchmarks for linked lists with coarse- and fine-grain locks \\
          & O     & Benchmarks for hash maps with coarse- and fine-grain locks \\
          & O,P   & {\bf Check point 2} \\
          & O,P   & Lock-free doubly-linked list \\
-         & O     & Benchmarks for Java ConcurrentLinkedDeque \\
-4/30     & P     & Benchmarks for Java ConcurrentHashMap \\
+4/30     & P,O   & Benchmarks for third party C/C++ multi-threading library \\
          & O,P   & Lock-free doubly-linked list \\
          & O,P   & Lock-free hash map \\
          & P     & Benchmark for lock-free linked list \\
          & O     & Benchmark for lock-free hash map \\
          & O,P   & Final report \\
-         & *     & *Lock-free ordered doubly-linked list \\
-         & *     & *Concurrent data structures with spinning locks \\
+         & *     & *Parallelize algorithm/problem with our data structes \\
 \bottomrule
 \end{tabular}
 \caption{
 Weekly schedule. Check points include the items preceding them. The * on the
-last two items indicate {\it nice-to-haves}, but we are not commiting to them.
+last means it is a {\it nice-to-have}, but we are not commiting to it.
 The {\it Assigned To} column indicates with an O for Omar or a P for Patricio
 who will work on a given task.
 }
@@ -187,14 +201,29 @@ each other and against the serial version with respect to the number of threads.
 the Java ConcurrentHashMap data structure.
 \end{itemize}
 
-We are still including a couple {\it nice-to-haves} in our schedule, per
-Table~\ref{table:sche}, but it seems unlikely that we'll get to them.
+Instead of trying another data structure as a {\it nice-to-have}, we are now
+looking forward to the opportunity of applying our concurrent data structures to
+an algorithm or problem. We don't have concrete ideas right now, but have
+floated the idea of doing something like a search or graph algorithm, like
+$A^*$, for example.
 
 \section*{Schedule}
 Table~\ref{table:sche} contains an updated version of the schedule. The new
-schedule is the same as the original, minus completed tasks, all of which we
-expected to completed by this checkpoint. The table contains a column to
-indicate how tasks are assigned. We are currently right on track with our
-original schedule.
+schedule is the same as the original, minus completed tasks, and three
+modifications:
+
+\begin{itemize}
+\item
+Remove Java-related tasks, since we won't be using Java's concurrent package.
+\item
+Add a task for this week to find a C/C++ multi-threading library to use for
+benchmarking.
+\item
+Change {\it nice-to-have} to one where we apply our concurrent data structures
+to an algorithm or a problem.
+\end{itemize}
+
+The table contains a column to indicate how tasks are assigned. We are currently
+right on track with our original schedule.
 
 \end{document}
