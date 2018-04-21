@@ -113,16 +113,16 @@ TEST(DlNode, OutputOpWordsCorrectly) {
   std::ostringstream oss, oss1, oss2;
 
   oss << dlList;
-  EXPECT_EQ("DlList()", oss.str());
+  EXPECT_EQ("()", oss.str());
 
   dlList.Insert(1);
   oss1 << dlList;
-  EXPECT_EQ("DlList(1)", oss1.str());
+  EXPECT_EQ("(1)", oss1.str());
 
   dlList.Insert(2);
   dlList.Insert(6);
   oss2 << dlList;
-  EXPECT_EQ("DlList(6,2,1)", oss2.str());
+  EXPECT_EQ("(6,2,1)", oss2.str());
 }
 
 TEST(DlNode, EqualityOpWordsCorrectly) {
