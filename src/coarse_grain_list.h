@@ -29,7 +29,6 @@ template <typename T> struct CoarseGrainList : DlList<T> {
   bool Empty() const noexcept override;
 };
 
-
 /**
  * Inserts an element into the list at the front of the list.
  * @param value The value to insert into the list.
@@ -52,7 +51,8 @@ template <typename T> bool CoarseGrainList<T>::Remove(T value) noexcept {
  * Removes an element from the list if the element is found.
  * @param value The value to remove from the list.
  */
-template <typename T> bool CoarseGrainList<T>::Contains(T value) const noexcept {
+template <typename T>
+bool CoarseGrainList<T>::Contains(T value) const noexcept {
   LockGuard lck(mtx);
   return DlList<T>::Contains(value);
 }
@@ -65,8 +65,7 @@ template <typename T> T *CoarseGrainList<T>::Find(T value) const noexcept {
 /**
  * @return The number of elements in the list.
  */
-template <typename T> unsigned CoarseGrainList<T>::Size() const noexcept
-{
+template <typename T> unsigned CoarseGrainList<T>::Size() const noexcept {
   LockGuard lck(mtx);
   return DlList<T>::Size();
 }
@@ -90,7 +89,7 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, const CoarseGrainList<T> &lst) {
   using LockGuard = typename CoarseGrainList<T>::LockGuard;
   LockGuard lck(lst.mtx);
-  return os << *dynamic_cast<const DlList<T>*>(&lst);
+  return os << *dynamic_cast<const DlList<T> *>(&lst);
 }
 
 /**
@@ -102,14 +101,14 @@ std::ostream &operator<<(std::ostream &os, const CoarseGrainList<T> &lst) {
  */
 template <typename T>
 bool operator==(const CoarseGrainList<T> &lhs, const CoarseGrainList<T> &rhs) {
-    if (&lhs.mtx == &rhs.mtx)
-        return true;
-    using LockGuard = typename CoarseGrainList<T>::LockGuard;
-    std::lock(lhs.mtx, rhs.mtx);
-    LockGuard lck1(lhs.mtx, std::adopt_lock);
-    LockGuard lck2(rhs.mtx, std::adopt_lock);
-    using Base = const DlList<T>*;
-    return *dynamic_cast<Base>(&lhs) == *dynamic_cast<Base>(&rhs);
+  if (&lhs.mtx == &rhs.mtx)
+    return true;
+  using LockGuard = typename CoarseGrainList<T>::LockGuard;
+  std::lock(lhs.mtx, rhs.mtx);
+  LockGuard lck1(lhs.mtx, std::adopt_lock);
+  LockGuard lck2(rhs.mtx, std::adopt_lock);
+  using Base = const DlList<T> *;
+  return *dynamic_cast<Base>(&lhs) == *dynamic_cast<Base>(&rhs);
 }
 
 /**
@@ -122,4 +121,3 @@ template <typename T>
 bool operator!=(const CoarseGrainList<T> &lhs, const CoarseGrainList<T> &rhs) {
   return not(lhs == rhs);
 }
-
