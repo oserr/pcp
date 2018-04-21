@@ -2,15 +2,14 @@
 
 #include "gtest/gtest.h"
 
-#include "dllist.h"
 #include "coarse_grain_list.h"
+#include "dllist.h"
 
 namespace {
 
-template <typename TIntList>
-struct IntListTest : public ::testing::Test {
-    TIntList intList{};
-    TIntList otherIntList{};
+template <typename TIntList> struct IntListTest : public ::testing::Test {
+  TIntList intList{};
+  TIntList otherIntList{};
 };
 
 // Google test needs this declaration before the type-parameterized tests are
@@ -136,20 +135,16 @@ TYPED_TEST_P(IntListTest, EqualityOpWorksCorrectly) {
   EXPECT_NE(this->intList, this->otherIntList);
 }
 
-REGISTER_TYPED_TEST_CASE_P(IntListTest,
-    DefaultCtorInitalizesListCorrectly,
-    InsertWorksCorrectly,
-    RemoveCanRemoveWhenListOnlyHasOne,
-    RemoveCanRemoveFirstOfMany,
-    RemoveCanRemoveMiddleOfMany,
-    RemoveCanRemoveLastOfMany,
-    ContainsWorksCorrectly,
-    SizeWorksCorrectly,
-    EmptyWorksCorrectly,
-    OutputOpWorksCorrectly,
-    EqualityOpWorksCorrectly
-);
+REGISTER_TYPED_TEST_CASE_P(IntListTest, DefaultCtorInitalizesListCorrectly,
+                           InsertWorksCorrectly,
+                           RemoveCanRemoveWhenListOnlyHasOne,
+                           RemoveCanRemoveFirstOfMany,
+                           RemoveCanRemoveMiddleOfMany,
+                           RemoveCanRemoveLastOfMany, ContainsWorksCorrectly,
+                           SizeWorksCorrectly, EmptyWorksCorrectly,
+                           OutputOpWorksCorrectly, EqualityOpWorksCorrectly);
 INSTANTIATE_TYPED_TEST_CASE_P(DlList, IntListTest, DlList<int>);
-INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntListTest, CoarseGrainList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntListTest,
+                              CoarseGrainList<int>);
 
 } // namespace
