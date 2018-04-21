@@ -136,11 +136,11 @@ template <typename T> bool DlList<T>::Empty() const noexcept {
  * @param os The output stream.
  * @param dlList The list to be inserted into the output stream.
  * @return A reference to the output stream.
- * @details The format is: DlList(value1,value2,..,valueN).
+ * @details The format is: (value1,value2,..,valueN).
  */
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const DlList<T> &dlList) {
-  os << "DlList(";
+  os << "(";
   auto node = dlList.head;
   if (node) {
     os << node->value;
