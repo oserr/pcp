@@ -20,13 +20,13 @@ template <typename T> struct DlList {
   DlNode<T> *head{nullptr};
   unsigned size{0};
 
-  ~DlList();
-  DlNode<T> *Insert(T value);
-  bool Remove(T value);
-  bool Contains(T value) const noexcept;
-  T *Find(T value) const noexcept;
-  unsigned Size() const noexcept;
-  bool Empty() const noexcept;
+  virtual ~DlList();
+  virtual DlNode<T> *Insert(T value);
+  virtual bool Remove(T value) noexcept;
+  virtual bool Contains(T value) const noexcept;
+  virtual T *Find(T value) const noexcept;
+  virtual unsigned Size() const noexcept;
+  virtual bool Empty() const noexcept;
 };
 
 /**
