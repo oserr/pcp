@@ -64,7 +64,7 @@ template <typename T> DlNode<T> *DlList<T>::Insert(T value) {
  * Removes an element from the list if the element is found.
  * @param value The value to remove from the list.
  */
-template <typename T> bool DlList<T>::Remove(T value) {
+template <typename T> bool DlList<T>::Remove(T value) noexcept {
   // The list is empty
   if (not head)
     return false;
@@ -163,7 +163,7 @@ std::ostream &operator<<(std::ostream &os, const DlList<T> &dlList) {
  */
 template <typename T>
 bool operator==(const DlList<T> &lList, const DlList<T> &rList) {
-  if (lList.Size() != rList.Size())
+  if (lList.size != rList.size)
     return false;
   auto node1 = lList.head;
   auto node2 = rList.head;
