@@ -239,7 +239,7 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
       auto ptr = &curr->value;
       curr->mtx.unlock();
       prev->mtx.unlock();
-      return true;
+      return ptr;
     }
     auto prevmtx = &prev->mtx;
     prev = curr;
