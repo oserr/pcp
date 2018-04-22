@@ -27,8 +27,8 @@ template <typename T> struct FineGrainNode {
    * @param prev A pointer to the previous node.
    * @param next A pointer to the next node.
    */
-  FineGrainNode(T value, DlNode *prev, DlNode *next)
-      : value(value), prev(prev), next(next), {}
+  FineGrainNode(T value, FineGrainNode *prev, FineGrainNode *next)
+      : value(value), prev(prev), next(next) {}
 
   /* Default behavior for assignment/moves/dtor */
   FineGrainNode() = default;
@@ -50,7 +50,7 @@ template <typename T> struct FineGrainList {
   using LockGuard = std::lock_guard<std::mutex>;
   FineGrainNode<T> *head{nullptr};
   std::atomic_uint size{0};
-  std::mutex mtx{};
+  mutable std::mutex mtx{};
 
   ~FineGrainList();
   FineGrainNode<T> *Insert(T value);
@@ -127,7 +127,7 @@ template <typename T> bool FineGrainList<T>::Remove(T value) noexcept {
     node->mtx.unlock();
     delete node;
     --size;
-    mtx.unlokc();
+    mtx.unlock();
     return true;
   }
 
@@ -162,7 +162,7 @@ template <typename T> bool FineGrainList<T>::Remove(T value) noexcept {
     prev->mtx.unlock();
     delete curr;
     --size;
-    return true
+    return true;
   }
 }
 
@@ -285,15 +285,15 @@ std::ostream &operator<<(std::ostream &os, const FineGrainList<T> &lst) {
 
   if (not lst.head) {
     lst.mtx.unlock();
-    return false;
+    return os << ')';
   }
 
   auto prev = lst.head;
   prev->mtx.unlock();
 
-  os << head->value;
+  os << prev->value;
 
-  auto curr = head->next;
+  auto curr = prev->next;
   lst.mtx.unlock();
   if (curr)
     curr->mtx.lock();
@@ -360,7 +360,7 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
     curr2->mtx.lock();
 
   while (curr1 and curr2) {
-    if (curr1->value == curr2->value) {
+    if (curr1->value != curr2->value) {
       curr2->mtx.unlock();
       curr1->mtx.unlock();
       prev2->mtx.unlock();
@@ -384,9 +384,6 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
       curr2->mtx.lock();
   }
 
-  // If one still has items then they are different.
-  auto result = curr1 == nullptr and curr2 == nullptr;
-
   if (curr2)
     curr2->mtx.unlock();
   if (curr1)
@@ -394,7 +391,8 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
   prev2->mtx.unlock();
   prev1->mtx.unlock();
 
-  return result;
+  // If one still has items then they are different.
+  return curr1 == nullptr and curr2 == nullptr;
 }
 
 /**

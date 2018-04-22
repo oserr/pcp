@@ -4,6 +4,7 @@
 
 #include "coarse_grain_list.h"
 #include "dllist.h"
+#include "fine_grain_list.h"
 
 namespace {
 
@@ -146,5 +147,6 @@ REGISTER_TYPED_TEST_CASE_P(IntListTest, DefaultCtorInitalizesListCorrectly,
 INSTANTIATE_TYPED_TEST_CASE_P(DlList, IntListTest, DlList<int>);
 INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntListTest,
                               CoarseGrainList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, IntListTest, FineGrainList<int>);
 
 } // namespace
