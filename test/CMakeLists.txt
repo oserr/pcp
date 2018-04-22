@@ -5,6 +5,7 @@ include_directories(
 )
 # One executable for all unit tests.
 add_executable(test_all
+    test_async_list.cpp
     test_dlnode.cpp
     test_hashmap.cpp
     test_list.cpp
