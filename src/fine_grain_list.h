@@ -178,7 +178,7 @@ template <typename T> bool FineGrainList<T>::Contains(T value) const noexcept {
     return false;
   }
 
-  head->mtx.unlock();
+  head->mtx.lock();
   if (value == head->value) {
     head->mtx.unlock();
     mtx.unlock();
@@ -220,7 +220,7 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
     return nullptr;
   }
 
-  head->mtx.unlock();
+  head->mtx.lock();
   if (value == head->value) {
     auto ptr = &head->value;
     head->mtx.unlock();
