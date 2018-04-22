@@ -118,13 +118,12 @@ template <typename T> bool FineGrainList<T>::Remove(T value) noexcept {
     head = nullptr;
     mtx.unlock();
     return true;
-  }
-  else if (value == head->value) {
+  } else if (value == head->value) {
     // The head matches but list has more than one item
     auto node = head;
     head = head->next;
     if (head)
-        head->prev = nullptr;
+      head->prev = nullptr;
     node->mtx.unlock();
     delete node;
     --size;
@@ -141,26 +140,24 @@ template <typename T> bool FineGrainList<T>::Remove(T value) noexcept {
 
   while (curr) {
     if (curr->value == value)
-        break;
+      break;
     auto prevmtx = &prev->mtx;
     prev = curr;
     curr = curr->next;
     prevmtx->unlock();
     if (curr)
-        curr->mtx.lock();
+      curr->mtx.lock();
   }
 
   if (not curr) {
     // We did not find matching value
     prev->mtx.unlock();
     return false;
-  }
-  else
-  {
+  } else {
     // We found matching value
     prev->next = curr->next;
     if (curr->next)
-        curr->next->prev = prev;
+      curr->next->prev = prev;
     curr->mtx.unlock();
     prev->mtx.unlock();
     delete curr;
@@ -205,7 +202,7 @@ template <typename T> bool FineGrainList<T>::Contains(T value) const noexcept {
     curr = curr->next;
     prevmtx->unlock();
     if (curr)
-        curr->mtx.lock();
+      curr->mtx.lock();
   }
 
   if (curr)
@@ -249,7 +246,7 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
     curr = curr->next;
     prevmtx->unlock();
     if (curr)
-        curr->mtx.lock();
+      curr->mtx.lock();
   }
 
   if (curr)
@@ -262,7 +259,9 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
 /**
  * @return The number of elements in the list.
  */
-template <typename T> unsigned FineGrainList<T>::Size() const noexcept { return size.load(); }
+template <typename T> unsigned FineGrainList<T>::Size() const noexcept {
+  return size.load();
+}
 
 /**
  * @return True if the list is empty, false otherwise.
@@ -306,7 +305,7 @@ std::ostream &operator<<(std::ostream &os, const FineGrainList<T> &lst) {
     curr = curr->next;
     prevmtx->unlock();
     if (curr)
-        curr->mtx.lock();
+      curr->mtx.lock();
   }
 
   if (curr)
@@ -355,16 +354,18 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
   lhs.mtx.unlock();
   rhs.mtx.unlock();
 
-  if (curr1) curr1->mtx.lock();
-  if (curr2) curr2->mtx.lock();
+  if (curr1)
+    curr1->mtx.lock();
+  if (curr2)
+    curr2->mtx.lock();
 
   while (curr1 and curr2) {
     if (curr1->value == curr2->value) {
-        curr2->mtx.unlock();
-        curr1->mtx.unlock();
-        prev2->mtx.unlock();
-        prev1->mtx.unlock();
-        return false;
+      curr2->mtx.unlock();
+      curr1->mtx.unlock();
+      prev2->mtx.unlock();
+      prev1->mtx.unlock();
+      return false;
     }
 
     auto prev1mtx = &prev1->mtx;
@@ -377,15 +378,19 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
     prev2mtx->unlock();
     prev1mtx->unlock();
 
-    if (curr1) curr1->mtx.lock();
-    if (curr2) curr2->mtx.lock();
+    if (curr1)
+      curr1->mtx.lock();
+    if (curr2)
+      curr2->mtx.lock();
   }
 
   // If one still has items then they are different.
   auto result = curr1 == nullptr and curr2 == nullptr;
 
-  if (curr2) curr2->mtx.unlock();
-  if (curr1) curr1->mtx.unlock();
+  if (curr2)
+    curr2->mtx.unlock();
+  if (curr1)
+    curr1->mtx.unlock();
   prev2->mtx.unlock();
   prev1->mtx.unlock();
 
@@ -399,8 +404,6 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
  * @return True if the lists are not the same, false otherwise.
  */
 template <typename T>
-bool operator!=(
-    const FineGrainList<T> &lhs,
-    const FineGrainList<T> &rhs) {
+bool operator!=(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
   return not(lhs == rhs);
 }
