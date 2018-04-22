@@ -62,8 +62,8 @@ template <typename T> struct FineGrainList {
 };
 
 /**
- * Destroys the list. Since the list is being destroyed, we just lock the list's
- * to prevent other threads from getting access to any part of the list.
+ * Destroys the list. Since the list is being destroyed, we just lock the whole
+ * list to prevent other threads from getting access to any part of the list.
  */
 template <typename T> FineGrainList<T>::~FineGrainList() {
   LockGuard lck(mtx);
