@@ -135,18 +135,15 @@ template <typename T> bool FineGrainList<T>::Remove(T value) noexcept {
   auto prev = head;
   auto curr = head->next;
   mtx.unlock();
-  if (curr)
-    curr->mtx.lock();
 
   while (curr) {
+    curr->mtx.lock();
     if (curr->value == value)
       break;
     auto prevmtx = &prev->mtx;
     prev = curr;
     curr = curr->next;
     prevmtx->unlock();
-    if (curr)
-      curr->mtx.lock();
   }
 
   if (not curr) {
@@ -188,10 +185,9 @@ template <typename T> bool FineGrainList<T>::Contains(T value) const noexcept {
   auto prev = head;
   auto curr = head->next;
   mtx.unlock();
-  if (curr)
-    curr->mtx.lock();
 
   while (curr) {
+    curr->mtx.lock();
     if (value == curr->value) {
       curr->mtx.unlock();
       prev->mtx.unlock();
@@ -201,12 +197,8 @@ template <typename T> bool FineGrainList<T>::Contains(T value) const noexcept {
     prev = curr;
     curr = curr->next;
     prevmtx->unlock();
-    if (curr)
-      curr->mtx.lock();
   }
 
-  if (curr)
-    curr->mtx.unlock();
   prev->mtx.unlock();
 
   return false;
@@ -231,10 +223,9 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
   auto prev = head;
   auto curr = head->next;
   mtx.unlock();
-  if (curr)
-    curr->mtx.lock();
 
   while (curr) {
+    curr->mtx.lock();
     if (value == curr->value) {
       auto ptr = &curr->value;
       curr->mtx.unlock();
@@ -245,12 +236,8 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
     prev = curr;
     curr = curr->next;
     prevmtx->unlock();
-    if (curr)
-      curr->mtx.lock();
   }
 
-  if (curr)
-    curr->mtx.unlock();
   prev->mtx.unlock();
 
   return nullptr;
@@ -295,21 +282,16 @@ std::ostream &operator<<(std::ostream &os, const FineGrainList<T> &lst) {
 
   auto curr = prev->next;
   lst.mtx.unlock();
-  if (curr)
-    curr->mtx.lock();
 
   while (curr) {
+    curr->mtx.lock();
     os << ',' << curr->value;
     auto prevmtx = &prev->mtx;
     prev = curr;
     curr = curr->next;
     prevmtx->unlock();
-    if (curr)
-      curr->mtx.lock();
   }
 
-  if (curr)
-    curr->mtx.unlock();
   prev->mtx.unlock();
 
   os << ')';
@@ -354,12 +336,10 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
   lhs.mtx.unlock();
   rhs.mtx.unlock();
 
-  if (curr1)
+  while (curr1 and curr2) {
     curr1->mtx.lock();
-  if (curr2)
     curr2->mtx.lock();
 
-  while (curr1 and curr2) {
     if (curr1->value != curr2->value) {
       curr2->mtx.unlock();
       curr1->mtx.unlock();
@@ -377,17 +357,8 @@ bool operator==(const FineGrainList<T> &lhs, const FineGrainList<T> &rhs) {
 
     prev2mtx->unlock();
     prev1mtx->unlock();
-
-    if (curr1)
-      curr1->mtx.lock();
-    if (curr2)
-      curr2->mtx.lock();
   }
 
-  if (curr2)
-    curr2->mtx.unlock();
-  if (curr1)
-    curr1->mtx.unlock();
   prev2->mtx.unlock();
   prev1->mtx.unlock();
 
