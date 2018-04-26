@@ -54,6 +54,7 @@ template <typename T> struct FineGrainList {
 
   ~FineGrainList();
   FineGrainNode<T> *Insert(T value);
+  bool InsertUnique(T value);
   bool Remove(T value) noexcept;
   bool Contains(T value) const noexcept;
   T *Find(T value) const noexcept;
@@ -95,6 +96,55 @@ template <typename T> FineGrainNode<T> *FineGrainList<T>::Insert(T value) {
     ++size;
     return node;
   }
+}
+
+/**
+ * Inserts an item only if the list does not cotain the item.
+ * @param value The value to insert into the list.
+ */
+template <typename T> bool FineGrainList<T>::InsertUnique(T value) {
+  mtx.lock();
+
+  if (not head) {
+    try {
+      head = new FineGrainNode<T>(value);
+    } catch (std::exception) {
+      mtx.unlock();
+      return false;
+    }
+    ++size;
+    mtx.unlock();
+    return true;
+  }
+
+  auto prev = head;
+  prev->mtx.lock();
+  auto curr = prev->next;
+  mtx.unlock();
+
+  while (curr) {
+    curr->mtx.lock();
+    if (prev->value == value) {
+      curr->mtx.unlock();
+      prev->mtx.unlock();
+      return false;
+    }
+    auto prevmtx = &prev->mtx;
+    prev = curr;
+    curr = curr->next;
+    prevmtx->unlock();
+  }
+
+  try {
+    prev->next = new FineGrainNode<T>(std::move(value), prev, nullptr);
+  } catch (std::exception) {
+    prev->mtx.unlock();
+    return false;
+  }
+
+  prev->mtx.unlock();
+  ++size;
+  return true;
 }
 
 /**

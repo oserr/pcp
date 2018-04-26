@@ -34,9 +34,9 @@ TYPED_TEST_P(IntListTest, InsertWorksCorrectly) {
 }
 
 TYPED_TEST_P(IntListTest, InsertUniqueWorksCorrectly) {
-  EXPECT_NE(nullptr, this->intList.Insert(1))
-  EXPECT_FALSE(this->intList.InsertUnique(1))
-  EXPECT_TRUE(this->intList.InsertUnque(2));
+  EXPECT_NE(nullptr, this->intList.Insert(1));
+  EXPECT_FALSE(this->intList.InsertUnique(1));
+  EXPECT_TRUE(this->intList.InsertUnique(2));
   EXPECT_EQ(2, this->intList.head->next->value);
   EXPECT_EQ(this->intList.head, this->intList.head->next->prev);
   EXPECT_FALSE(this->intList.InsertUnique(2));
