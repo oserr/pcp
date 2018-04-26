@@ -7,19 +7,19 @@
 
 namespace {
 
+template <typename K, typename V> using DlListHashMap = HashMap<K, V, DlList>;
+
 TEST(HashMap, SizeWorksCorrectly) {
-  HashMap<std::string, std::string> hm;
-  // std::ostringstream out;
+  DlListHashMap<std::string, std::string> hm;
 
   hm.Insert("color", "blue");
   hm.Insert("hair", "brown");
 
   EXPECT_EQ(2u, hm.Size());
-  // EXPECT_TRUE(false) << hm;
 }
 
 TEST(HashMap, HasWorksCorrectly) {
-  HashMap<std::string, std::string> hm;
+  DlListHashMap<std::string, std::string> hm;
 
   hm.Insert("color", "blue");
   hm.Insert("hair", "brown");
@@ -29,7 +29,7 @@ TEST(HashMap, HasWorksCorrectly) {
 }
 
 TEST(HashMap, InsertGetWorksCorrectly) {
-  HashMap<std::string, std::string> hm;
+  DlListHashMap<std::string, std::string> hm;
 
   hm.Insert("color", "blue");
   hm.Insert("hair", "brown");
@@ -46,7 +46,7 @@ TEST(HashMap, InsertGetWorksCorrectly) {
 }
 
 TEST(HashMap, GetsNonExistingWorksCorrectly) {
-  HashMap<std::string, std::string> hm;
+  DlListHashMap<std::string, std::string> hm;
 
   hm.Insert("color", "blue");
   EXPECT_EQ(1u, hm.Size());
@@ -56,7 +56,7 @@ TEST(HashMap, GetsNonExistingWorksCorrectly) {
 }
 
 TEST(HashMap, WriteWithSubscriptWorksCorrectly) {
-  HashMap<std::string, std::string> hm;
+  DlListHashMap<std::string, std::string> hm;
 
   hm.Insert("color", "blue");
   hm["hair"] = "brown";
@@ -68,7 +68,7 @@ TEST(HashMap, WriteWithSubscriptWorksCorrectly) {
 }
 
 TEST(HashMap, RemoveWorksCorrectly) {
-  HashMap<std::string, std::string> hm;
+  DlListHashMap<std::string, std::string> hm;
 
   hm.Insert("color", "blue");
   hm.Insert("hair", "brown");
@@ -84,7 +84,7 @@ TEST(HashMap, RemoveWorksCorrectly) {
 }
 
 TEST(HashMap, HashMapStringInt) {
-  HashMap<std::string, int> hm;
+  DlListHashMap<std::string, int> hm;
 
   hm.Insert("height", 15);
   hm.Insert("diameter", 4);
