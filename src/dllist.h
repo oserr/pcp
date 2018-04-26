@@ -22,6 +22,7 @@ template <typename T> struct DlList {
 
   virtual ~DlList();
   virtual DlNode<T> *Insert(T value);
+  virtual bool InsertUnique(T value);
   virtual bool Remove(T value) noexcept;
   virtual bool Contains(T value) const noexcept;
   virtual T *Find(T value) const noexcept;
@@ -48,16 +49,40 @@ template <typename T> DlList<T>::~DlList() {
 template <typename T> DlNode<T> *DlList<T>::Insert(T value) {
   // The list is empty
   if (not head) {
-    head = new DlNode<T>(value);
+    head = new DlNode<T>(std::move(value));
     ++size;
     return head;
   } else {
-    auto node = new DlNode<T>(value, nullptr, head);
+    auto node = new DlNode<T>(std::move(value), nullptr, head);
     head->prev = node;
     head = node;
     ++size;
     return node;
   }
+}
+
+/**
+ * Inserts an item only if the list does not cotain the item.
+ * @param value The value to insert into the list.
+ */
+template <typename T> bool DlList<T>::InsertUnique(T value) {
+  if (not head) {
+    head = new DlNode<T>(std::move(value));
+    ++size;
+    return true;
+  }
+
+  auto node = head;
+  for (; node; node = node->next) {
+    if (node->value == value)
+      return false;
+    if (not node->next)
+      break;
+  }
+
+  node->next = new DlNode<T>(std::move(value), node, nullptr);
+  ++size;
+  return true;
 }
 
 /**
