@@ -42,6 +42,7 @@ template <typename T> DlNode<T> *CoarseGrainList<T>::Insert(T value) {
 /**
  * Inserts an element into the list only if the list does not contain the item.
  * @param value The value to insert into the list.
+ * @return True if the value was inserted, false otherwise.
  */
 template <typename T> bool CoarseGrainList<T>::InsertUnique(T value) {
   LockGuard lck(mtx);

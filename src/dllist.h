@@ -64,6 +64,7 @@ template <typename T> DlNode<T> *DlList<T>::Insert(T value) {
 /**
  * Inserts an item only if the list does not cotain the item.
  * @param value The value to insert into the list.
+ * @return True if the value was inserted, false otherwise.
  */
 template <typename T> bool DlList<T>::InsertUnique(T value) {
   if (not head) {
