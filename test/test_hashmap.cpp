@@ -1,102 +1,99 @@
 #include <sstream>
+#include <string>
 
 #include "gtest/gtest.h"
 
+#include "coarse_grain_list.h"
+#include "dllist.h"
+#include "fine_grain_list.h"
 #include "hashmap.h"
-#include <string>
 
 namespace {
 
-template <typename K, typename V> using DlListHashMap = HashMap<K, V, DlList>;
+template <typename TStringHashMap>
+struct StringHashMapTest : public ::testing::Test {
+  TStringHashMap hm{};
+};
 
-TEST(HashMap, SizeWorksCorrectly) {
-  DlListHashMap<std::string, std::string> hm;
+// Google test needs this declaration before the type-parameterized tests are
+// created
+TYPED_TEST_CASE_P(StringHashMapTest);
 
-  hm.Insert("color", "blue");
-  hm.Insert("hair", "brown");
+TYPED_TEST_P(StringHashMapTest, SizeWorksCorrectly) {
+  this->hm.Insert("color", "blue");
+  this->hm.Insert("hair", "brown");
 
-  EXPECT_EQ(2u, hm.Size());
+  EXPECT_EQ(2u, this->hm.Size());
 }
 
-TEST(HashMap, HasWorksCorrectly) {
-  DlListHashMap<std::string, std::string> hm;
+TYPED_TEST_P(StringHashMapTest, HasWorksCorrectly) {
+  this->hm.Insert("color", "blue");
+  this->hm.Insert("hair", "brown");
 
-  hm.Insert("color", "blue");
-  hm.Insert("hair", "brown");
-
-  EXPECT_EQ(hm.Has("color"), true);
-  EXPECT_EQ(hm.Has("size"), false);
+  EXPECT_TRUE(this->hm.Has("color"));
+  EXPECT_FALSE(this->hm.Has("size"));
 }
 
-TEST(HashMap, InsertGetWorksCorrectly) {
-  DlListHashMap<std::string, std::string> hm;
+TYPED_TEST_P(StringHashMapTest, InsertGetWorksCorrectly) {
+  this->hm.Insert("color", "blue");
+  this->hm.Insert("hair", "brown");
+  this->hm.Insert("size", "small");
 
-  hm.Insert("color", "blue");
-  hm.Insert("hair", "brown");
-  hm.Insert("size", "small");
+  EXPECT_EQ("blue", this->hm["color"]);
+  EXPECT_EQ("brown", this->hm["hair"]);
+  EXPECT_EQ("small", this->hm["size"]);
+  EXPECT_EQ(3u, this->hm.Size());
 
-  EXPECT_EQ(hm["color"], "blue");
-  EXPECT_EQ(hm["hair"], "brown");
-  EXPECT_EQ(hm["size"], "small");
-  EXPECT_EQ(3u, hm.Size());
-
-  std::string s = hm["nothere"];
-  EXPECT_EQ(hm["nothere"], s);
-  EXPECT_EQ(4u, hm.Size());
+  EXPECT_EQ("", this->hm["nothere"]);
+  EXPECT_EQ(4u, this->hm.Size());
 }
 
-TEST(HashMap, GetsNonExistingWorksCorrectly) {
-  DlListHashMap<std::string, std::string> hm;
-
-  hm.Insert("color", "blue");
-  EXPECT_EQ(1u, hm.Size());
-
-  EXPECT_EQ(hm["size"], "");
-  EXPECT_EQ(2u, hm.Size());
+TYPED_TEST_P(StringHashMapTest, GetsNonExistingWorksCorrectly) {
+  this->hm.Insert("color", "blue");
+  EXPECT_EQ(1u, this->hm.Size());
+  EXPECT_EQ("", this->hm["size"]);
+  EXPECT_EQ(2u, this->hm.Size());
 }
 
-TEST(HashMap, WriteWithSubscriptWorksCorrectly) {
-  DlListHashMap<std::string, std::string> hm;
+TYPED_TEST_P(StringHashMapTest, WriteWithSubscriptWorksCorrectly) {
+  this->hm.Insert("color", "blue");
+  this->hm["hair"] = "brown";
+  this->hm["color"] = "yellow";
 
-  hm.Insert("color", "blue");
-  hm["hair"] = "brown";
-  hm["color"] = "yellow";
-
-  EXPECT_EQ(hm["hair"], "brown");
-  EXPECT_EQ(hm["color"], "yellow");
-  EXPECT_EQ(2u, hm.Size());
+  EXPECT_EQ("brown", this->hm["hair"]);
+  EXPECT_EQ("yellow", this->hm["color"]);
+  EXPECT_EQ(2u, this->hm.Size());
 }
 
-TEST(HashMap, RemoveWorksCorrectly) {
-  DlListHashMap<std::string, std::string> hm;
+TYPED_TEST_P(StringHashMapTest, RemoveWorksCorrectly) {
+  this->hm.Insert("color", "blue");
+  this->hm.Insert("hair", "brown");
+  EXPECT_TRUE(this->hm.Has("color"));
+  EXPECT_EQ(2u, this->hm.Size());
 
-  hm.Insert("color", "blue");
-  hm.Insert("hair", "brown");
-  EXPECT_EQ(hm.Has("color"), true);
-  EXPECT_EQ(2u, hm.Size());
+  this->hm.Remove("color");
+  EXPECT_FALSE(this->hm.Has("color"));
+  EXPECT_EQ(1u, this->hm.Size());
 
-  hm.Remove("color");
-  EXPECT_EQ(hm.Has("color"), false);
-  EXPECT_EQ(1u, hm.Size());
-
-  hm.Remove("nothere");
-  EXPECT_EQ(1u, hm.Size());
+  this->hm.Remove("nothere");
+  EXPECT_EQ(1u, this->hm.Size());
 }
 
-TEST(HashMap, HashMapStringInt) {
-  DlListHashMap<std::string, int> hm;
+using DlListStringHashMap = HashMap<std::string, std::string, DlList>;
+using CoarseGrainListStringHashMap =
+    HashMap<std::string, std::string, CoarseGrainList>;
+using FineGrainListStringHashMap =
+    HashMap<std::string, std::string, FineGrainList>;
 
-  hm.Insert("height", 15);
-  hm.Insert("diameter", 4);
-  hm.Insert("area", 50);
-  EXPECT_EQ(hm.Has("height"), true);
-  EXPECT_EQ(3u, hm.Size());
+REGISTER_TYPED_TEST_CASE_P(StringHashMapTest, SizeWorksCorrectly,
+                           HasWorksCorrectly, InsertGetWorksCorrectly,
+                           GetsNonExistingWorksCorrectly,
+                           WriteWithSubscriptWorksCorrectly,
+                           RemoveWorksCorrectly);
+INSTANTIATE_TYPED_TEST_CASE_P(DlList, StringHashMapTest, DlListStringHashMap);
+INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, StringHashMapTest,
+                              CoarseGrainListStringHashMap);
+INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, StringHashMapTest,
+                              FineGrainListStringHashMap);
 
-  hm.Remove("height");
-  EXPECT_EQ(hm.Has("height"), false);
-  EXPECT_EQ(2u, hm.Size());
-
-  EXPECT_EQ(hm.Has("area"), true);
-  EXPECT_EQ(hm["area"], 50);
-}
 } // namespace
