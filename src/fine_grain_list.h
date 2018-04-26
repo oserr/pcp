@@ -108,7 +108,7 @@ template <typename T> bool FineGrainList<T>::InsertUnique(T value) {
   if (not head) {
     try {
       head = new FineGrainNode<T>(value);
-    } catch (std::exception) {
+    } catch (...) {
       mtx.unlock();
       return false;
     }
@@ -137,7 +137,7 @@ template <typename T> bool FineGrainList<T>::InsertUnique(T value) {
 
   try {
     prev->next = new FineGrainNode<T>(std::move(value), prev, nullptr);
-  } catch (std::exception) {
+  } catch (...) {
     prev->mtx.unlock();
     return false;
   }
