@@ -135,6 +135,11 @@ template <typename T> bool FineGrainList<T>::InsertUnique(T value) {
     prevmtx->unlock();
   }
 
+  if (prev->value == value) {
+    prev->mtx.unlock();
+    return false;
+  }
+
   try {
     prev->next = new FineGrainNode<T>(std::move(value), prev, nullptr);
   } catch (...) {
