@@ -33,6 +33,18 @@ TYPED_TEST_P(IntListTest, InsertWorksCorrectly) {
   EXPECT_EQ(this->intList.head, this->intList.head->next->prev);
 }
 
+TYPED_TEST_P(IntListTest, InsertUniqueWorksCorrectly) {
+  EXPECT_NE(nullptr, this->intList.Insert(1))
+  EXPECT_FALSE(this->intList.InsertUnique(1))
+  EXPECT_TRUE(this->intList.InsertUnque(2));
+  EXPECT_EQ(2, this->intList.head->next->value);
+  EXPECT_EQ(this->intList.head, this->intList.head->next->prev);
+  EXPECT_FALSE(this->intList.InsertUnique(2));
+  EXPECT_TRUE(this->intList.InsertUnique(3));
+  EXPECT_EQ(3, this->intList.head->next->next->value);
+  EXPECT_FALSE(this->intList.InsertUnique(3));
+}
+
 TYPED_TEST_P(IntListTest, RemoveCanRemoveWhenListOnlyHasOne) {
   this->intList.Insert(1);
   EXPECT_EQ(1, this->intList.head->value);
@@ -137,7 +149,7 @@ TYPED_TEST_P(IntListTest, EqualityOpWorksCorrectly) {
 }
 
 REGISTER_TYPED_TEST_CASE_P(IntListTest, DefaultCtorInitalizesListCorrectly,
-                           InsertWorksCorrectly,
+                           InsertWorksCorrectly, InsertUniqueWorksCorrectly,
                            RemoveCanRemoveWhenListOnlyHasOne,
                            RemoveCanRemoveFirstOfMany,
                            RemoveCanRemoveMiddleOfMany,
