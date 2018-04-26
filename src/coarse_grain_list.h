@@ -22,6 +22,7 @@ template <typename T> struct CoarseGrainList : DlList<T> {
   mutable std::mutex mtx;
 
   DlNode<T> *Insert(T value) override;
+  bool InsertUnique(T value) override;
   bool Remove(T value) noexcept;
   bool Contains(T value) const noexcept override;
   T *Find(T value) const noexcept override;
@@ -36,6 +37,15 @@ template <typename T> struct CoarseGrainList : DlList<T> {
 template <typename T> DlNode<T> *CoarseGrainList<T>::Insert(T value) {
   LockGuard lck(mtx);
   return DlList<T>::Insert(value);
+}
+
+/**
+ * Inserts an element into the list only if the list does not contain the item.
+ * @param value The value to insert into the list.
+ */
+template <typename T> bool CoarseGrainList<T>::InsertUnique(T value) {
+  LockGuard lck(mtx);
+  return DlList<T>::InsertUnique(value);
 }
 
 /**
@@ -66,7 +76,6 @@ template <typename T> T *CoarseGrainList<T>::Find(T value) const noexcept {
  * @return The number of elements in the list.
  */
 template <typename T> unsigned CoarseGrainList<T>::Size() const noexcept {
-  LockGuard lck(mtx);
   return DlList<T>::Size();
 }
 
@@ -74,7 +83,6 @@ template <typename T> unsigned CoarseGrainList<T>::Size() const noexcept {
  * @return True if the list is empty, false otherwise.
  */
 template <typename T> bool CoarseGrainList<T>::Empty() const noexcept {
-  LockGuard lck(mtx);
   return DlList<T>::Empty();
 }
 
