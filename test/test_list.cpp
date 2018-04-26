@@ -93,6 +93,23 @@ TYPED_TEST_P(IntListTest, ContainsWorksCorrectly) {
   EXPECT_FALSE(this->intList.Contains(11));
 }
 
+TYPED_TEST_P(IntListTest, FindWorksCorrectly) {
+  int numbers[] = {5, 10, 11, 33};
+  for (auto num : numbers)
+    this->intList.Insert(num);
+
+  for (auto num : numbers) {
+    auto ptr = this->intList.Find(num);
+    EXPECT_TRUE(ptr != nullptr and num == *ptr);
+  }
+
+  int otherNum[] = {100, 200, 300, 400};
+  for (auto num : otherNum) {
+    auto ptr = this->intList.Find(num);
+    EXPECT_EQ(nullptr, ptr);
+  }
+}
+
 TYPED_TEST_P(IntListTest, SizeWorksCorrectly) {
   EXPECT_EQ(0u, this->intList.Size());
   this->intList.Insert(5);
@@ -154,8 +171,9 @@ REGISTER_TYPED_TEST_CASE_P(IntListTest, DefaultCtorInitalizesListCorrectly,
                            RemoveCanRemoveFirstOfMany,
                            RemoveCanRemoveMiddleOfMany,
                            RemoveCanRemoveLastOfMany, ContainsWorksCorrectly,
-                           SizeWorksCorrectly, EmptyWorksCorrectly,
-                           OutputOpWorksCorrectly, EqualityOpWorksCorrectly);
+                           FindWorksCorrectly, SizeWorksCorrectly,
+                           EmptyWorksCorrectly, OutputOpWorksCorrectly,
+                           EqualityOpWorksCorrectly);
 INSTANTIATE_TYPED_TEST_CASE_P(DlList, IntListTest, DlList<int>);
 INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntListTest,
                               CoarseGrainList<int>);
