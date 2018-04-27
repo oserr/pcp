@@ -49,6 +49,7 @@ style=ieee
     filecolor=magenta,
     urlcolor=cyan,
 }
+\addbibresource{references.bib}
 
 \newcommand{\rt}{\textsuperscript{\textregistered}}
 \newcommand{\tm}{\texttrademark}
@@ -62,7 +63,7 @@ style=ieee
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{\vspace{-25pt}
-\huge CS 15-618 Project Checkpoint 1 \\
+\huge CS 15-618 Project Checkpoint 2 \\
 \huge Synchrony (ID 24)
 }
 \author{
@@ -88,48 +89,152 @@ style=ieee
 
 \maketitle
 
-\section*{Summary}
-We are right on track with our original schedule but still working on the implementation
-of lock free linked lists. We made a change in one of our data structures: we will use single linked
-lists instead of doubly linked lists. From the papers we found on lock free data structures very 
-few implement doubly linked lists (\cite{Sundell}) and they become difficult to implement
-while guaranteeing correctness. Since the focus of this project is in having experience implementing 
-and comparing syncronization techniques we think is more valuable to use single linked lists 
-which will also leave for time for actual benchmarking and analysis.
+\section*{Summary} We are on track with our original schedule but still working
+on the implementation of lock free linked lists that we had planned to have
+finished by this checkpoint.  We made a change in one of our data structures: we
+will use single linked lists instead of doubly  linked lists. From the papers we
+found on lock free data structures very  few implement doubly linked lists and
+the ones that do (\cite{Sundell}) become difficult and tricky to implement while still
+guaranteeing correctness. Since the focus of this project is to have experience
+implementing  and comparing syncronization techniques we think is more valuable
+to use single linked lists  which will also leave more time for actual
+benchmarking and analysis. We've also begun making progress on the benchmark
+harness for the linked-lists, and decided to add a linked list with fine-grained
+spinning-reader-writer locks to the mix of lists we will use in our benchmarks.
 
 \section*{Work Done}
+We implemented a fine-grained doubly-linked list. We used the hand-over-hand
+locking technique presented in the lecture 17 slides. The code in the slides
+contains some unnecessary checks of {\tt curr}, but overall the same
+hand-over-hand pattern can be used in any function that traverses the list. We
+noticed that the overall structure of the algorithms could be used with
+different kinds of locks, so we decided to implement a spinning-reader-writer
+lock to create a fine-grained spinning-reader-writer lock doubly-linked list
+which we will also use in our benchmarks. The full implementation of the
+spinning-reading-write lock is included in Figure~\ref{fig:rwlock}.
 
-As for lock free data structures we did research and found some papers that gave us ideas on how
-to implement them. We will adopt a scheme based mainly on \cite{Harris}, where we will use flags within
-pointer addresses to keep track of deleted nodes. This will also require to use the CAS atomic primitive
-which is available in the x86-64 architecture that we are using as target. Also we will use atomic types
-provided by C++ to ensure sequential consistency of the code and avoid races.
+\begin{figure}
+\begin{center}
+\begin{lstlisting}
+struct RwLock {
+  std::atomic_int counter{0};
 
-Finally regarding 
+  void ReadLock() noexcept {
+    int val, old;
+    do {
+      while ((val = counter.load()) < 0)
+        ;
+      old = val++;
+    } while (not counter.compare_exchange_weak(old, val));
+  }
 
-\section*{Goals}
-We are planning to deliver the following:
+  void ReadUnlock() noexcept { --counter; }
+
+  void WriteLock() noexcept {
+    int val, old;
+    do {
+      while ((val = counter.load()) != 0)
+        ;
+      old = val--;
+    } while (not counter.compare_exchange_weak(old, val));
+  }
+
+  void WriteUnlock() noexcept { ++counter; }
+};
+\end{lstlisting}
+\caption{Spinning-writer-reader lock implemented with atomics.}
+\label{fig:rwlock}
+\end{center}
+\end{figure}
+
+We also created more tests with GoogleTest. We converted the hashmap and list
+unit tests to type-parametrized tests. This allows us to use the same set of
+tests on any list or hashmap that supports the APIs we have defined. Instead of
+creating different tests, we simply add one line with the type of list or
+hashmap to be tested. These are serial tests that simply test that all the
+functions work correctly on a single-threaded environment, but we also created a
+type-parametrized multi-threaded concurrent list test that ensures lists work
+correctly with multiple threads making insertions and removals simultaneously.
+
+We began implementing the benchmark harness for the lists, which will allow us
+to test a list with different parameters, including different number of threads,
+total items to insert/remove from the list, and different use-profiles, e.g.,
+80\% inserts, 10\% removes, and 10\% lookups vs 50\% inserts, 25\% removes, and
+25\% lookups. What remains is to add logic to pass in all the parameters via the
+command line, and perhaps to add additional logic for different kinds of tests,
+e.g., preload list with items to be able to run a use-profile with 50\% removals
+and 50\% lookups.
+
+As for lock free data structures, we did research and found some papers that gave
+us ideas on how to implement them. We will adopt a scheme based mainly on
+\cite{Harris}, where we will use flags within pointer addresses to keep track of
+deleted nodes. The delete operation will then be divided in a logical delete and 
+a phyisical delete which will require to use the simple CAS atomic primitive available 
+in the x86-64 architecture that we are using as target. Also we will
+use atomic types provided by C++ to ensure sequential consistency of the code
+and avoid races.
+
+We've also trimmed down or list of candidates for a C++ concurrent library down
+to
 \begin{itemize}
 \item
-Implement a concurrent single linked list using different
-synchronization methods: course-grain locks, fine-grain locks and lock-free
-techniques.
-\item Compare the performance of each implementation of the single
-linked list against each other and against the serial version with respect to
-the number of threads.
-\item Implement a concurrent HashMap using different synchronization methods:
-course-grain locks, fine-grain locks and lock-free techniques.
-\item Compare the performance of each implementation of the HashMap against
-each other and against the serial version with respect to the number of threads.
-\item Use external C/C++ library that implements concurrent lists and
-HashMaps to compare it against our versions.
+\href{https://github.com/01org/tbb}{tbb} Intel's concurrent library, Threading
+Building Blocks (TBB).
+\item
+\href{https://github.com/facebook/folly}{folly} Facebooks open-source library,
+which includes concurrent data structures.
+\item
+\href{https://github.com/efficient/libcuckoo}{libcuckoo} libcuckoo library,
+which includes concurrent hash tables.
+\end{itemize}
+TBB seems ideal, but we are not yet commited to it because we don't know how easy
+it will be to build it and use it. As of now, the only thing we can say is that it
+builds on Linux with a simple {\tt make}, but the same command on macOS will make
+it barf (at least on Omar's mac).
+
+\section*{Goals}
+We are not removing any of our goals, but are modifying some of them slightly (doubly linked
+change to single linked). Our deliverables are:
+
+\begin{itemize}
+\item
+Implement a concurrent single-linked list with different kinds of locks:
+coarse-grained locks, fine-grained locks, and fine-grained
+spinning-reader-writer locks.
+\item % Patricio: correcto?
+Implement a concurrent lock-free singly-linked list.
+\item
+Compare the performance of the lists, including serial version, with respect to
+number of threads and use-profile, e.g., 80\% inserts, 10\% removals, 10\%
+lookups.
+\item
+Implement concurrent hashmaps with each one of our lists.
+\item
+Compare the performance of the hashmaps, including serial version, with respect
+to the number of threads and different use-profiles.
+\item
+Compare performance of our library with another C++ library, e.g., TBB.
+\item
+{\bf Nice-to-have}. Parallelize algorithm/problem with our data structures.
 \end{itemize}
 
-Instead of trying another data structure as a {\it nice-to-have}, we are now
-looking forward to the opportunity of applying our concurrent data structures to
-an algorithm or problem. We don't have concrete ideas right now, but have
-floated the idea of doing something like a search or graph algorithm, like
-$A^*$, for example.
+We are confident that we can complete all our delivarables, but it seems highly
+unlikely that we'll have a chance to apply our data structures to an algorithm
+or problem; however, if we are able to make quick progress on our remaining
+tasks, then we'll definitely look into it, but as of now we have not had any
+time to look into this.
+
+
+\section*{Schedule}
+Table~\ref{table:sche} contains an updated version of the schedule. The week is
+packed with tasks, but we should be able to move through some of these
+relatively quickly. The benchmarking harness for the lists is almost complete,
+and this will make it easier for us to write the harness for the hashmaps and
+the data structures for the external library, because at the very least we
+should be able to use the list benchmark harness as a template. It's hard to
+gage how long it will take us to complete some of the other tasks, such as
+implementing the lock-free list, or getting the library to work, but ultimately
+we belive that 9 days are enough to get us to the end.
 
 \begin{table}[t]
 \begin{center}
@@ -137,58 +242,42 @@ $A^*$, for example.
 \toprule
 \bf Week & \bf Assigned To  & \bf Deliverable   \\
 \midrule
-4/16     & O     & Doubly-linked list with fine-grain locks \\
-         & O,P   & Find third party C/C++ multi-threading library \\
-         & P     & Lock-free doubly-linked list \\
-4/23     & O     & Hash map with fine-grain locks \\
-         & P     & Lock-free HashMap \\ 
-         & O,P   & {\bf Check point 2} \\   
 4/30     & O     & Benchmarking harness for linked-lists \\
-         & P     & Benchmarking harness for HashMap \\
-         & P,O   & Benchmarks for third party C/C++ multi-threading library \\
+         & P     & Lock-free doubly-linked list \\
+         & O     & Benchmarking harness for HashMap \\
+5/03     & P,O   & Benchmarks for third party C/C++ multi-threading library \\
          & P,O   & Compare results with hypothesis. Identify improvement spots \\
          & O,P   & Final report \\
+         & O,P   & Poster \\
          & *     & *Parallelize algorithm/problem with our data structures \\
 \bottomrule
 \end{tabular}
 \caption{
-Weekly schedule. Check points include the items preceding them. The * on the
-last means it is a {\it nice-to-have}, but we are not commiting to it.
-The {\it Assigned To} column indicates with an O for Omar or a P for Patricio
-who will work on a given task.
+Schedule for last week. The {\it nice-to-have} is still in our list, but it
+seems highly unlikely that we'll be able to get to it.
 }
 \label{table:sche}
 \end{center}
 \end{table}
 
-\section*{Schedule}
-Table~\ref{table:sche} contains an updated version of the schedule. The new
-schedule is the same as the original, minus completed tasks, and three
-modifications:
-
-\begin{itemize}
-\item
-Remove Java-related tasks, since we won't be using Java's concurrent package.
-\item
-Add a task for this week to find a C/C++ multi-threading library to use for
-benchmarking.
-\item
-Change {\it nice-to-have} to one where we apply our concurrent data structures
-to an algorithm or a problem.
-\end{itemize}
-
-The table contains a column to indicate how tasks are assigned. We are currently
-right on track with our original schedule.
-
 \section*{Pending Issues}
-This is a summary of the pending issues we have to resolve:
+Our issues are for the most part resolved, and we have very good idea what
+direction to take:
+
 \begin{itemize}
 \item
-Define the concrete techniques we are going to use to implement fine-grain locking and lock-free mechanisms.
+{\bf C++ concurrent library}. This is still in a somewhat fluid state, because
+we've yet to benchmark a library, but we have at least two very good candidates
+in {\tt tbb} and {\tt folly}. We'll start our experimentation with {\tt tbb} and
+only move on to something else, or reach out for help, if we have trouble
+getting the library to cooperate.
 \item
-Find a C/C++ library to use for benchmarking.
-\item
-Think of a problem or algorithm that could be parallelized using our data structures.
+{\bf Parallelizing algorithm/problem}. This is our {\it nice-to-have} item and
+hence don't see it as something that needs to be resolved, because it doesn't
+affect our deliverables. If we are able to complete our remaining tasks quickly
+then we'll shift our focus to this, and reach out for help if necessary.
 \end{itemize}
+
+\printbibliography
 
 \end{document}

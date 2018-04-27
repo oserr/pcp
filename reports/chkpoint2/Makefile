@@ -1,6 +1,6 @@
 MAC = Darwin
 OS = $(shell uname)
-APP = chkpoint1.pdf
+APP = chkpoint2.pdf
 
 all: $(APP)
 
