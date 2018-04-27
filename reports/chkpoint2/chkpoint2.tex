@@ -94,10 +94,10 @@ on the implementation of lock free linked lists that we had planned to have
 finished by this checkpoint.  We made a change in one of our data structures: we
 will use single linked lists instead of doubly  linked lists. From the papers we
 found on lock free data structures very  few implement doubly linked lists and
-the ones that do (\cite{Sundell}) become difficult and tricky to implement while still
+the ones that do (\cite{Sundell}) are difficult and tricky to implement while still
 guaranteeing correctness. Since the focus of this project is to have experience
 implementing  and comparing syncronization techniques we think is more valuable
-to use single linked lists  which will also leave more time for actual
+to use lock free single linked lists  which will also leave more time for actual
 benchmarking and analysis. We've also begun making progress on the benchmark
 harness for the linked-lists, and decided to add a linked list with fine-grained
 spinning-reader-writer locks to the mix of lists we will use in our benchmarks.
