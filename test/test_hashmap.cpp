@@ -7,6 +7,7 @@
 #include "dllist.h"
 #include "fine_grain_list.h"
 #include "hashmap.h"
+#include "nonblocking_list.h"
 
 namespace {
 
@@ -84,6 +85,8 @@ using CoarseGrainListStringHashMap =
     HashMap<std::string, std::string, CoarseGrainList>;
 using FineGrainListStringHashMap =
     HashMap<std::string, std::string, FineGrainList>;
+using NonBlockingListStringHashMap =
+    HashMap<std::string, std::string, NonBlockingList>;
 
 REGISTER_TYPED_TEST_CASE_P(StringHashMapTest, SizeWorksCorrectly,
                            HasWorksCorrectly, InsertGetWorksCorrectly,
@@ -95,5 +98,7 @@ INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, StringHashMapTest,
                               CoarseGrainListStringHashMap);
 INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, StringHashMapTest,
                               FineGrainListStringHashMap);
+INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, StringHashMapTest,
+                              NonBlockingListStringHashMap);
 
 } // namespace
