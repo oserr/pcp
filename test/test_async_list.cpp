@@ -9,6 +9,7 @@
 
 #include "coarse_grain_list.h"
 #include "fine_grain_list.h"
+#include "nonblocking_list.h"
 
 namespace {
 
@@ -99,5 +100,7 @@ INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntAsyncListTest,
                               CoarseGrainList<int>);
 INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, IntAsyncListTest,
                               FineGrainList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, IntAsyncListTest,
+                              NonBlockingList<int>);
 
 } // namespace

@@ -5,6 +5,7 @@
 #include "coarse_grain_list.h"
 #include "dllist.h"
 #include "fine_grain_list.h"
+#include "nonblocking_list.h"
 
 namespace {
 
@@ -178,5 +179,7 @@ INSTANTIATE_TYPED_TEST_CASE_P(DlList, IntListTest, DlList<int>);
 INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntListTest,
                               CoarseGrainList<int>);
 INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, IntListTest, FineGrainList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, IntListTest,
+                              NonBlockingList<int>);
 
 } // namespace
