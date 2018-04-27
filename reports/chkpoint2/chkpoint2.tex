@@ -1,0 +1,270 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{backnaur}
+\usepackage[scaled]{beramono}
+\usepackage{bm}
+\usepackage[small,bf]{caption}
+\usepackage[strict]{changepage}
+\usepackage{dblfloatfix}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{flushend}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{ifsym}
+\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{makeidx}
+\usepackage{mathrsfs}
+\usepackage{multirow}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage[hyphens]{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+\usepackage{wrapfig}
+\usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{shapes,decorations}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+\pgfplotsset{compat=1.14}
+\usepackage{bm}
+\usepackage[
+backend=biber,
+style=ieee
+]{biblatex}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+\addbibresource{references.bib}
+
+\newcommand{\rt}{\textsuperscript{\textregistered}}
+\newcommand{\tm}{\texttrademark}
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.8in}
+\addtolength{\topmargin}{-.4in}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{\vspace{-25pt}
+\huge CS 15-618 Project Checkpoint 2 \\
+\huge Synchrony (ID 24)
+}
+\author{
+    Patricio Chilano (pchilano) \\
+    Omar Serrano (oserrano)
+}
+\date{\today}
+
+\begin{document}
+
+\definecolor{beaublue}{rgb}{0.74, 0.83, 0.9}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{orange}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true,
+    morekeywords={nullptr,noexcept}
+}
+
+\maketitle
+
+\section*{Summary}
+We were unable to complete the lock-free list task as we had planned to do so by
+this checkpoint; however, we are still on track to meet all of our deliverables.
+Even though we did not implement the lock-free list, we invested time in
+researching different implementation techniques, and this will be valuable this
+upcoming week as we implement the lock-free list. We've also begun making
+progress on the benchmark harness for the linked-lists, and decided to add a
+linked list with fine-grain non-blocking reader-writer locks to the mix of lists
+we will use in our benchmarks.
+
+\section*{Work Done}
+We implemented a fine-grained doubly-linked list. We used the hand-over-hand
+locking technique presented in the lecture 17 slides. The code in the slides
+contains some unnecessary checks of {\tt curr}, but overall the same
+hand-over-hand pattern can be used in any function that traverses the list. We
+noticed that the overall structure of the algorithms could be used with
+different kinds of locks, so we decided to implement a spinning-reader-writer
+lock to create a fine-grained spinning-reader-writer lock doubly-linked list
+which we will also use in our benchmarks. The full implementation of the
+spinning-reading-write lock is included in Figure~\ref{fig:rwlock}.
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}
+struct RwLock {
+  std::atomic_int counter{0};
+
+  void ReadLock() noexcept {
+    int val, old;
+    do {
+      while ((val = counter.load()) < 0)
+        ;
+      old = val++;
+    } while (not counter.compare_exchange_weak(old, val));
+  }
+
+  void ReadUnlock() noexcept { --counter; }
+
+  void WriteLock() noexcept {
+    int val, old;
+    do {
+      while ((val = counter.load()) != 0)
+        ;
+      old = val--;
+    } while (not counter.compare_exchange_weak(old, val));
+  }
+
+  void WriteUnlock() noexcept { ++counter; }
+};
+\end{lstlisting}
+\caption{Spinning-writer-reader lock implemented with atomics.}
+\label{fig:rwlock}
+\end{center}
+\end{figure}
+
+We also created more tests with GoogleTest. We converted the hashmap and list
+unit tests to type-parametrized tests. This allows us to use the same set of
+tests on any list or hashmap that supports the APIs we have defined. Instead of
+creating different tests, we simply add one line with the type of list or
+hashmap to be tested. These are serial tests that simply test that all the
+functions work correctly on a single-threaded environment, but we also created a
+type-parametrized multi-threaded concurrent list test that ensures lists work
+correctly with multiple threads making insertions and removals simultaneously.
+
+We began implementing the benchmark harness for the lists, which will allow us
+to test a list with different parameters, including different number of threads,
+total items to insert/remove from the list, and different use-profiles, e.g.,
+80\% inserts, 10\% removes, and 10\% lookups vs 50\% inserts, 25\% removes, and
+25\% lookups. What remains is to add logic to pass in all the parameters via the
+command line, and perhaps to add additional logic for different kinds of tests,
+e.g., preload list with items to be able to run a use-profile with 50\% removals
+and 50\% lookups.
+
+% Patricio: researched implementation techniques for lock-free list
+
+We've also trimmed down or list of candidates for a C++ concurrent library down
+to
+\begin{itemize}
+\item
+\href{https://github.com/01org/tbb}{tbb} Intel's concurrent library, Threading
+Building Blocks (TBB).
+\item
+\href{https://github.com/facebook/folly}{folly} Facebooks open-source library,
+which includes concurrent data structures.
+\end{itemize}
+TBB seems ideal, but we are not yet commited to it because we don't know how easy
+it will be to build it and use it. As of now, the only thing we can say is that it
+builds on Linux with a simple {\tt make}, but the same command on macOS will make
+it bargh (at least on Omar's mac).
+
+\section*{Goals}
+We are not removing any of our goals, but are modifying some of them slightly.
+Our deliverables are:
+
+\begin{itemize}
+\item
+Implement a concurrent doubly-linked list with different kinds of locks:
+coarse-grained locks, fine-grained locks, and fine-grained
+spinning-reader-writer locks.
+\item
+Implement a concurrent lock-free singly-linked list.
+\item
+Compare the performance of the lists, including serial version, with respect to
+number of threads and use-profile, e.g., 80\% inserts, 10\% removals, 10\%
+lookups.
+\item
+Implement concurrent hashmaps with each one of our lists.
+\item
+Compare the performance of the hashmaps, including serial version, with respect
+to the number of threads and different use-profiles.
+\item
+Compare performance of our library with another C++ library, e.g., TBB.
+\item
+{\bf Nice-to-have}. Parallelize algorithm/problem with our data structures.
+\end{itemize}
+
+We are confident that we can complete all our delivarables, but it seems highly
+unlikely that we'll have a chance to apply our data structures to an algorithm
+or problem; however, if we are able to make quick progress on our remaining
+tasks, then we'll definitely look into it, but as of now we have not had any
+time to look into this.
+
+
+\section*{Schedule}
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\bf Week & \bf Assigned To  & \bf Deliverable   \\
+\midrule
+4/30     & O     & Benchmarking harness for linked-lists \\
+         & P     & Lock-free doubly-linked list \\
+         & O     & Benchmarking harness for HashMap \\
+         & P,O   & Benchmarks for third party C/C++ multi-threading library \\
+         & P,O   & Compare results with hypothesis. Identify improvement spots \\
+         & O,P   & Final report \\
+         & O,P   & Poster \\
+         & *     & *Parallelize algorithm/problem with our data structures \\
+\bottomrule
+\end{tabular}
+\caption{
+Schedule for last week. The {\it nice-to-have} is still in our list, but it
+seems highly unlikely that we'll be able to get to it.
+}
+\label{table:sche}
+\end{center}
+\end{table}
+
+Table~\ref{table:sche} contains an updated version of the schedule. The week is
+packed with tasks, but we should be able to move through some of these
+relatively quickly. The benchmarking harness for the lists is almost complete,
+and this will make it easier for us to write the harness for the hashmaps and
+the data structures for the external library, because we'll be able to make
+modifications to the list harness, or to use it as a template.
+
+\section*{Pending Issues}
+Our issues are for the most part resolved, and we have very good idea what
+direction to take:
+
+\begin{itemize}
+\item
+% Patricio: que tecnica vamos a usar?
+Technique from paper.
+\item
+{\bf C++ concurrent library}. This is still in a somewhat fluid state, because
+we've yet to benchmark a library, but we have at least two very good candidates
+in {\tt tbb} and {\tt folly}. We'll start our experimentation with {\tt tbb} and
+only move on to something else, or reach out for help, if we have trouble
+getting the library to cooperate.
+\item
+{\bf Parallelizing algorithm/problem}. This is our {\it nice-to-have} item and
+hence don't see it as something that needs to be resolved, because it doesn't
+affect our deliverables. If we are able to complete our remaining tasks quickly
+then we'll shift our focus to this, and reach out for help if necessary.
+\end{itemize}
+
+\printbibliography
+
+\end{document}
