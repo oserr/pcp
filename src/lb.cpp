@@ -14,6 +14,8 @@
 #include "nonblocking_list.h"
 
 int main(int argc, char *argv[]) {
+  // TODO: add logic to process all parameters via command line
+  // TODO: run the tests for all the lists
   ListRunner runner(4, 1000, .8, .1, .1);
   runner.Run<FineGrainList>("FineGrainList");
   runner.PrintSummary(std::cout);
