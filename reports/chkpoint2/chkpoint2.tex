@@ -96,7 +96,7 @@ Even though we did not implement the lock-free list, we invested time in
 researching different implementation techniques, and this will be valuable this
 upcoming week as we implement the lock-free list. We've also begun making
 progress on the benchmark harness for the linked-lists, and decided to add a
-linked list with fine-grain non-blocking reader-writer locks to the mix of lists
+linked list with fine-grained spinning-reader-writer locks to the mix of lists
 we will use in our benchmarks.
 
 \section*{Work Done}
@@ -177,7 +177,7 @@ which includes concurrent data structures.
 TBB seems ideal, but we are not yet commited to it because we don't know how easy
 it will be to build it and use it. As of now, the only thing we can say is that it
 builds on Linux with a simple {\tt make}, but the same command on macOS will make
-it bargh (at least on Omar's mac).
+it barf (at least on Omar's mac).
 
 \section*{Goals}
 We are not removing any of our goals, but are modifying some of them slightly.
@@ -188,7 +188,7 @@ Our deliverables are:
 Implement a concurrent doubly-linked list with different kinds of locks:
 coarse-grained locks, fine-grained locks, and fine-grained
 spinning-reader-writer locks.
-\item
+\item % Patricio: correcto?
 Implement a concurrent lock-free singly-linked list.
 \item
 Compare the performance of the lists, including serial version, with respect to
@@ -213,6 +213,16 @@ time to look into this.
 
 
 \section*{Schedule}
+Table~\ref{table:sche} contains an updated version of the schedule. The week is
+packed with tasks, but we should be able to move through some of these
+relatively quickly. The benchmarking harness for the lists is almost complete,
+and this will make it easier for us to write the harness for the hashmaps and
+the data structures for the external library, because at the very least we
+should be able to use the list benchmark harness as a template. It's hard to
+gage how long it will take us to complete some of the other tasks, such as
+implementing the lock-free list, or getting the library to work, but ultimately
+we belive that 9 days are enough to get us to the end.
+
 \begin{table}[t]
 \begin{center}
 \begin{tabular}{lll}
@@ -236,13 +246,6 @@ seems highly unlikely that we'll be able to get to it.
 \label{table:sche}
 \end{center}
 \end{table}
-
-Table~\ref{table:sche} contains an updated version of the schedule. The week is
-packed with tasks, but we should be able to move through some of these
-relatively quickly. The benchmarking harness for the lists is almost complete,
-and this will make it easier for us to write the harness for the hashmaps and
-the data structures for the external library, because we'll be able to make
-modifications to the list harness, or to use it as a template.
 
 \section*{Pending Issues}
 Our issues are for the most part resolved, and we have very good idea what
