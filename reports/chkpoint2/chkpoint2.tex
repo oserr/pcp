@@ -1,0 +1,194 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{backnaur}
+\usepackage[scaled]{beramono}
+\usepackage{bm}
+\usepackage[small,bf]{caption}
+\usepackage[strict]{changepage}
+\usepackage{dblfloatfix}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{flushend}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{ifsym}
+\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{makeidx}
+\usepackage{mathrsfs}
+\usepackage{multirow}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage[hyphens]{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+\usepackage{wrapfig}
+\usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{shapes,decorations}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+\pgfplotsset{compat=1.14}
+\usepackage{bm}
+\usepackage[
+backend=biber,
+style=ieee
+]{biblatex}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\newcommand{\rt}{\textsuperscript{\textregistered}}
+\newcommand{\tm}{\texttrademark}
+
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\textwidth}{0.8in}
+\addtolength{\textheight}{0.8in}
+\addtolength{\topmargin}{-.4in}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{\vspace{-25pt}
+\huge CS 15-618 Project Checkpoint 1 \\
+\huge Synchrony (ID 24)
+}
+\author{
+    Patricio Chilano (pchilano) \\
+    Omar Serrano (oserrano)
+}
+\date{\today}
+
+\begin{document}
+
+\definecolor{beaublue}{rgb}{0.74, 0.83, 0.9}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{orange}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true,
+    morekeywords={nullptr,noexcept}
+}
+
+\maketitle
+
+\section*{Summary}
+We are right on track with our original schedule but still working on the implementation
+of lock free linked lists. We made a change in one of our data structures: we will use single linked
+lists instead of doubly linked lists. From the papers we found on lock free data structures very 
+few implement doubly linked lists (\cite{Sundell}) and they become difficult to implement
+while guaranteeing correctness. Since the focus of this project is in having experience implementing 
+and comparing syncronization techniques we think is more valuable to use single linked lists 
+which will also leave for time for actual benchmarking and analysis.
+
+\section*{Work Done}
+
+As for lock free data structures we did research and found some papers that gave us ideas on how
+to implement them. We will adopt a scheme based mainly on \cite{Harris}, where we will use flags within
+pointer addresses to keep track of deleted nodes. This will also require to use the CAS atomic primitive
+which is available in the x86-64 architecture that we are using as target. Also we will use atomic types
+provided by C++ to ensure sequential consistency of the code and avoid races.
+
+Finally regarding 
+
+\section*{Goals}
+We are planning to deliver the following:
+\begin{itemize}
+\item
+Implement a concurrent single linked list using different
+synchronization methods: course-grain locks, fine-grain locks and lock-free
+techniques.
+\item Compare the performance of each implementation of the single
+linked list against each other and against the serial version with respect to
+the number of threads.
+\item Implement a concurrent HashMap using different synchronization methods:
+course-grain locks, fine-grain locks and lock-free techniques.
+\item Compare the performance of each implementation of the HashMap against
+each other and against the serial version with respect to the number of threads.
+\item Use external C/C++ library that implements concurrent lists and
+HashMaps to compare it against our versions.
+\end{itemize}
+
+Instead of trying another data structure as a {\it nice-to-have}, we are now
+looking forward to the opportunity of applying our concurrent data structures to
+an algorithm or problem. We don't have concrete ideas right now, but have
+floated the idea of doing something like a search or graph algorithm, like
+$A^*$, for example.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\bf Week & \bf Assigned To  & \bf Deliverable   \\
+\midrule
+4/16     & O     & Doubly-linked list with fine-grain locks \\
+         & O,P   & Find third party C/C++ multi-threading library \\
+         & P     & Lock-free doubly-linked list \\
+4/23     & O     & Hash map with fine-grain locks \\
+         & P     & Lock-free HashMap \\ 
+         & O,P   & {\bf Check point 2} \\   
+4/30     & O     & Benchmarking harness for linked-lists \\
+         & P     & Benchmarking harness for HashMap \\
+         & P,O   & Benchmarks for third party C/C++ multi-threading library \\
+         & P,O   & Compare results with hypothesis. Identify improvement spots \\
+         & O,P   & Final report \\
+         & *     & *Parallelize algorithm/problem with our data structures \\
+\bottomrule
+\end{tabular}
+\caption{
+Weekly schedule. Check points include the items preceding them. The * on the
+last means it is a {\it nice-to-have}, but we are not commiting to it.
+The {\it Assigned To} column indicates with an O for Omar or a P for Patricio
+who will work on a given task.
+}
+\label{table:sche}
+\end{center}
+\end{table}
+
+\section*{Schedule}
+Table~\ref{table:sche} contains an updated version of the schedule. The new
+schedule is the same as the original, minus completed tasks, and three
+modifications:
+
+\begin{itemize}
+\item
+Remove Java-related tasks, since we won't be using Java's concurrent package.
+\item
+Add a task for this week to find a C/C++ multi-threading library to use for
+benchmarking.
+\item
+Change {\it nice-to-have} to one where we apply our concurrent data structures
+to an algorithm or a problem.
+\end{itemize}
+
+The table contains a column to indicate how tasks are assigned. We are currently
+right on track with our original schedule.
+
+\section*{Pending Issues}
+This is a summary of the pending issues we have to resolve:
+\begin{itemize}
+\item
+Define the concrete techniques we are going to use to implement fine-grain locking and lock-free mechanisms.
+\item
+Find a C/C++ library to use for benchmarking.
+\item
+Think of a problem or algorithm that could be parallelized using our data structures.
+\end{itemize}
+
+\end{document}
