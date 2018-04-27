@@ -10,4 +10,4 @@ add_executable(test_all
     test_hashmap.cpp
     test_list.cpp
 )
-target_link_libraries(test_all libgtest)
+target_link_libraries(test_all libgtest ${CMAKE_THREADS_LIB_INIT})

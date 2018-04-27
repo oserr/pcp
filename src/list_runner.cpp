@@ -23,8 +23,8 @@
  * sum up to at last .99.
  */
 ListRunner::ListRunner(size_t nThreads, size_t nPerThread, float percentInserts,
-                       float percentRemoves, float percentContains)
-    : nThread(nThreads), nPerThread(nPerThread), n(nThreads * nPerThread),
+                       float percentRemoves, float percentLookups)
+    : nThreads(nThreads), nPerThread(nPerThread), n(nThreads * nPerThread),
       percentInserts(percentInserts), percentRemoves(percentRemoves),
       percentLookups(percentLookups), numbers(n) {
   assert(nThreads and nPerThread);
@@ -41,7 +41,7 @@ ListRunner::ListRunner(size_t nThreads, size_t nPerThread, float percentInserts,
  */
 void ListRunner::PrintSummary(std::ostream &os) {
   os << "------ " << listName << " -----\n"
-     << "run time:      " << runTime << '\n'
+     << "run time (s):  " << runTime << '\n'
      << "# threads:     " << nThreads << '\n'
      << "#s per thread: " << nPerThread << '\n'
      << "% inserts:     " << percentInserts << '\n'

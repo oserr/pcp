@@ -8,6 +8,5 @@ add_library(synch
     list_runner.cpp
     nonblocking_list.h
 )
-
 add_executable(lb lb.cpp)
-target_link_libraries(lb synch)
+target_link_libraries(lb synch ${CMAKE_THREAD_LIBS_INIT})

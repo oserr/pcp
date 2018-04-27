@@ -42,7 +42,7 @@ public:
 };
 
 template <typename TList> void ListRunner::Run(size_t threadId, TList &lst) {
-  constexpr auto removesThreshold = percentInserts + percentRemoves;
+  const auto removesThreshold = percentInserts + percentRemoves;
   size_t nCount = 0;
   int buf[nPerThread];
   auto genRand = std::bind(std::uniform_real_distribution<float>(),
@@ -81,7 +81,8 @@ void ListRunner::Run(const std::string &description) {
   std::thread threads[nThreads];
   auto tnow = steady_clock::now();
   for (size_t i = 1; i < nThreads; ++i)
-    threads[i] = std::thread(&ListRunner::Run<ListType>, i, std::ref(lst));
+    threads[i] =
+        std::thread(&ListRunner::Run<ListType>, this, i, std::ref(lst));
   // Thread 0 runs this
   Run(0, lst);
   for (size_t i = 1; i < nThreads; ++i)
