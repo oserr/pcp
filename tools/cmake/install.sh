@@ -25,7 +25,7 @@ minor_ver=3.11
 full_ver=${minor_ver}.0
 fname=cmake-${full_ver}
 downloadurl=https://cmake.org/files/v${minor_ver}/${fname}.tar.gz
-wget -qO- ${downloadurl} | tar xzv
+wget -qO- --no-check-certificate ${downloadurl} | tar xzv
 pushd ${fname}
 ./bootstrap --prefix=${prefix_dir} --parallel=${build_jobs}
 make -j ${build_jobs}
