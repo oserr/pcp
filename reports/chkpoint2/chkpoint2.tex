@@ -104,13 +104,13 @@ harness for the linked-lists, and decided to add a linked list with fine-grained
 spinning-reader-writer locks to the mix of lists we will use in our benchmarks.
 
 \section*{Work Done}
-We implemented a fine-grained doubly-linked list. We used the hand-over-hand
+We implemented a fine-grained singly-linked list. We used the hand-over-hand
 locking technique presented in the lecture 17 slides. The code in the slides
 contains some unnecessary checks of {\tt curr}, but overall the same
 hand-over-hand pattern can be used in any function that traverses the list. We
 noticed that the overall structure of the algorithms could be used with
 different kinds of locks, so we decided to implement a spinning-reader-writer
-lock to create a fine-grained spinning-reader-writer lock doubly-linked list,
+lock to create a fine-grained spinning-reader-writer lock singly-linked list,
 which we will also use in our benchmarks. The full implementation of the
 spinning-reader-write lock is included in Figure~\ref{fig:rwlock}.
 
@@ -247,7 +247,7 @@ we believe that 9 days are enough to get us to the end.
 \bf Week & \bf Assigned To  & \bf Deliverable   \\
 \midrule
 4/30     & O     & Benchmarking harness for linked-lists \\
-         & P     & Lock-free doubly-linked list \\
+         & P     & Lock-free singly-linked list \\
          & O     & Benchmarking harness for HashMap \\
 5/03     & P,O   & Benchmarks for third party C/C++ multi-threading library \\
          & P,O   & Compare results with hypothesis. Identify improvement spots \\
