@@ -4,7 +4,7 @@ APP = chkpoint2.pdf
 
 all: $(APP)
 
-$(APP): $(APP:.pdf=.tex)
+$(APP): $(APP:.pdf=.tex) references.bib
 	# Ignore errors because rubber outputs a lot of warnings.
 ifneq ($(MAC),$(findstring $(MAC),$(OS)))
 	-rubber --module xelatex $<
