@@ -9,8 +9,4 @@ cd $PBS_O_WORKDIR
 
 export LD_LIBRARY_PATH=/opt/gcc/4.9.2/lib64:/opt/gcc/4.9.2/lib:${LD_LIBRARY_PATH}
 
-# Execute the performance evaluation program and store summary in benchmark.out
-# (XXXX will get replaced by randomly generated 4-digit sequence)
-# The "-a o" option instructs it to use processor affinity directives that are compatible
-# with the version of MPI running on the Latedays nodes
 ./build/src/lb
