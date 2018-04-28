@@ -9,8 +9,12 @@ prefix_dir=${HOME}/local
 build_jobs=4
 host=$(hostname)
 if [[ ${host} =~ "latedays.andrew" ]]; then
+    export CC=/opt/gcc/4.9.2/bin/gcc
+    export CXX=/opt/gcc/4.9.2/bin/g++
     build_jobs=24
 elif [[ ${host} =~ "ghc.andrew" ]]; then
+    export CC=/opt/rh/devtoolset-3/root/usr/bin/gcc
+    export CXX=/opt/rh/devtoolset-3/root/usr/bin/g++
     build_jobs=16
 fi
 
