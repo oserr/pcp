@@ -89,15 +89,16 @@ style=ieee
 
 \maketitle
 
-\section*{Summary} We are on track with our original schedule but still working
-on the implementation of lock free linked lists that we had planned to have
-finished by this checkpoint.  We made a change in one of our data structures: we
-will use single linked lists instead of doubly  linked lists. From the papers we
-found on lock free data structures very  few implement doubly linked lists and
-the ones that do (\cite{Sundell}) are difficult and tricky to implement while still
+\section*{Summary}
+We are on track with our original schedule but still working on the
+implementation of lock free linked lists that we had planned to have finished by
+this checkpoint. We made a change in one of our data structures: we will use
+single linked lists instead of doubly linked lists. From the papers we found on
+lock free data structures, very few implement doubly linked lists and the ones
+that do \cite{Sundell} are difficult and tricky to implement while still
 guaranteeing correctness. Since the focus of this project is to have experience
-implementing  and comparing syncronization techniques we think is more valuable
-to use lock free single linked lists  which will also leave more time for actual
+implementing and comparing syncronization techniques we think it is more valuable
+to use lock free single linked lists, which will also leave more time for actual
 benchmarking and analysis. We've also begun making progress on the benchmark
 harness for the linked-lists, and decided to add a linked list with fine-grained
 spinning-reader-writer locks to the mix of lists we will use in our benchmarks.
@@ -109,9 +110,9 @@ contains some unnecessary checks of {\tt curr}, but overall the same
 hand-over-hand pattern can be used in any function that traverses the list. We
 noticed that the overall structure of the algorithms could be used with
 different kinds of locks, so we decided to implement a spinning-reader-writer
-lock to create a fine-grained spinning-reader-writer lock doubly-linked list
+lock to create a fine-grained spinning-reader-writer lock doubly-linked list,
 which we will also use in our benchmarks. The full implementation of the
-spinning-reading-write lock is included in Figure~\ref{fig:rwlock}.
+spinning-reader-write lock is included in Figure~\ref{fig:rwlock}.
 
 \begin{figure}
 \begin{center}
@@ -168,40 +169,43 @@ and 50\% lookups.
 As for lock free data structures, we did research and found some papers that gave
 us ideas on how to implement them. We will adopt a scheme based mainly on
 \cite{Harris}, where we will use flags within pointer addresses to keep track of
-deleted nodes. The delete operation will then be divided in a logical delete and 
-a phyisical delete which will require to use the simple CAS atomic primitive available 
-in the x86-64 architecture that we are using as target. Also we will
-use atomic types provided by C++ to ensure sequential consistency of the code
-and avoid races.
+deleted nodes. The delete operation will then be divided in a logical delete and
+a physical delete requiring the use of the simple CAS atomic primitive available
+in the x86-64 architecture. Also, we will use atomic types provided by C++ to
+ensure sequential consistency of the code and avoid races.
 
-We've also trimmed down or list of candidates for a C++ concurrent library down
-to
+We've also trimmed down our list of candidates for a C++ concurrent library to one
+of the following:
+
 \begin{itemize}
 \item
 \href{https://github.com/01org/tbb}{tbb} Intel's concurrent library, Threading
 Building Blocks (TBB).
 \item
-\href{https://github.com/facebook/folly}{folly} Facebooks open-source library,
+\href{https://github.com/facebook/folly}{folly} Facebook's open-source library,
 which includes concurrent data structures.
 \item
-\href{https://github.com/efficient/libcuckoo}{libcuckoo} libcuckoo library,
-which includes concurrent hash tables.
+\href{https://github.com/efficient/libcuckoo}{libcuckoo} library, another C++
+library with concurrent hash tables.
 \end{itemize}
+
 TBB seems ideal, but we are not yet commited to it because we don't know how easy
 it will be to build it and use it. As of now, the only thing we can say is that it
 builds on Linux with a simple {\tt make}, but the same command on macOS will make
 it barf (at least on Omar's mac).
 
 \section*{Goals}
-We are not removing any of our goals, but are modifying some of them slightly (doubly linked
-change to single linked). Our deliverables are:
+We are not removing any of our goals, but are modifying two of them. One change
+is to make the lock-free list singly-linked, and the other change is to include
+benchmarks for a fine-grained spinning-reader-writer-lock list. Our deliverables
+are:
 
 \begin{itemize}
 \item
-Implement a concurrent single-linked list with different kinds of locks:
+Implement a concurrent singly-linked list with different kinds of locks:
 coarse-grained locks, fine-grained locks, and fine-grained
 spinning-reader-writer locks.
-\item % Patricio: correcto?
+\item
 Implement a concurrent lock-free singly-linked list.
 \item
 Compare the performance of the lists, including serial version, with respect to
@@ -218,12 +222,12 @@ Compare performance of our library with another C++ library, e.g., TBB.
 {\bf Nice-to-have}. Parallelize algorithm/problem with our data structures.
 \end{itemize}
 
-We are confident that we can complete all our delivarables, but it seems highly
-unlikely that we'll have a chance to apply our data structures to an algorithm
-or problem; however, if we are able to make quick progress on our remaining
-tasks, then we'll definitely look into it, but as of now we have not had any
-time to look into this.
-
+We will gather the results from these experiments into a series of graphs and
+present them in the poster session. We are confident that we can complete all
+our delivarables, but it seems highly unlikely that we'll have a chance to apply
+our data structures to an algorithm or problem; however, if we are able to make
+quick progress on our remaining tasks, then we'll definitely look into it, but
+as of now we have not had any time to look into this.
 
 \section*{Schedule}
 Table~\ref{table:sche} contains an updated version of the schedule. The week is
@@ -234,7 +238,7 @@ the data structures for the external library, because at the very least we
 should be able to use the list benchmark harness as a template. It's hard to
 gage how long it will take us to complete some of the other tasks, such as
 implementing the lock-free list, or getting the library to work, but ultimately
-we belive that 9 days are enough to get us to the end.
+we believe that 9 days are enough to get us to the end.
 
 \begin{table}[t]
 \begin{center}
@@ -261,16 +265,16 @@ seems highly unlikely that we'll be able to get to it.
 \end{table}
 
 \section*{Pending Issues}
-Our issues are for the most part resolved, and we have very good idea what
+Our issues are for the most part resolved, and we have a very good idea what
 direction to take:
 
 \begin{itemize}
 \item
 {\bf C++ concurrent library}. This is still in a somewhat fluid state, because
-we've yet to benchmark a library, but we have at least two very good candidates
-in {\tt tbb} and {\tt folly}. We'll start our experimentation with {\tt tbb} and
-only move on to something else, or reach out for help, if we have trouble
-getting the library to cooperate.
+we've yet to benchmark a library, but we have at least three very good candidates.
+We'll start our experimentation with {\tt tbb} and only move on to one of the
+other libraries, or reach out for help, if we have trouble getting TBB to
+cooperate.
 \item
 {\bf Parallelizing algorithm/problem}. This is our {\it nice-to-have} item and
 hence don't see it as something that needs to be resolved, because it doesn't
