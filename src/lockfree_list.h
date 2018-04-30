@@ -69,30 +69,29 @@ template <typename T> struct LockFreeList {
   virtual unsigned Size() const noexcept;
   virtual bool Empty() const noexcept;
 
-  LockFreeNode<T> *search(T value, LockFreeNode<T> **left_node) const ;
+  LockFreeNode<T> *search(T value, LockFreeNode<T> **left_node) const;
   static bool is_marked(LockFreeNode<T> *);
   static LockFreeNode<T> *get_marked(LockFreeNode<T> *);
   static LockFreeNode<T> *get_unmarked(LockFreeNode<T> *);
 };
 
-
-
-template <typename T> bool LockFreeList<T>::is_marked(LockFreeNode<T> *addr){
+template <typename T> bool LockFreeList<T>::is_marked(LockFreeNode<T> *addr) {
   return 0x1 & (long)addr;
 }
 
 template <typename T>
-LockFreeNode<T> *LockFreeList<T>::get_marked(LockFreeNode<T> *addr){
+LockFreeNode<T> *LockFreeList<T>::get_marked(LockFreeNode<T> *addr) {
   return (LockFreeNode<T> *)((long)addr | 0x01);
 }
 
 template <typename T>
-LockFreeNode<T> *LockFreeList<T>::get_unmarked(LockFreeNode<T> *addr){
+LockFreeNode<T> *LockFreeList<T>::get_unmarked(LockFreeNode<T> *addr) {
   return (LockFreeNode<T> *)((long)addr & ~0x01);
 }
 
 template <typename T>
-LockFreeNode<T> *LockFreeList<T>::search(T value, LockFreeNode<T> **left_node) const {
+LockFreeNode<T> *LockFreeList<T>::search(T value,
+                                         LockFreeNode<T> **left_node) const {
   LockFreeNode<T> *left_node_nxt, *right_node;
   while (1) {
     LockFreeNode<T> *node = head;
@@ -105,11 +104,11 @@ LockFreeNode<T> *LockFreeList<T>::search(T value, LockFreeNode<T> **left_node) c
       }
       // advance node
       node = get_unmarked(node_nxt);
-      if (node == tail){
+      if (node == tail) {
         break;
       }
       node_nxt = node->next;
-      if (!is_marked(node_nxt) && node->value == value){
+      if (!is_marked(node_nxt) && node->value == value) {
         break;
       }
     }
@@ -118,7 +117,9 @@ LockFreeNode<T> *LockFreeList<T>::search(T value, LockFreeNode<T> **left_node) c
     if (left_node_nxt == right_node) {
       return right_node;
     } else {
-      if (std::atomic_compare_exchange_weak(&(*left_node)->next, (LockFreeNode<T>**)&left_node_nxt, right_node)){
+      if (std::atomic_compare_exchange_weak(&(*left_node)->next,
+                                            (LockFreeNode<T> **)&left_node_nxt,
+                                            right_node)) {
         return right_node;
       }
     }
@@ -152,7 +153,9 @@ template <typename T> LockFreeList<T>::~LockFreeList() {
  */
 template <typename T> bool LockFreeList<T>::Insert(T value) {
   LockFreeNode<T> *new_node = new LockFreeNode<T>(value, head->next, nullptr);
-  while (!std::atomic_compare_exchange_weak(&head->next, (LockFreeNode<T>**)&new_node->next, new_node));
+  while (!std::atomic_compare_exchange_weak(
+      &head->next, (LockFreeNode<T> **)&new_node->next, new_node))
+    ;
   size++;
   return true;
 }
@@ -167,12 +170,12 @@ template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
   LockFreeNode<T> *new_node = new LockFreeNode<T>(value, nullptr, nullptr);
   while (1) {
     right_node = search(value, &left_node);
-    if (right_node != tail){
+    if (right_node != tail) {
       return false;
-    }
-    else {
+    } else {
       new_node->next = right_node;
-      if(std::atomic_compare_exchange_weak(&left_node->next, (LockFreeNode<T>**)&right_node, new_node)){
+      if (std::atomic_compare_exchange_weak(
+              &left_node->next, (LockFreeNode<T> **)&right_node, new_node)) {
         size++;
         return true;
       }
@@ -185,20 +188,26 @@ template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
  * @param value The value to remove from the list.
  */
 template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
-  LockFreeNode<T> *right_node, *left_node;
+  LockFreeNode<T> *right_node, *left_node, *right_node_next;
   while (1) {
     right_node = search(value, &left_node);
-    if ((right_node == tail) || (right_node->value != value)){
+    if ((right_node == tail) || (right_node->value != value)) {
       return false;
     }
-    LockFreeNode<T> *right_node_next = right_node->next;
+    right_node_next = right_node->next;
     if (!is_marked(right_node_next)) {
       // logically delete node
-      if (std::atomic_compare_exchange_weak(&right_node->next, (LockFreeNode<T>**)&right_node_next, get_marked(right_node_next))){
+      if (std::atomic_compare_exchange_weak(
+              &right_node->next, (LockFreeNode<T> **)&right_node_next,
+              get_marked(right_node_next))) {
         size--;
         break;
       }
     }
+  }
+  // physically delete node
+  if (!std::atomic_compare_exchange_weak(&(left_node->next), (LockFreeNode<T> **)&right_node, right_node_next)){
+    search (value, &left_node);
   }
   return true;
 }
@@ -210,7 +219,7 @@ template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
 template <typename T> bool LockFreeList<T>::Contains(T value) const noexcept {
   auto node = get_unmarked(head->next);
   while (node != tail) {
-    if (value == node->value && !is_marked(node->next)){
+    if (value == node->value && !is_marked(node->next)) {
       return true;
     }
     node = get_unmarked(node->next);
@@ -246,20 +255,20 @@ std::ostream &operator<<(std::ostream &os, const LockFreeList<T> &dlList) {
   os << "(";
   auto node = LockFreeList<T>::get_unmarked(dlList.head->next);
   while (node != dlList.tail) {
-    if(!LockFreeList<T>::is_marked(node->next)){
-      os << node->value;  
+    if (!LockFreeList<T>::is_marked(node->next)) {
+      os << node->value;
       break;
     }
     node = LockFreeList<T>::get_unmarked(node->next);
   }
-  if(node == dlList.tail){
+  if (node == dlList.tail) {
     os << ')';
     return os;
   }
 
   node = LockFreeList<T>::get_unmarked(node->next);
   while (node != dlList.tail) {
-    if(!LockFreeList<T>::is_marked(node->next)){
+    if (!LockFreeList<T>::is_marked(node->next)) {
       os << ',' << node->value;
     }
     node = LockFreeList<T>::get_unmarked(node->next);
@@ -267,5 +276,3 @@ std::ostream &operator<<(std::ostream &os, const LockFreeList<T> &dlList) {
   os << ')';
   return os;
 }
-
-
