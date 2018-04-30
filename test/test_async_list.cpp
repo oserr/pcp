@@ -10,10 +10,11 @@
 #include "coarse_grain_list.h"
 #include "fine_grain_list.h"
 #include "nonblocking_list.h"
+#include "lockfree_list.h"
 
 namespace {
 
-constexpr int kNumThreads = 4;
+constexpr int kNumThreads = 8;
 // At 10000 the tests start to take a little longer to run.
 constexpr int kIntsPerThread = 10000;
 
@@ -96,11 +97,12 @@ TYPED_TEST_P(IntAsyncListTest, CanInsertAndRemoveItemsWithoutDeadlock) {
 
 REGISTER_TYPED_TEST_CASE_P(IntAsyncListTest,
                            CanInsertAndRemoveItemsWithoutDeadlock);
-INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntAsyncListTest,
-                              CoarseGrainList<int>);
-INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, IntAsyncListTest,
-                              FineGrainList<int>);
-INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, IntAsyncListTest,
-                              NonBlockingList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, IntAsyncListTest, CoarseGrainList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, IntAsyncListTest, FineGrainList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(LockFreeList, IntAsyncListTest, LockFreeList<int>);
+INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, IntAsyncListTest, NonBlockingList<int>);
 
 } // namespace
+
+
+

@@ -6,23 +6,55 @@
 
 #pragma once
 
-#include <ostream>
 #include <atomic>
 #include <mutex>
+#include <ostream>
 
-#include "dlnode.h"
+template <typename T> struct LockFreeNode {
+  T value;
+  std::atomic<LockFreeNode *> prev;
+  std::atomic<LockFreeNode *> next;
+
+  /**
+   * Default ctor. Initalizes everything to default or nullptr.
+   */
+  LockFreeNode() : value(), prev(nullptr), next(nullptr) {}
+
+  /**
+   * Initializes node with specific value, and sets prev/next to nullptr.
+   * @param value The value to initialize the node with.
+   */
+  LockFreeNode(T value) : value(value), prev(nullptr), next(nullptr) {}
+
+  /**
+   * Initializes node with a value, and with points to neighboring nodes.
+   * @param value The value to initialize the node with.
+   * @param prev A pointer to the previous node.
+   * @param next A pointer to the next node.
+   */
+  LockFreeNode(T value, LockFreeNode *prev, LockFreeNode *next)
+      : value(value), prev(prev), next(next) {}
+
+  /* Default behavior for assignment/moves/dtor */
+  LockFreeNode(const LockFreeNode &node) = default;
+  LockFreeNode(LockFreeNode &&node) = default;
+  LockFreeNode &operator=(const LockFreeNode &node) = default;
+  LockFreeNode &operator=(LockFreeNode &&node) = default;
+  ~LockFreeNode() = default;
+};
 
 /**
  * A simple lockfree single linked list with very basic operations:
  * - Insert(): inserts a value at the front of the list
- * - InsertUnique(): inserts a value only if it does not exists in the list already
+ * - InsertUnique(): inserts a value only if it does not exists in the list
+ * already
  * - Remove(): remove a value from the list
  * - Contains(): Checks if a value is in the list
  * - Size(): Returns the size of the list
  */
 template <typename T> struct LockFreeList {
-  DlNode<T> *head;
-  DlNode<T> *tail;
+  LockFreeNode<T> *head;
+  LockFreeNode<T> *tail;
   std::atomic_uint size{0};
   // for printing the list
   using LockGuard = std::lock_guard<std::mutex>;
@@ -37,53 +69,58 @@ template <typename T> struct LockFreeList {
   virtual unsigned Size() const noexcept;
   virtual bool Empty() const noexcept;
 
-  private:
-    DlNode<T> *search(T value, DlNode<T> **left_node) const;
-    bool is_marked(DlNode<T> *) const;
-    DlNode<T> *get_marked(DlNode<T> *) const;
-    DlNode<T> *get_unmarked(DlNode<T> *) const;
+  LockFreeNode<T> *search(T value, LockFreeNode<T> **left_node) const ;
+  static bool is_marked(LockFreeNode<T> *);
+  static LockFreeNode<T> *get_marked(LockFreeNode<T> *);
+  static LockFreeNode<T> *get_unmarked(LockFreeNode<T> *);
 };
 
-template <typename T> bool LockFreeList<T>::is_marked(DlNode<T> *addr) const{
+
+
+template <typename T> bool LockFreeList<T>::is_marked(LockFreeNode<T> *addr){
   return 0x1 & (long)addr;
 }
 
-template <typename T> DlNode<T> *LockFreeList<T>::get_marked(DlNode<T> *addr) const{
-  return (DlNode<T> *)((long)addr | 0x01); 
+template <typename T>
+LockFreeNode<T> *LockFreeList<T>::get_marked(LockFreeNode<T> *addr){
+  return (LockFreeNode<T> *)((long)addr | 0x01);
 }
 
-template <typename T> DlNode<T> *LockFreeList<T>::get_unmarked(DlNode<T> *addr) const{
-  return (DlNode<T> *)((long)addr & ~0x01); 
+template <typename T>
+LockFreeNode<T> *LockFreeList<T>::get_unmarked(LockFreeNode<T> *addr){
+  return (LockFreeNode<T> *)((long)addr & ~0x01);
 }
 
+template <typename T>
+LockFreeNode<T> *LockFreeList<T>::search(T value, LockFreeNode<T> **left_node) const {
+  LockFreeNode<T> *left_node_nxt, *right_node;
+  while (1) {
+    LockFreeNode<T> *node = head;
+    LockFreeNode<T> *node_nxt = head->next;
 
-template <typename T> DlNode<T> *LockFreeList<T>::search(T value, DlNode<T> **left_node) const{
-  DlNode<T> *left_node_nxt, *right_node;
-  while(1){
-    DlNode<T> *node = head;
-    DlNode<T> *node_nxt = head->next;
-
-    while(1){
+    while (1) {
       if (!is_marked(node_nxt)) {
         (*left_node) = node;
         left_node_nxt = node_nxt;
       }
       // advance node
       node = get_unmarked(node_nxt);
-      if(node == tail)
+      if (node == tail){
         break;
+      }
       node_nxt = node->next;
-      if(!is_marked(node_nxt) && node->value == value)
+      if (!is_marked(node_nxt) && node->value == value){
         break;
+      }
     }
     right_node = node;
- 
-    if (left_node_nxt == right_node){
+
+    if (left_node_nxt == right_node) {
       return right_node;
-    }
-    else{
-      //if (std::atomic_compare_exchange_weak(&(*left_node)->next, left_node_nxt, right_node))
+    } else {
+      if (std::atomic_compare_exchange_weak(&(*left_node)->next, (LockFreeNode<T>**)&left_node_nxt, right_node)){
         return right_node;
+      }
     }
   }
 }
@@ -92,8 +129,8 @@ template <typename T> DlNode<T> *LockFreeList<T>::search(T value, DlNode<T> **le
  * Initializes the list.
  */
 template <typename T> LockFreeList<T>::LockFreeList() {
-  head = new DlNode<T>();
-  tail = new DlNode<T>();
+  head = new LockFreeNode<T>();
+  tail = new LockFreeNode<T>();
   head->next = tail;
 }
 
@@ -114,8 +151,8 @@ template <typename T> LockFreeList<T>::~LockFreeList() {
  * @param value The value to insert into the list.
  */
 template <typename T> bool LockFreeList<T>::Insert(T value) {
-  DlNode<T> *new_node = new DlNode<T>(value, head->next, nullptr);
-  while(!std::atomic_compare_exchange_weak(&head->next, &new_node->next, new_node));
+  LockFreeNode<T> *new_node = new LockFreeNode<T>(value, head->next, nullptr);
+  while (!std::atomic_compare_exchange_weak(&head->next, (LockFreeNode<T>**)&new_node->next, new_node));
   size++;
   return true;
 }
@@ -126,20 +163,21 @@ template <typename T> bool LockFreeList<T>::Insert(T value) {
  * @return True if the value was inserted, false otherwise.
  */
 template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
-  DlNode<T> *right_node, *left_node;
-  DlNode<T> *new_node = new DlNode<T>(value, nullptr, nullptr);
-  while(1){
+  LockFreeNode<T> *right_node, *left_node;
+  LockFreeNode<T> *new_node = new LockFreeNode<T>(value, nullptr, nullptr);
+  while (1) {
     right_node = search(value, &left_node);
-    if (right_node != tail)
+    if (right_node != tail){
       return false;
-    else{
+    }
+    else {
       new_node->next = right_node;
-      //if(std::atomic_compare_exchange_weak(&left_node->next, &right_node, new_node)){
+      if(std::atomic_compare_exchange_weak(&left_node->next, (LockFreeNode<T>**)&right_node, new_node)){
         size++;
         return true;
-      //}
+      }
     }
-  } 
+  }
 }
 
 /**
@@ -147,18 +185,19 @@ template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
  * @param value The value to remove from the list.
  */
 template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
-  DlNode<T> *right_node, *left_node;
-  while(1){
+  LockFreeNode<T> *right_node, *left_node;
+  while (1) {
     right_node = search(value, &left_node);
-    if ((right_node == tail) || (right_node->value != value))
+    if ((right_node == tail) || (right_node->value != value)){
       return false;
-    DlNode<T> *right_node_next = right_node->next;
-    if (!is_marked(right_node_next)){
-      //logically delete node
-      //if (std::atomic_compare_exchange_weak(&right_node->next, right_node_next, get_marked(right_node_next))){
-        break;
+    }
+    LockFreeNode<T> *right_node_next = right_node->next;
+    if (!is_marked(right_node_next)) {
+      // logically delete node
+      if (std::atomic_compare_exchange_weak(&right_node->next, (LockFreeNode<T>**)&right_node_next, get_marked(right_node_next))){
         size--;
-      //}
+        break;
+      }
     }
   }
   return true;
@@ -171,8 +210,9 @@ template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
 template <typename T> bool LockFreeList<T>::Contains(T value) const noexcept {
   auto node = get_unmarked(head->next);
   while (node != tail) {
-    if (value == node->value && !is_marked(node->next))
+    if (value == node->value && !is_marked(node->next)){
       return true;
+    }
     node = get_unmarked(node->next);
   }
   return false;
@@ -181,7 +221,9 @@ template <typename T> bool LockFreeList<T>::Contains(T value) const noexcept {
 /**
  * @return The number of elements in the list.
  */
-template <typename T> unsigned LockFreeList<T>::Size() const noexcept { return size; }
+template <typename T> unsigned LockFreeList<T>::Size() const noexcept {
+  return size;
+}
 
 /**
  * @return True if the list is empty, false otherwise.
@@ -202,15 +244,28 @@ std::ostream &operator<<(std::ostream &os, const LockFreeList<T> &dlList) {
   using LockGuard = typename LockFreeList<T>::LockGuard;
   LockGuard lck(dlList.mtx);
   os << "(";
-  auto node = get_unmarked(dlList.head->next);
-  if (node != dlList.tail && !is_marked(node->next)) {
-    os << node->value;
-    node = get_unmarked(node->next);
-    while (node != dlList.tail && !is_marked(node->next)) {
-      os << ',' << node->value;
-      node = get_unmarked(node->next);
+  auto node = LockFreeList<T>::get_unmarked(dlList.head->next);
+  while (node != dlList.tail) {
+    if(!LockFreeList<T>::is_marked(node->next)){
+      os << node->value;  
+      break;
     }
+    node = LockFreeList<T>::get_unmarked(node->next);
+  }
+  if(node == dlList.tail){
+    os << ')';
+    return os;
+  }
+
+  node = LockFreeList<T>::get_unmarked(node->next);
+  while (node != dlList.tail) {
+    if(!LockFreeList<T>::is_marked(node->next)){
+      os << ',' << node->value;
+    }
+    node = LockFreeList<T>::get_unmarked(node->next);
   }
   os << ')';
   return os;
 }
+
+
