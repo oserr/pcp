@@ -206,8 +206,10 @@ template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
     }
   }
   // physically delete node
-  if (!std::atomic_compare_exchange_weak(&(left_node->next), (LockFreeNode<T> **)&right_node, right_node_next)){
-    search (value, &left_node);
+  if (!std::atomic_compare_exchange_weak(&(left_node->next),
+                                         (LockFreeNode<T> **)&right_node,
+                                         right_node_next)) {
+    search(value, &left_node);
   }
   return true;
 }
