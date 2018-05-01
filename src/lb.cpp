@@ -138,9 +138,9 @@ void usage(const char *name) {
   std::printf("     effort is made to schedule threads in their own cores.\n");
   std::printf("     Does not run with program affinity by default.\n");
   std::printf("  -p  --preload  <FLOAT>\n");
-  std::printf(
-      "     Percent of numbers to preload. The percent is out of the\n");
-  std::printf("     total number of operations to be performed per thread.\n");
+  std::printf("     Percent of numbers to preload. The percent is out of\n");
+  std::printf("     the total number of operations to be performed per\n");
+  std::printf("     thread.\n");
 }
 
 void usageErr(const char *name) {
