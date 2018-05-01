@@ -104,14 +104,14 @@ void usage(const char *name) {
   std::printf("     Prints this a help message.\n");
   std::printf("  -n  --numbers  <UNSIGNED>\n");
   std::printf("     The total number of operations to be performed.\n");
-  std::printf("     With problem scaling, the number is fixed and gets\n")
-      std::printf("     divided when more than one thread is running. With\n");
+  std::printf("     With problem scaling, the number is fixed and gets\n");
+  std::printf("     divided when more than one thread is running. With\n");
   std::printf("     memory scaling, this reresents the number of opertions\n");
   std::printf("     to be performed by each thread.\n");
   std::printf("  -i  --inserts  <FLOAT>\n");
   std::printf("     A number between 0 and 1 representing the percent of\n");
-  std::printf("     insertions to be performed. The sum of i, r, and l must\n");
-  std::printf("     be no less than 0.01 from 1.\n");
+  std::printf("     insertions to be performed. The sum of i, r, and l\n");
+  std::printf("     must be no less than 0.01 from 1.\n");
   std::printf("  -r  --removals <FLOAT>\n");
   std::printf("     A number between 0 and 1 representing the percent of\n");
   std::printf("     removals to be performed. The sum of i, r, and l must\n");
@@ -128,8 +128,8 @@ void usage(const char *name) {
   std::printf("     separate core. If the flag is not provided, then no\n");
   std::printf("     effort is made to schedule threads in their own cores.\n");
   std::printf("  -p  --preload  <FLOAT>\n");
-  std::printf(
-      "     Percent of numbers to preload. The argument is optional.\n");
+  std::printf("     Percent of numbers to preload. The argument is\n");
+  std::printf("     optional.\n");
   std::printf("     If it is not provided, then .5 is used by default.\n");
 }
 
