@@ -38,7 +38,7 @@ struct RunnerParams {
   float removals{0.0};
   float lookups{0.0};
   ScalingMode scalingMode{ScalingMode::Problem};
-  bool withAffinity{true};
+  bool withAffinity{false};
   float preload{0.0};
 
   RunnerParams() = default;

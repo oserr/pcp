@@ -4,31 +4,137 @@
  * Runs the benchmark for the lists.
  */
 
+#include <getopt.h>
+
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <thread>
+#include <vector>
 
 #include "coarse_grain_list.h"
 #include "dllist.h"
 #include "fine_grain_list.h"
 #include "list_runner.h"
+#include "lockfree_list.h"
 #include "nonblocking_list.h"
 
-int main() {
-  std::vector<RunnerResults> results;
-  RunnerParams params(10000, .80, .10, .10);
-  for (auto b : {false, true}) {
-    params.withAffinity = b;
-    ListRunner runner(params);
-    results.push_back(runner.Run<CoarseGrainList>("CoarseGrainList"));
-    results.push_back(runner.Run<FineGrainList>("FineGrainList"));
-    results.push_back(runner.Run<NonBlockingList>("NonBlockingList"));
+void usage(const char *name);
+void usageErr(const char *name);
+
+int main(int argc, char *argv[]) {
+  static struct option longOptions[] = {
+      {"help", no_argument, nullptr, 'h'},
+      {"numbers", required_argument, nullptr, 'n'},
+      {"iserts", required_argument, nullptr, 'i'},
+      {"removals", required_argument, nullptr, 'r'},
+      {"lookups", required_argument, nullptr, 'l'},
+      {"scaling", required_argument, nullptr, 's'},
+      {"affinity", no_argument, nullptr, 'a'},
+      {"preload", optional_argument, nullptr, 'p'},
+      {0, 0, 0, 0}};
+  RunnerParams params;
+  int opt;
+  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap::", longOptions,
+                            nullptr)) != -1) {
+    switch (opt) {
+    case 'h':
+      usage(argv[0]);
+      std::exit(EXIT_SUCCESS);
+    case 'n':
+      params.nPerThread = std::stoull(optarg);
+      break;
+    case 'i':
+      params.inserts = std::stof(optarg);
+      break;
+    case 'r':
+      params.removals = std::stof(optarg);
+      break;
+    case 'l':
+      params.lookups = std::stof(optarg);
+      break;
+    case 's':
+      switch (std::stoi(optarg)) {
+      case 'p':
+      case 'P':
+        params.scalingMode = ScalingMode::Problem;
+        break;
+      case 'm':
+      case 'M':
+        params.scalingMode = ScalingMode::Memory;
+        break;
+      default:
+        usageErr(argv[0]);
+      }
+      break;
+    case 'a':
+      params.withAffinity = true;
+      break;
+    case 'p':
+      params.preload = std::strlen(optarg) ? std::stof(optarg) : 0.5;
+      break;
+    case '?':
+    default:
+      usageErr(argv[0]);
+    }
   }
-  std::cout << "list,nPerThread,%inserts,%removals,%lookups,"
-            << "%scalingMode,%withAffinity,%preload,nThreads...\n";
+
+  std::vector<RunnerResults> results;
+  ListRunner runner(params);
+  results.push_back(runner.RunSingle<DlList>("DlList"));
+  results.push_back(runner.Run<CoarseGrainList>("CoarseGrainList"));
+  results.push_back(runner.Run<FineGrainList>("FineGrainList"));
+  results.push_back(runner.Run<NonBlockingList>("NonBlockingList"));
+  results.push_back(runner.Run<LockfreeList>("LockfreeList"));
+
+  std::cout << "list,n,inserts,removals,lookups,scalingMode,"
+            << "withAffinity,preload,nThreads...\n";
   std::copy(results.begin(), results.end(),
             std::ostream_iterator<RunnerResults>(std::cout, "\n"));
-  exit(EXIT_SUCCESS);
+  std::exit(EXIT_SUCCESS);
+}
+
+void usage(const char *name) {
+  std::printf("Usage: %s [options]\n", name);
+  std::printf("Program Options:\n");
+  std::printf("  -h  --help\n");
+  std::printf("     Prints this a help message.\n");
+  std::printf("  -n  --numbers  <UNSIGNED>\n");
+  std::printf("     The total number of operations to be performed.\n");
+  std::printf("     With problem scaling, the number is fixed and gets\n")
+      std::printf("     divided when more than one thread is running. With\n");
+  std::printf("     memory scaling, this reresents the number of opertions\n");
+  std::printf("     to be performed by each thread.\n");
+  std::printf("  -i  --inserts  <FLOAT>\n");
+  std::printf("     A number between 0 and 1 representing the percent of\n");
+  std::printf("     insertions to be performed. The sum of i, r, and l must\n");
+  std::printf("     be no less than 0.01 from 1.\n");
+  std::printf("  -r  --removals <FLOAT>\n");
+  std::printf("     A number between 0 and 1 representing the percent of\n");
+  std::printf("     removals to be performed. The sum of i, r, and l must\n");
+  std::printf("     be no less than 0.01 from 1.\n");
+  std::printf("  -l  --lookups  <FLOAT>\n");
+  std::printf("     A number between 0 and 1 representing the percent of\n");
+  std::printf("     lookups to be performed. The sum of i, r, and l must\n");
+  std::printf("     be no less than 0.01 from 1.\n");
+  std::printf("  -s  --scaling  <p|P|m|M>\n");
+  std::printf("     The scaling type, where p or P represent problem\n");
+  std::printf("     scaling, and m or M represent memory scaling.\n");
+  std::printf("  -a  --affinity\n");
+  std::printf("     The threading affinity. This runs each thread on a\n");
+  std::printf("     separate core. If the flag is not provided, then no\n");
+  std::printf("     effort is made to schedule threads in their own cores.\n");
+  std::printf("  -p  --preload  <FLOAT>\n");
+  std::printf(
+      "     Percent of numbers to preload. The argument is optional.\n");
+  std::printf("     If it is not provided, then .5 is used by default.\n");
+}
+
+void usageErr(const char *name) {
+  std::printf("Error: unexpected argument or option provided\n");
+  usage(name);
+  std::exit(EXIT_FAILURE);
 }
