@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
   results.push_back(runner.Run<CoarseGrainList>("CoarseGrainList"));
   results.push_back(runner.Run<FineGrainList>("FineGrainList"));
   results.push_back(runner.Run<NonBlockingList>("NonBlockingList"));
-  results.push_back(runner.Run<LockfreeList>("LockfreeList"));
+  results.push_back(runner.Run<LockFreeList>("LockFreeList"));
 
   std::cout << "list,n,inserts,removals,lookups,scalingMode,"
             << "withAffinity,preload,nThreads...\n";
@@ -137,8 +137,8 @@ void usage(const char *name) {
   std::printf("     effort is made to schedule threads in their own cores.\n");
   std::printf("  -p  --preload  <FLOAT>\n");
   std::printf("     Percent of numbers to preload. The argument is\n");
-  std::printf("     optional.\n");
-  std::printf("     If it is not provided, then .5 is used by default.\n");
+  std::printf("     optional. If it is not provided, then .5 is used by\n");
+  std::printf("     default.\n");
 }
 
 void usageErr(const char *name) {
@@ -152,7 +152,7 @@ void checkArgs(const RunnerParams &params) {
   assert(params.removals >= 0.0 and params.removals <= 1.0);
   assert(params.lookups >= 0.0 and params.lookups <= 1.0);
   assert(params.preload >= 0.0 and params.preload <= 1.0);
-  auto total = params.insets + params.removals + params.lookups;
+  auto total = params.inserts + params.removals + params.lookups;
   assert(std::fabs(1.0 - total) <= 0.01);
 }
 
