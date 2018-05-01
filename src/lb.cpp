@@ -109,7 +109,7 @@ void usage(const char *name) {
   std::printf("Usage: %s [options]\n", name);
   std::printf("Program Options:\n");
   std::printf("  -h  --help\n");
-  std::printf("     Prints this a help message.\n");
+  std::printf("     Prints this help message.\n");
   std::printf("  -n  --numbers  <UNSIGNED>\n");
   std::printf("     The total number of operations to be performed.\n");
   std::printf("     With problem scaling, the number is fixed and gets\n");
