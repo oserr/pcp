@@ -7,6 +7,8 @@
 #include <getopt.h>
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -22,8 +24,11 @@
 #include "lockfree_list.h"
 #include "nonblocking_list.h"
 
+namespace {
 void usage(const char *name);
 void usageErr(const char *name);
+void checkArgs(const RunnerParams &params);
+} // anonymous namespace
 
 int main(int argc, char *argv[]) {
   static struct option longOptions[] = {
@@ -82,6 +87,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  checkArgs(params);
   std::vector<RunnerResults> results;
   ListRunner runner(params);
   results.push_back(runner.RunSingle<DlList>("DlList"));
@@ -96,6 +102,8 @@ int main(int argc, char *argv[]) {
             std::ostream_iterator<RunnerResults>(std::cout, "\n"));
   std::exit(EXIT_SUCCESS);
 }
+
+namespace {
 
 void usage(const char *name) {
   std::printf("Usage: %s [options]\n", name);
@@ -138,3 +146,14 @@ void usageErr(const char *name) {
   usage(name);
   std::exit(EXIT_FAILURE);
 }
+
+void checkArgs(const RunnerParams &params) {
+  assert(params.inserts >= 0.0 and params.inserts <= 1.0);
+  assert(params.removals >= 0.0 and params.removals <= 1.0);
+  assert(params.lookups >= 0.0 and params.lookups <= 1.0);
+  assert(params.preload >= 0.0 and params.preload <= 1.0);
+  auto total = params.insets + params.removals + params.lookups;
+  assert(std::fabs(1.0 - total) <= 0.01);
+}
+
+} // anonymous namespace
