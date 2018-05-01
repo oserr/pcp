@@ -73,6 +73,7 @@ template <typename T> struct LockFreeList {
   static bool is_marked(LockFreeNode<T> *);
   static LockFreeNode<T> *get_marked(LockFreeNode<T> *);
   static LockFreeNode<T> *get_unmarked(LockFreeNode<T> *);
+  LockFreeNode<T> *get_next_unmarked(LockFreeNode<T> *) const;
 };
 
 template <typename T> bool LockFreeList<T>::is_marked(LockFreeNode<T> *addr) {
@@ -87,6 +88,15 @@ LockFreeNode<T> *LockFreeList<T>::get_marked(LockFreeNode<T> *addr) {
 template <typename T>
 LockFreeNode<T> *LockFreeList<T>::get_unmarked(LockFreeNode<T> *addr) {
   return (LockFreeNode<T> *)((long)addr & ~0x01);
+}
+
+template <typename T>
+LockFreeNode<T> *LockFreeList<T>::get_next_unmarked(LockFreeNode<T> *node) const {
+  LockFreeNode<T> *next = get_unmarked(node->next);
+  while(next != tail && is_marked(next->next)){
+    next = get_unmarked(next->next);
+  }
+  return next;
 }
 
 template <typename T>
@@ -277,4 +287,33 @@ std::ostream &operator<<(std::ostream &os, const LockFreeList<T> &dlList) {
   }
   os << ')';
   return os;
+}
+
+/**
+ * Equality operator for LockFreeList.
+ * @param lhs The list on the left side.
+ * @param rhs The list on right side.
+ * @return True if the lists have the same number of elements and all the
+ *  elements are the same. Empty lists are considered equal.
+ */
+template <typename T>
+bool operator==(const LockFreeList<T> &lhs, const LockFreeList<T> &rhs) {
+  using LockGuard = typename LockFreeList<T>::LockGuard;
+  LockGuard lck1(lhs.mtx);
+  LockGuard lck2(rhs.mtx);
+
+  if (lhs.size != rhs.size)
+    return false;
+
+  LockFreeNode<T> *lhs_node = lhs.get_next_unmarked(lhs.head);
+  LockFreeNode<T> *rhs_node = rhs.get_next_unmarked(rhs.head);
+
+  while(lhs_node != lhs.tail && rhs_node != rhs.tail){
+    if(lhs_node->value != rhs_node->value){
+      return false;
+    }
+    lhs_node = lhs.get_next_unmarked(lhs_node);
+    rhs_node = rhs.get_next_unmarked(rhs_node);
+  }
+  return true;
 }
