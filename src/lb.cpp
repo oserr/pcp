@@ -31,6 +31,7 @@ void checkArgs(const RunnerParams &params);
 } // anonymous namespace
 
 int main(int argc, char *argv[]) {
+  constexpr int expectedArgs = 4;
   static struct option longOptions[] = {
       {"help", no_argument, nullptr, 'h'},
       {"numbers", required_argument, nullptr, 'n'},
@@ -41,6 +42,7 @@ int main(int argc, char *argv[]) {
       {"affinity", no_argument, nullptr, 'a'},
       {"preload", optional_argument, nullptr, 'p'},
       {0, 0, 0, 0}};
+  int nArgs = 0;
   RunnerParams params;
   int opt;
   while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap::", longOptions,
@@ -51,15 +53,19 @@ int main(int argc, char *argv[]) {
       std::exit(EXIT_SUCCESS);
     case 'n':
       params.nPerThread = std::stoull(optarg);
+      ++nArgs;
       break;
     case 'i':
       params.inserts = std::stof(optarg);
+      ++nArgs;
       break;
     case 'r':
       params.removals = std::stof(optarg);
+      ++nArgs;
       break;
     case 'l':
       params.lookups = std::stof(optarg);
+      ++nArgs;
       break;
     case 's':
       switch (std::stoi(optarg)) {
@@ -87,6 +93,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  assert(nArgs == expectedArgs);
   checkArgs(params);
   std::vector<RunnerResults> results;
   ListRunner runner(params);
