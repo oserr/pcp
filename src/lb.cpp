@@ -31,7 +31,6 @@ void checkArgs(const RunnerParams &params);
 } // anonymous namespace
 
 int main(int argc, char *argv[]) {
-  constexpr int expectedArgs = 4;
   static struct option longOptions[] = {
       {"help", no_argument, nullptr, 'h'},
       {"numbers", required_argument, nullptr, 'n'},
@@ -40,11 +39,11 @@ int main(int argc, char *argv[]) {
       {"lookups", required_argument, nullptr, 'l'},
       {"scaling", required_argument, nullptr, 's'},
       {"affinity", no_argument, nullptr, 'a'},
-      {"preload", optional_argument, nullptr, 'p'},
+      {"preload", required_argument, nullptr, 'p'},
       {0, 0, 0, 0}};
   RunnerParams params;
   int opt;
-  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap::", longOptions,
+  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:", longOptions,
                             nullptr)) != -1) {
     switch (opt) {
     case 'h':
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) {
       params.withAffinity = true;
       break;
     case 'p':
-      params.preload = std::strlen(optarg) ? std::stof(optarg) : 0.5;
+      params.preload = std::stof(optarg);
       break;
     case '?':
     default:
@@ -131,15 +130,17 @@ void usage(const char *name) {
   std::printf("     be no less than 0.01 from 1.\n");
   std::printf("  -s  --scaling  <p|P|m|M>\n");
   std::printf("     The scaling type, where p or P represent problem\n");
-  std::printf("     scaling, and m or M represent memory scaling.\n");
+  std::printf("     scaling, and m or M represent memory scaling. Runs with\n");
+  std::printf("     problem scaling by defualt.\n");
   std::printf("  -a  --affinity\n");
   std::printf("     The threading affinity. This runs each thread on a\n");
   std::printf("     separate core. If the flag is not provided, then no\n");
   std::printf("     effort is made to schedule threads in their own cores.\n");
+  std::printf("     Does not run with program affinity by default.\n");
   std::printf("  -p  --preload  <FLOAT>\n");
-  std::printf("     Percent of numbers to preload. The argument is\n");
-  std::printf("     optional. If it is not provided, then .5 is used by\n");
-  std::printf("     default.\n");
+  std::printf(
+      "     Percent of numbers to preload. The percent is out of the\n");
+  std::printf("     total number of operations to be performed per thread.\n");
 }
 
 void usageErr(const char *name) {
@@ -149,6 +150,7 @@ void usageErr(const char *name) {
 }
 
 void checkArgs(const RunnerParams &params) {
+  assert(params.nPerThread);
   assert(params.inserts >= 0.0 and params.inserts <= 1.0);
   assert(params.removals >= 0.0 and params.removals <= 1.0);
   assert(params.lookups >= 0.0 and params.lookups <= 1.0);
