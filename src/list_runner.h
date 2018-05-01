@@ -85,18 +85,14 @@ RunnerResults ListRunner::Run(const std::string &listName) {
   RunnerResults results(listName, params);
   std::thread threads[nCores];
   for (size_t c = 1; c <= nCores; ++c) {
-    std::cerr << "concurrency=" << c << std::endl;
     ListType lst;
     auto buffers = DoPreload(lst, c);
     auto timeStart = steady_clock::now();
     for (size_t t = 1; t < c; ++t) {
-      std::cerr << "launching thread t=" << t << std::endl;
       threads[t] = std::thread(&ListRunner::Run<ListType>, this, t, c,
                                std::ref(lst), std::ref(buffers[t]));
     }
-    std::cerr << "launching thread t=0" << std::endl;
     Run(0, c, lst, buffers[0]);
-    std::cerr << "joining all threads" << std::endl;
     for (size_t t = 1; t < c; ++t)
       threads[t].join();
     auto dur = steady_clock::now() - timeStart;
