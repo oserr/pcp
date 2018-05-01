@@ -73,6 +73,6 @@ ChunkParams ListRunner::GetChunkParams(size_t threadId, size_t nThreads) const
     startNext = nextId < extra ? nextId * (base + 1) : nextId * base + extra;
   }
   chunk = startNext - start;
-  nPreload = params.preload * params.removals * chunk;
+  nPreload = params.preload * chunk;
   return {start, startNext, chunk, nPreload};
 }
