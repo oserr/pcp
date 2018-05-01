@@ -76,6 +76,8 @@ struct ListRunner {
   ListRunner(const RunnerParams &params);
   template <template <typename> class TList>
   RunnerResults Run(const std::string &description);
+  template <template <typename> class TList>
+  RunnerResults RunSingle(const std::string &description);
 };
 
 template <template <typename> class TList>
@@ -99,6 +101,22 @@ RunnerResults ListRunner::Run(const std::string &listName) {
     auto runTime = duration_cast<duration<double>>(dur).count();
     results.runTimes.push_back(runTime);
   }
+  return results;
+}
+
+template <template <typename> class TList>
+RunnerResults ListRunner::RunSingle(const std::string &listName) {
+  using namespace std::chrono;
+  using ListType = TList<int>;
+  RunnerResults results(listName, params);
+  ListType lst;
+  auto buffers = DoPreload(lst, 1);
+  assert(buffers.size() == 1);
+  auto timeStart = steady_clock::now();
+  Run(0, 1, lst, buffers[0]);
+  auto dur = steady_clock::now() - timeStart;
+  auto runTime = duration_cast<duration<double>>(dur).count();
+  results.runTimes.push_back(runTime);
   return results;
 }
 
