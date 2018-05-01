@@ -150,11 +150,13 @@ void ListRunner::Run(size_t threadId, size_t nThreads, TList &lst,
   size_t nCount = cp.nPreload;
   auto genRand = std::bind(std::uniform_real_distribution<float>(),
                            std::default_random_engine(kSeed * threadId));
-  for (auto first = cp.start + cp.nPreload; first < cp.startNext;) {
+  auto first = cp.start + cp.nPreload;
+  for (size_t ops = 0; ops < cp.chunk;) {
     auto r = genRand();
-    if (r < params.inserts) {
+    if (r < params.inserts and first < cp.startNext) {
       auto num = numbers[first++];
       buf[nCount++] = num;
+      ++ops;
 
       // Take turns inserting via Insert and InsertUnique
       if (genRand() < 0.5)
@@ -166,13 +168,18 @@ void ListRunner::Run(size_t threadId, size_t nThreads, TList &lst,
         size_t index = genRand() * (nCount - 1);
         lst.Remove(buf[index]);
         buf[index] = buf[nCount--];
+        ++ops;
       }
     } else {
       if (nCount) {
         // Generate an index at random
         size_t index = genRand() * (nCount - 1);
         lst.Contains(buf[index]);
+        ++ops;
       }
     }
+    // Make sure we don't get stuck in an infinite loop.
+    if (first >= cp.startNext and nCount == 0 and ops < cp.chunk)
+      break;
   }
 }
