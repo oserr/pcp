@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
       ++nArgs;
       break;
     case 's':
-      switch (std::stoi(optarg)) {
+      switch (optarg[0]) {
       case 'p':
       case 'P':
         params.scalingMode = ScalingMode::Problem;
