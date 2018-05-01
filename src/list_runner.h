@@ -14,43 +14,131 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 #include <ostream>
 #include <random>
 #include <thread>
 
-class ListRunner {
-  static constexpr size_t kSeed = 117;
-  static constexpr float kTolerance = 0.01;
-  size_t nThreads;      // The number of threads to use for the benchmark.
-  size_t nPerThread;    // The number of items per thread.
-  size_t n;             // The total number of elements to run the test with.
-  float percentInserts; // The percent of insertions to run.
-  float percentRemoves; // The percent of removals to run.
-  float percentLookups; // The percent of lookups to run.
-  double runTime;       // The run time of the experiment in seconds.
-  std::string listName;
-  std::vector<int> numbers;
+#include "util.h"
 
-  template <typename TList> void Run(size_t threadId, TList &lst);
+enum class ScalingMode { Problem, Memory };
 
-public:
-  ListRunner(size_t nThreads, size_t nPerThread, float percentInserts,
-             float percentRemoves, float percentLookups);
-  template <template <typename> class TList>
-  void Run(const std::string &description);
-  void PrintSummary(std::ostream &os);
+std::ostream &operator<<(std::ostream &os, ScalingMode mode);
+
+struct ChunkParams {
+  size_t start;
+  size_t startNext;
+  size_t chunk;
+  size_t nPreload;
 };
 
-template <typename TList> void ListRunner::Run(size_t threadId, TList &lst) {
-  const auto removesThreshold = percentInserts + percentRemoves;
-  size_t nCount = 0;
-  int buf[nPerThread];
+struct RunnerParams {
+  size_t nPerThread{0};
+  float inserts{0.0};
+  float removals{0.0};
+  float lookups{0.0};
+  ScalingMode scalingMode{ScalingMode::Problem};
+  bool withAffinity{true};
+  float preload{0.0};
+
+  RunnerParams() = default;
+  RunnerParams(size_t nPerThread, float inserts, float removals, float lookups)
+      : nPerThread(nPerThread), inserts(inserts), removals(removals),
+        lookups(lookups) {}
+};
+
+struct RunnerResults {
+  std::string listName;
+  RunnerParams params;
+  std::vector<double> runTimes;
+
+  RunnerResults() = default;
+  RunnerResults(const std::string &listName, const RunnerParams &params)
+      : listName(listName), params(params) {}
+};
+
+std::ostream &operator<<(std::ostream &os, const RunnerResults &results);
+
+struct ListRunner {
+  static constexpr size_t kSeed = 117;
+  static constexpr float kTolerance = 0.01;
+  RunnerParams params;
+  unsigned nCores;
+  std::vector<int> numbers;
+
+  template <typename TList>
+  void Run(size_t threadId, size_t nThreads, TList &lst, std::vector<int> &buf);
+  template <typename TList>
+  std::vector<std::vector<int>> DoPreload(TList &lst, size_t nThreads);
+  void PrepareNumbers();
+  ChunkParams GetChunkParams(size_t threadId, size_t nThreads) const noexcept;
+
+  ListRunner(const RunnerParams &params);
+  template <template <typename> class TList>
+  RunnerResults Run(const std::string &description);
+};
+
+template <template <typename> class TList>
+RunnerResults ListRunner::Run(const std::string &listName) {
+  using namespace std::chrono;
+  using ListType = TList<int>;
+  RunnerResults results(listName, params);
+  std::thread threads[nCores];
+  for (size_t c = 1; c <= nCores; ++c) {
+    std::cerr << "concurrency=" << c << std::endl;
+    ListType lst;
+    auto buffers = DoPreload(lst, c);
+    auto timeStart = steady_clock::now();
+    for (size_t t = 1; t < c; ++t) {
+      std::cerr << "launching thread t=" << t << std::endl;
+      threads[t] = std::thread(&ListRunner::Run<ListType>, this, t, c,
+                               std::ref(lst), std::ref(buffers[t]));
+    }
+    std::cerr << "launching thread t=0" << std::endl;
+    Run(0, c, lst, buffers[0]);
+    std::cerr << "joining all threads" << std::endl;
+    for (size_t t = 1; t < c; ++t)
+      threads[t].join();
+    auto dur = steady_clock::now() - timeStart;
+    auto runTime = duration_cast<duration<double>>(dur).count();
+    results.runTimes.push_back(runTime);
+  }
+  return results;
+}
+
+template <typename TList>
+std::vector<std::vector<int>> ListRunner::DoPreload(TList &lst,
+                                                    size_t nThreads) {
+  std::vector<std::vector<int>> buffers;
+  for (size_t i = 0; i < nThreads; ++i) {
+    auto cp = GetChunkParams(i, nThreads);
+    std::vector<int> buf(cp.chunk);
+    size_t k = 0;
+    auto last = std::min(cp.startNext, cp.start + cp.nPreload);
+    for (auto j = cp.start; j < last; ++j) {
+      auto num = numbers[j];
+      lst.Insert(num);
+      buf[k++] = num;
+    }
+    buffers.emplace_back(std::move(buf));
+  }
+  return buffers;
+}
+
+template <typename TList>
+void ListRunner::Run(size_t threadId, size_t nThreads, TList &lst,
+                     std::vector<int> &buf) {
+  if (params.withAffinity)
+    setCoreAffinity(threadId);
+
+  const auto rThreshold = params.inserts + params.removals;
+  auto cp = GetChunkParams(threadId, nThreads);
+  size_t nCount = cp.nPreload;
   auto genRand = std::bind(std::uniform_real_distribution<float>(),
                            std::default_random_engine(kSeed * threadId));
-  auto first = threadId * nPerThread;
-  for (auto last = first + nPerThread; first < last;) {
+  for (auto first = cp.start + cp.nPreload; first < cp.startNext;) {
     auto r = genRand();
-    if (r < percentInserts) {
+    if (r < params.inserts) {
       auto num = numbers[first++];
       buf[nCount++] = num;
 
@@ -59,9 +147,12 @@ template <typename TList> void ListRunner::Run(size_t threadId, TList &lst) {
         lst.Insert(num);
       else
         lst.InsertUnique(num);
-    } else if (r < removesThreshold) {
-      if (nCount)
-        lst.Remove(buf[nCount--]);
+    } else if (r < rThreshold) {
+      if (nCount) {
+        size_t index = genRand() * (nCount - 1);
+        lst.Remove(buf[index]);
+        buf[index] = buf[nCount--];
+      }
     } else {
       if (nCount) {
         // Generate an index at random
@@ -70,24 +161,4 @@ template <typename TList> void ListRunner::Run(size_t threadId, TList &lst) {
       }
     }
   }
-}
-
-template <template <typename> class TList>
-void ListRunner::Run(const std::string &description) {
-  using namespace std::chrono;
-  using ListType = TList<int>;
-  listName = description;
-  ListType lst;
-  std::thread threads[nThreads];
-  auto tnow = steady_clock::now();
-  for (size_t i = 1; i < nThreads; ++i)
-    threads[i] =
-        std::thread(&ListRunner::Run<ListType>, this, i, std::ref(lst));
-  // Thread 0 runs this
-  Run(0, lst);
-  for (size_t i = 1; i < nThreads; ++i)
-    threads[i].join();
-  auto dur = steady_clock::now() - tnow;
-  // duration<double> is in seconds
-  runTime = duration_cast<duration<double>>(dur).count();
 }

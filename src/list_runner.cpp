@@ -6,45 +6,73 @@
 
 #include <cmath>
 #include <ostream>
+#include <thread>
 
 #include "list_runner.h"
+#include "util.h"
+
+std::ostream &operator<<(std::ostream &os, ScalingMode mode) {
+  const char *ptr;
+  switch (mode) {
+  case ScalingMode::Problem:
+    ptr = "problem";
+    break;
+  case ScalingMode::Memory:
+    ptr = "memory";
+    break;
+  default:
+    ptr = "unknown";
+    break;
+  }
+  return os << ptr;
+}
+
+std::ostream &operator<<(std::ostream &os, const RunnerResults &rr) {
+  os << rr.listName << ',' << rr.params.nPerThread << ',' << rr.params.inserts
+     << ',' << rr.params.removals << ',' << rr.params.lookups << ','
+     << rr.params.scalingMode << ',' << rr.params.withAffinity << ','
+     << rr.params.preload << ',';
+  auto first = rr.runTimes.begin();
+  auto last = rr.runTimes.end();
+  if (first != last)
+    os << *first++;
+  while (first != last)
+    os << ',' << *first++;
+  return os;
+}
 
 /**
  * Initializes a ListRunner with the specs of the benchmark.
  *
- * @param nThreads The number of threads to use for the benchmark.
- * @param nPerThread The total number of numbers assigned to each thread.
- * @param percentInserts The percent of insertions to be carried out.
- * @param percentRemoves The percent of removals to be carried out.
- * @param percentLookups The percent of lookups to be carried out.
- *
- * @details Initializes a vector of unique numbers that the threads will use to
- * get their chunk of numbers to be used in the test. Verifies that the percents
- * sum up to at last .99.
+ * @param params The parameters to use for running the benchmark.
  */
-ListRunner::ListRunner(size_t nThreads, size_t nPerThread, float percentInserts,
-                       float percentRemoves, float percentLookups)
-    : nThreads(nThreads), nPerThread(nPerThread), n(nThreads * nPerThread),
-      percentInserts(percentInserts), percentRemoves(percentRemoves),
-      percentLookups(percentLookups), numbers(n) {
-  assert(nThreads and nPerThread);
-  auto totalPercent = percentInserts + percentRemoves + percentLookups;
-  assert(std::fabs(1.0 - totalPercent) < kTolerance);
-  for (size_t i = 0; i < n; ++i)
-    numbers[i] = i;
+ListRunner::ListRunner(const RunnerParams &params)
+    : params(params), nCores(std::thread::hardware_concurrency()) {
+  PrepareNumbers();
 }
 
-/**
- * Prints a summary of the benchmark.
- *
- * @param os The output stream where stats are printed.
- */
-void ListRunner::PrintSummary(std::ostream &os) {
-  os << "------ " << listName << " -----\n"
-     << "run time (s):  " << runTime << '\n'
-     << "# threads:     " << nThreads << '\n'
-     << "#s per thread: " << nPerThread << '\n'
-     << "% inserts:     " << percentInserts << '\n'
-     << "% removes:     " << percentRemoves << '\n'
-     << "% lookups:     " << percentLookups << '\n';
+void ListRunner::PrepareNumbers() {
+  size_t n = params.nPerThread;
+  if (params.scalingMode == ScalingMode::Memory)
+    n *= nCores;
+  for (size_t i = 0; i < n; ++i)
+    numbers.push_back(i);
+}
+
+ChunkParams ListRunner::GetChunkParams(size_t threadId, size_t nThreads) const
+    noexcept {
+  size_t start, startNext, chunk, nPreload;
+  if (params.scalingMode == ScalingMode::Memory) {
+    start = threadId * params.nPerThread;
+    startNext = start + params.nPerThread;
+  } else {
+    auto base = numbers.size() / nThreads;
+    auto extra = numbers.size() % nThreads;
+    auto nextId = threadId + 1;
+    start = threadId < extra ? threadId * (base + 1) : threadId * base + extra;
+    startNext = nextId < extra ? nextId * (base + 1) : nextId * base + extra;
+  }
+  chunk = startNext - start;
+  nPreload = params.preload * params.removals * chunk;
+  return {start, startNext, chunk, nPreload};
 }

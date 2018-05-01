@@ -4,8 +4,10 @@
  * Runs the benchmark for the lists.
  */
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <iterator>
 #include <thread>
 
 #include "coarse_grain_list.h"
@@ -15,20 +17,18 @@
 #include "nonblocking_list.h"
 
 int main() {
-  const unsigned nMachineThreads = std::thread::hardware_concurrency();
-  std::cout << "HARDWARE CONCURRENCY = " << nMachineThreads << '\n';
-  for (unsigned t = 1; t <= nMachineThreads; ++t) {
-    ListRunner runner(t, 1000, .8, .1, .1);
-    if (t == 1) {
-      runner.Run<DlList>("DlList");
-      runner.PrintSummary(std::cout);
-    }
-    runner.Run<CoarseGrainList>("CoarseGrainList");
-    runner.PrintSummary(std::cout);
-    runner.Run<FineGrainList>("FineGrainList");
-    runner.PrintSummary(std::cout);
-    runner.Run<NonBlockingList>("NonBlockingList");
-    runner.PrintSummary(std::cout);
+  std::vector<RunnerResults> results;
+  RunnerParams params(10000, .80, .10, .10);
+  for (auto b : {false, true}) {
+    params.withAffinity = b;
+    ListRunner runner(params);
+    results.push_back(runner.Run<CoarseGrainList>("CoarseGrainList"));
+    results.push_back(runner.Run<FineGrainList>("FineGrainList"));
+    results.push_back(runner.Run<NonBlockingList>("NonBlockingList"));
   }
+  std::cout << "list,nPerThread,%inserts,%removals,%lookups,"
+            << "%scalingMode,%withAffinity,%preload,nThreads...\n";
+  std::copy(results.begin(), results.end(),
+            std::ostream_iterator<RunnerResults>(std::cout, "\n"));
   exit(EXIT_SUCCESS);
 }
