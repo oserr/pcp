@@ -8,7 +8,7 @@
 #include <ostream>
 #include <thread>
 
-#include "list_runner.h"
+#include "benchmark_runner.h"
 #include "util.h"
 
 std::ostream &operator<<(std::ostream &os, ScalingMode mode) {

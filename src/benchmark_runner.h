@@ -91,7 +91,7 @@ RunnerResults BenchmarkRunner::Run(const std::string &listName) {
     auto buffers = DoPreload(lst, c);
     auto timeStart = steady_clock::now();
     for (size_t t = 1; t < c; ++t) {
-      threads[t] = std::thread(&ListRunner::Run<ListType>, this, t, c,
+      threads[t] = std::thread(&BenchmarkRunner::Run<ListType>, this, t, c,
                                std::ref(lst), std::ref(buffers[t]));
     }
     Run(0, c, lst, buffers[0]);
