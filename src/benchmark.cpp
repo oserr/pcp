@@ -17,10 +17,10 @@
 #include <thread>
 #include <vector>
 
+#include "benchmark_runner.h"
 #include "coarse_grain_list.h"
 #include "dllist.h"
 #include "fine_grain_list.h"
-#include "list_runner.h"
 #include "lockfree_list.h"
 #include "nonblocking_list.h"
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
   checkArgs(params);
   std::vector<RunnerResults> results;
-  ListRunner runner(params);
+  BenchmarkRunner runner(params);
   results.push_back(runner.RunSingle<DlList>("DlList"));
   results.push_back(runner.Run<CoarseGrainList>("CoarseGrainList"));
   results.push_back(runner.Run<FineGrainList>("FineGrainList"));

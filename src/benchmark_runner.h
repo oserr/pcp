@@ -59,7 +59,7 @@ struct RunnerResults {
 
 std::ostream &operator<<(std::ostream &os, const RunnerResults &results);
 
-struct ListRunner {
+struct BenchmarkRunner {
   static constexpr size_t kSeed = 117;
   static constexpr float kTolerance = 0.01;
   RunnerParams params;
@@ -73,7 +73,7 @@ struct ListRunner {
   void PrepareNumbers();
   ChunkParams GetChunkParams(size_t threadId, size_t nThreads) const noexcept;
 
-  ListRunner(const RunnerParams &params);
+  BenchmarkRunner(const RunnerParams &params);
   template <template <typename> class TList>
   RunnerResults Run(const std::string &description);
   template <template <typename> class TList>
@@ -81,7 +81,7 @@ struct ListRunner {
 };
 
 template <template <typename> class TList>
-RunnerResults ListRunner::Run(const std::string &listName) {
+RunnerResults BenchmarkRunner::Run(const std::string &listName) {
   using namespace std::chrono;
   using ListType = TList<int>;
   RunnerResults results(listName, params);
@@ -105,7 +105,7 @@ RunnerResults ListRunner::Run(const std::string &listName) {
 }
 
 template <template <typename> class TList>
-RunnerResults ListRunner::RunSingle(const std::string &listName) {
+RunnerResults BenchmarkRunner::RunSingle(const std::string &listName) {
   using namespace std::chrono;
   using ListType = TList<int>;
   RunnerResults results(listName, params);
@@ -121,8 +121,8 @@ RunnerResults ListRunner::RunSingle(const std::string &listName) {
 }
 
 template <typename TList>
-std::vector<std::vector<int>> ListRunner::DoPreload(TList &lst,
-                                                    size_t nThreads) {
+std::vector<std::vector<int>> BenchmarkRunner::DoPreload(TList &lst,
+                                                         size_t nThreads) {
   std::vector<std::vector<int>> buffers;
   for (size_t i = 0; i < nThreads; ++i) {
     auto cp = GetChunkParams(i, nThreads);
@@ -140,8 +140,8 @@ std::vector<std::vector<int>> ListRunner::DoPreload(TList &lst,
 }
 
 template <typename TList>
-void ListRunner::Run(size_t threadId, size_t nThreads, TList &lst,
-                     std::vector<int> &buf) {
+void BenchmarkRunner::Run(size_t threadId, size_t nThreads, TList &lst,
+                          std::vector<int> &buf) {
   if (params.withAffinity)
     setCoreAffinity(threadId);
 

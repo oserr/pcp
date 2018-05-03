@@ -46,12 +46,12 @@ std::ostream &operator<<(std::ostream &os, const RunnerResults &rr) {
  *
  * @param params The parameters to use for running the benchmark.
  */
-ListRunner::ListRunner(const RunnerParams &params)
+BenchmarkRunner::BenchmarkRunner(const RunnerParams &params)
     : params(params), nCores(std::thread::hardware_concurrency()) {
   PrepareNumbers();
 }
 
-void ListRunner::PrepareNumbers() {
+void BenchmarkRunner::PrepareNumbers() {
   size_t n = params.nPerThread;
   if (params.scalingMode == ScalingMode::Memory)
     n *= nCores;
@@ -59,8 +59,8 @@ void ListRunner::PrepareNumbers() {
     numbers.push_back(i);
 }
 
-ChunkParams ListRunner::GetChunkParams(size_t threadId, size_t nThreads) const
-    noexcept {
+ChunkParams BenchmarkRunner::GetChunkParams(size_t threadId,
+                                            size_t nThreads) const noexcept {
   size_t start, startNext, chunk, nPreload;
   if (params.scalingMode == ScalingMode::Memory) {
     start = threadId * params.nPerThread;
