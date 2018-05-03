@@ -13,6 +13,3 @@ add_library(synch
 )
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark synch ${CMAKE_THREAD_LIBS_INIT})
-
-add_executable(lftest lftest.cpp)
-target_link_libraries(lftest synch ${CMAKE_THREAD_LIBS_INIT})
