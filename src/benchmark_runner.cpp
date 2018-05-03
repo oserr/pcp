@@ -30,11 +30,11 @@ std::ostream &operator<<(std::ostream &os, ScalingMode mode) {
 }
 
 std::ostream &operator<<(std::ostream &os, const RunnerResults &rr) {
-  os << rr.listName << ',' << rr.params.nCores << ',' << rr.params.minThreads
-     << ',' << rr.params.maxThreads << ',' << rr.params.n << ','
-     << rr.params.inserts << ',' << rr.params.removals << ','
-     << rr.params.lookups << ',' << rr.params.scalingMode << ','
-     << rr.params.withAffinity << ',' << rr.params.preload << ',';
+  os << rr.name << ',' << rr.params.nCores << ',' << rr.params.minThreads << ','
+     << rr.params.maxThreads << ',' << rr.params.n << ',' << rr.params.inserts
+     << ',' << rr.params.removals << ',' << rr.params.lookups << ','
+     << rr.params.scalingMode << ',' << rr.params.withAffinity << ','
+     << rr.params.preload << ',';
   auto first = rr.runTimes.begin();
   auto last = rr.runTimes.end();
   if (first != last)

@@ -106,11 +106,11 @@ int main(int argc, char *argv[]) {
   checkArgs(params);
   std::vector<RunnerResults> results;
   BenchmarkRunner runner(params);
-  results.push_back(runner.RunSingle<DlList>("DlList"));
-  results.push_back(runner.Run<CoarseGrainList>("CoarseGrainList"));
-  results.push_back(runner.Run<FineGrainList>("FineGrainList"));
-  results.push_back(runner.Run<NonBlockingList>("NonBlockingList"));
-  results.push_back(runner.Run<LockFreeList>("LockFreeList"));
+  results.push_back(runner.RunListSingle<DlList>("DlList"));
+  results.push_back(runner.RunList<CoarseGrainList>("CoarseGrainList"));
+  results.push_back(runner.RunList<FineGrainList>("FineGrainList"));
+  results.push_back(runner.RunList<NonBlockingList>("NonBlockingList"));
+  results.push_back(runner.RunList<LockFreeList>("LockFreeList"));
   printResults(results, params, isPrettyFormat);
   std::exit(EXIT_SUCCESS);
 }
@@ -199,7 +199,7 @@ void printResults(const std::vector<RunnerResults> &results,
     std::printf("\tlookups=%.2f\n", params.lookups);
     std::printf("\tpreload=%.2f\n", params.preload);
     for (auto &r : results) {
-      std::printf("%s\n", r.listName.c_str());
+      std::printf("%s\n", r.name.c_str());
       auto j = params.minThreads;
       for (auto first = r.runTimes.begin(); first != r.runTimes.end(); ++first)
         std::printf("\t%u threads - %.5f seconds\n", j++, *first);
