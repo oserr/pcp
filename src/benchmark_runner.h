@@ -1,12 +1,7 @@
 /**
- * @file list_runner.h
+ * @file benchmark_runner.h
  *
- * A harness that can run a benchmarking test for concurrent lists with the
- * following API:
- * - Insert(T value)
- * - InsertUnique(T value)
- * - Remove(T value)
- * - Contain(T value)
+ * A harness that can run a benchmarking test for the lists and hash maps.
  */
 
 #pragma once

@@ -1,7 +1,7 @@
 /**
- * @file list_runner.cpp
+ * @file benchmark_runner.cpp
  *
- * Non-template definitions for ListRunner.
+ * Non-template definitions for BenchmarkRunner.
  */
 
 #include <cmath>
