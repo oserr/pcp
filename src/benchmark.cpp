@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   static struct option longOptions[] = {
       {"help", no_argument, nullptr, 'h'},
       {"numbers", required_argument, nullptr, 'n'},
-      {"iserts", required_argument, nullptr, 'i'},
+      {"inserts", required_argument, nullptr, 'i'},
       {"removals", required_argument, nullptr, 'r'},
       {"lookups", required_argument, nullptr, 'l'},
       {"scaling", required_argument, nullptr, 's'},
