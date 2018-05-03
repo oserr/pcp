@@ -1,5 +1,5 @@
 /**
- * @file lb.cpp
+ * @file benchmark.cpp
  *
  * Runs the benchmark for the lists.
  */
