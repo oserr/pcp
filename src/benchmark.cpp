@@ -22,10 +22,22 @@
 #include "coarse_grain_list.h"
 #include "dllist.h"
 #include "fine_grain_list.h"
+#include "hashmap.h"
 #include "lockfree_list.h"
 #include "nonblocking_list.h"
 
 namespace {
+// Aliases
+template <typename T, typename K> using DlListMap = HashMap<T, K, DlList>;
+template <typename T, typename K>
+using CoarseGrainListMap = HashMap<T, K, CoarseGrainList>;
+template <typename T, typename K>
+using FineGrainListMap = HashMap<T, K, FineGrainList>;
+template <typename T, typename K>
+using NonBlockingListMap = HashMap<T, K, NonBlockingList>;
+template <typename T, typename K>
+using LockFreeListMap = HashMap<T, K, LockFreeList>;
+
 void usage(const char *name);
 void usageErr(const char *name);
 void checkArgs(const RunnerParams &params);
@@ -106,11 +118,23 @@ int main(int argc, char *argv[]) {
   checkArgs(params);
   std::vector<RunnerResults> results;
   BenchmarkRunner runner(params);
+
+  // Lists
+
   results.push_back(runner.RunListSingle<DlList>("DlList"));
   results.push_back(runner.RunList<CoarseGrainList>("CoarseGrainList"));
   results.push_back(runner.RunList<FineGrainList>("FineGrainList"));
   results.push_back(runner.RunList<NonBlockingList>("NonBlockingList"));
   results.push_back(runner.RunList<LockFreeList>("LockFreeList"));
+
+  // Maps
+
+  results.push_back(runner.RunMapSingle<DlListMap>("DlListMap"));
+  results.push_back(runner.RunMap<CoarseGrainListMap>("CoarseGrainListMap"));
+  results.push_back(runner.RunMap<FineGrainListMap>("FineGrainListMap"));
+  results.push_back(runner.RunMap<NonBlockingListMap>("NonBlockingListMap"));
+  results.push_back(runner.RunMap<LockFreeListMap>("LockFreeListMap"));
+
   printResults(results, params, isPrettyFormat);
   std::exit(EXIT_SUCCESS);
 }
@@ -194,6 +218,7 @@ void printResults(const std::vector<RunnerResults> &results,
     std::printf("\tmaxThreads=%u\n", params.maxThreads);
     std::printf("\taffinity=%s\n", params.withAffinity ? "true" : "false");
     std::printf("Use-profile stats:\n");
+    std::printf("\tn=%lu\n", params.n);
     std::printf("\tinserts=%.2f\n", params.inserts);
     std::printf("\tremovals=%.2f\n", params.removals);
     std::printf("\tlookups=%.2f\n", params.lookups);

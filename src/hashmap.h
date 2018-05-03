@@ -28,6 +28,7 @@ struct HashMap {
     Element(K key) : key(std::move(key)) {}
     Element(const Element &e) = default;
     bool operator==(const Element &e) { return key == e.key; }
+    bool operator!=(const Element &e) { return not(*this == e); }
     friend std::ostream &operator<<(std::ostream &os, const Element &e) {
       os << e.key << ": " << e.value;
       return os;
