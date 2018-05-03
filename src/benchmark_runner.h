@@ -33,18 +33,20 @@ struct ChunkParams {
 };
 
 struct RunnerParams {
-  size_t nPerThread{0};
+  size_t n{0};
   float inserts{0.0};
   float removals{0.0};
   float lookups{0.0};
   ScalingMode scalingMode{ScalingMode::Problem};
   bool withAffinity{false};
   float preload{0.0};
+  static const unsigned nCores;
+  unsigned minThreads{1};
+  unsigned maxThreads{nCores};
 
   RunnerParams() = default;
-  RunnerParams(size_t nPerThread, float inserts, float removals, float lookups)
-      : nPerThread(nPerThread), inserts(inserts), removals(removals),
-        lookups(lookups) {}
+  RunnerParams(size_t n, float inserts, float removals, float lookups)
+      : n(n), inserts(inserts), removals(removals), lookups(lookups) {}
 };
 
 struct RunnerResults {
@@ -63,7 +65,6 @@ struct BenchmarkRunner {
   static constexpr size_t kSeed = 117;
   static constexpr float kTolerance = 0.01;
   RunnerParams params;
-  unsigned nCores;
   std::vector<int> numbers;
 
   template <typename TList>
@@ -85,8 +86,8 @@ RunnerResults BenchmarkRunner::Run(const std::string &listName) {
   using namespace std::chrono;
   using ListType = TList<int>;
   RunnerResults results(listName, params);
-  std::thread threads[nCores];
-  for (size_t c = 1; c <= nCores; ++c) {
+  std::thread threads[params.maxThreads];
+  for (size_t c = params.minThreads; c <= params.maxThreads; ++c) {
     ListType lst;
     auto buffers = DoPreload(lst, c);
     auto timeStart = steady_clock::now();

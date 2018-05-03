@@ -11,6 +11,8 @@
 #include "benchmark_runner.h"
 #include "util.h"
 
+const unsigned RunnerParams::nCores = std::thread::hardware_concurrency();
+
 std::ostream &operator<<(std::ostream &os, ScalingMode mode) {
   const char *ptr;
   switch (mode) {
@@ -28,10 +30,11 @@ std::ostream &operator<<(std::ostream &os, ScalingMode mode) {
 }
 
 std::ostream &operator<<(std::ostream &os, const RunnerResults &rr) {
-  os << rr.listName << ',' << rr.params.nPerThread << ',' << rr.params.inserts
-     << ',' << rr.params.removals << ',' << rr.params.lookups << ','
-     << rr.params.scalingMode << ',' << rr.params.withAffinity << ','
-     << rr.params.preload << ',';
+  os << rr.listName << ',' << rr.params.nCores << ',' << rr.params.minThreads
+     << ',' << rr.params.maxThreads << ',' << rr.params.n << ','
+     << rr.params.inserts << ',' << rr.params.removals << ','
+     << rr.params.lookups << ',' << rr.params.scalingMode << ','
+     << rr.params.withAffinity << ',' << rr.params.preload << ',';
   auto first = rr.runTimes.begin();
   auto last = rr.runTimes.end();
   if (first != last)
@@ -46,15 +49,14 @@ std::ostream &operator<<(std::ostream &os, const RunnerResults &rr) {
  *
  * @param params The parameters to use for running the benchmark.
  */
-BenchmarkRunner::BenchmarkRunner(const RunnerParams &params)
-    : params(params), nCores(std::thread::hardware_concurrency()) {
+BenchmarkRunner::BenchmarkRunner(const RunnerParams &params) : params(params) {
   PrepareNumbers();
 }
 
 void BenchmarkRunner::PrepareNumbers() {
-  size_t n = params.nPerThread;
+  size_t n = params.n;
   if (params.scalingMode == ScalingMode::Memory)
-    n *= nCores;
+    n *= params.nCores;
   for (size_t i = 0; i < n; ++i)
     numbers.push_back(i);
 }
@@ -63,8 +65,8 @@ ChunkParams BenchmarkRunner::GetChunkParams(size_t threadId,
                                             size_t nThreads) const noexcept {
   size_t start, startNext, chunk, nPreload;
   if (params.scalingMode == ScalingMode::Memory) {
-    start = threadId * params.nPerThread;
-    startNext = start + params.nPerThread;
+    start = threadId * params.n;
+    startNext = start + params.n;
   } else {
     auto base = numbers.size() / nThreads;
     auto extra = numbers.size() % nThreads;

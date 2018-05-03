@@ -14,6 +14,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -28,6 +29,8 @@ namespace {
 void usage(const char *name);
 void usageErr(const char *name);
 void checkArgs(const RunnerParams &params);
+void printResults(const std::vector<RunnerResults> &results,
+                  const RunnerParams &params, bool pretty);
 } // anonymous namespace
 
 int main(int argc, char *argv[]) {
@@ -40,17 +43,21 @@ int main(int argc, char *argv[]) {
       {"scaling", required_argument, nullptr, 's'},
       {"affinity", no_argument, nullptr, 'a'},
       {"preload", required_argument, nullptr, 'p'},
+      {"min-threads", required_argument, nullptr, 'm'},
+      {"max-threads", required_argument, nullptr, 'x'},
+      {"pretty", no_argument, nullptr, 'f'},
       {0, 0, 0, 0}};
+  bool isPrettyFormat = false;
   RunnerParams params;
   int opt;
-  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:", longOptions,
+  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:m:x:", longOptions,
                             nullptr)) != -1) {
     switch (opt) {
     case 'h':
       usage(argv[0]);
       std::exit(EXIT_SUCCESS);
     case 'n':
-      params.nPerThread = std::stoull(optarg);
+      params.n = std::stoull(optarg);
       break;
     case 'i':
       params.inserts = std::stof(optarg);
@@ -81,6 +88,15 @@ int main(int argc, char *argv[]) {
     case 'p':
       params.preload = std::stof(optarg);
       break;
+    case 'm':
+      params.minThreads = std::stoul(optarg);
+      break;
+    case 'x':
+      params.maxThreads = std::stoul(optarg);
+      break;
+    case 'f':
+      isPrettyFormat = true;
+      break;
     case '?':
     default:
       usageErr(argv[0]);
@@ -95,11 +111,7 @@ int main(int argc, char *argv[]) {
   results.push_back(runner.Run<FineGrainList>("FineGrainList"));
   results.push_back(runner.Run<NonBlockingList>("NonBlockingList"));
   results.push_back(runner.Run<LockFreeList>("LockFreeList"));
-
-  std::cout << "list,n,inserts,removals,lookups,scalingMode,"
-            << "withAffinity,preload,nThreads...\n";
-  std::copy(results.begin(), results.end(),
-            std::ostream_iterator<RunnerResults>(std::cout, "\n"));
+  printResults(results, params, isPrettyFormat);
   std::exit(EXIT_SUCCESS);
 }
 
@@ -108,39 +120,46 @@ namespace {
 void usage(const char *name) {
   std::printf("Usage: %s [options]\n", name);
   std::printf("Program Options:\n");
-  std::printf("  -h  --help\n");
-  std::printf("     Prints this help message.\n");
-  std::printf("  -n  --numbers  <UNSIGNED>\n");
-  std::printf("     The total number of operations to be performed.\n");
-  std::printf("     With problem scaling, the number is fixed and gets\n");
-  std::printf("     divided when more than one thread is running. With\n");
-  std::printf("     memory scaling, this reresents the number of opertions\n");
-  std::printf("     to be performed by each thread.\n");
-  std::printf("  -i  --inserts  <FLOAT>\n");
-  std::printf("     A number between 0 and 1 representing the percent of\n");
-  std::printf("     insertions to be performed. The sum of i, r, and l\n");
-  std::printf("     must be no less than 0.01 from 1.\n");
-  std::printf("  -r  --removals <FLOAT>\n");
-  std::printf("     A number between 0 and 1 representing the percent of\n");
-  std::printf("     removals to be performed. The sum of i, r, and l must\n");
-  std::printf("     be no less than 0.01 from 1.\n");
-  std::printf("  -l  --lookups  <FLOAT>\n");
-  std::printf("     A number between 0 and 1 representing the percent of\n");
-  std::printf("     lookups to be performed. The sum of i, r, and l must\n");
-  std::printf("     be no less than 0.01 from 1.\n");
-  std::printf("  -s  --scaling  <p|P|m|M>\n");
-  std::printf("     The scaling type, where p or P represent problem\n");
-  std::printf("     scaling, and m or M represent memory scaling. Runs with\n");
-  std::printf("     problem scaling by defualt.\n");
-  std::printf("  -a  --affinity\n");
-  std::printf("     The threading affinity. This runs each thread on a\n");
-  std::printf("     separate core. If the flag is not provided, then no\n");
-  std::printf("     effort is made to schedule threads in their own cores.\n");
-  std::printf("     Does not run with program affinity by default.\n");
-  std::printf("  -p  --preload  <FLOAT>\n");
-  std::printf("     Percent of numbers to preload. The percent is out of\n");
-  std::printf("     the total number of operations to be performed per\n");
-  std::printf("     thread.\n");
+  std::printf("\t-h  --help\n");
+  std::printf("\t\tPrints this help message.\n");
+  std::printf("\t-n  --numbers  <UNSIGNED>\n");
+  std::printf("\t\tThe total number of operations to be performed.\n");
+  std::printf("\t\tWith problem scaling, the number is fixed and gets\n");
+  std::printf("\t\tdivided when more than one thread is running. With\n");
+  std::printf("\t\tmemory scaling, this reresents the number of opertions\n");
+  std::printf("\t\tto be performed by each thread.\n");
+  std::printf("\t-i  --inserts  <FLOAT>\n");
+  std::printf("\t\tA number between 0 and 1 representing the percent of\n");
+  std::printf("\t\tinsertions to be performed. The sum of i, r, and l\n");
+  std::printf("\t\tmust be no less than 0.01 from 1.\n");
+  std::printf("\t-r  --removals <FLOAT>\n");
+  std::printf("\t\tA number between 0 and 1 representing the percent of\n");
+  std::printf("\t\tremovals to be performed. The sum of i, r, and l must\n");
+  std::printf("\t\tbe no less than 0.01 from 1.\n");
+  std::printf("\t-l  --lookups  <FLOAT>\n");
+  std::printf("\t\tA number between 0 and 1 representing the percent of\n");
+  std::printf("\t\tlookups to be performed. The sum of i, r, and l must\n");
+  std::printf("\t\tbe no less than 0.01 from 1.\n");
+  std::printf("\t-s  --scaling  <p|P|m|M>\n");
+  std::printf("\t\tThe scaling type, where p or P represent problem\n");
+  std::printf("\t\tscaling, and m or M represent memory scaling. Runs with\n");
+  std::printf("\t\tproblem scaling by defualt.\n");
+  std::printf("\t-a  --affinity\n");
+  std::printf("\t\tThe threading affinity. This runs each thread on a\n");
+  std::printf("\t\tseparate core. If the flag is not provided, then no\n");
+  std::printf("\t\teffort is made to schedule threads in their own cores.\n");
+  std::printf("\t\tDoes not run with program affinity by default.\n");
+  std::printf("\t-p  --preload  <FLOAT>\n");
+  std::printf("\t\tPercent of numbers to preload. The percent is out of\n");
+  std::printf("\t\tthe total number of operations to be performed per\n");
+  std::printf("\t\tthread.\n");
+  std::printf("\t-m  --min-threads  <UNSIGNED>\n");
+  std::printf("\t\tThe minimum number of threads to run. 1 by default.\n");
+  std::printf("\t-x  --max-threads  <UNSIGNED>\n");
+  std::printf("\t\tThe maximum number of threads to run. Number of\n");
+  std::printf("\t\tvirtual cores on the machine is used by default.\n");
+  std::printf("\t-f  --pretty\n");
+  std::printf("\t\tOutputs the results in a more readable format.\n");
 }
 
 void usageErr(const char *name) {
@@ -150,13 +169,42 @@ void usageErr(const char *name) {
 }
 
 void checkArgs(const RunnerParams &params) {
-  assert(params.nPerThread);
+  assert(params.n);
   assert(params.inserts >= 0.0 and params.inserts <= 1.0);
   assert(params.removals >= 0.0 and params.removals <= 1.0);
   assert(params.lookups >= 0.0 and params.lookups <= 1.0);
   assert(params.preload >= 0.0 and params.preload <= 1.0);
+  assert(params.minThreads >= 1 and params.minThreads <= params.maxThreads);
   auto total = params.inserts + params.removals + params.lookups;
   assert(std::fabs(1.0 - total) <= 0.01);
+}
+
+void printResults(const std::vector<RunnerResults> &results,
+                  const RunnerParams &params, bool pretty = false) {
+  if (not pretty) {
+    std::cout << "list,cores,minThreads,maxThreads,n,inserts,removals,"
+              << "lookups,scalingMode,withAffinity,preload,runtimes...\n";
+    std::cout << std::boolalpha;
+    std::copy(results.begin(), results.end(),
+              std::ostream_iterator<RunnerResults>(std::cout, "\n"));
+  } else {
+    std::printf("Concurrency stats:\n");
+    std::printf("\tcores=%u\n", params.nCores);
+    std::printf("\tminThreads=%u\n", params.minThreads);
+    std::printf("\tmaxThreads=%u\n", params.maxThreads);
+    std::printf("\taffinity=%s\n", params.withAffinity ? "true" : "false");
+    std::printf("Use-profile stats:\n");
+    std::printf("\tinserts=%.2f\n", params.inserts);
+    std::printf("\tremovals=%.2f\n", params.removals);
+    std::printf("\tlookups=%.2f\n", params.lookups);
+    std::printf("\tpreload=%.2f\n", params.preload);
+    for (auto &r : results) {
+      std::printf("%s\n", r.listName.c_str());
+      auto j = params.minThreads;
+      for (auto first = r.runTimes.begin(); first != r.runTimes.end(); ++first)
+        std::printf("\t%u threads - %.5f seconds\n", j++, *first);
+    }
+  }
 }
 
 } // anonymous namespace
