@@ -32,7 +32,8 @@ template <typename TIntList> struct IntAsyncListTest : public ::testing::Test {
     for (int t = 0; t < kNumThreads; ++t) {
       std::vector<int> numbers(kIntsPerThread);
       auto iter = numbers.begin();
-      for (int i = t * kIntsPerThread, last = i + kIntsPerThread; i < last; ++i){
+      for (int i = t * kIntsPerThread, last = i + kIntsPerThread; i < last;
+           ++i) {
         *iter++ = i;
         serialList.Insert(i);
       }
@@ -71,20 +72,20 @@ template <typename TIntList> struct IntAsyncListTest : public ::testing::Test {
   }
 
   /**
-  * Remove all elements from serial list
-  */
-  void SerialRemoveAll(){
-    for (int i = 0; i < kNumThreads; ++i){
+   * Remove all elements from serial list
+   */
+  void SerialRemoveAll() {
+    for (int i = 0; i < kNumThreads; ++i) {
       auto &numbers = numberLists[i];
       std::shuffle(numbers.begin(), numbers.end(),
                    std::default_random_engine(i * 33));
       for (auto n : numbers)
-        EXPECT_TRUE(serialList.Remove(n)); 
-    }    
+        EXPECT_TRUE(serialList.Remove(n));
+    }
   }
 
   /* check if serial and concurrent lists are actually equal */
-  bool CompareLists(){
+  bool CompareLists() {
     std::ostringstream oss, osc;
     oss << serialList;
     osc << concurrentList;
@@ -94,13 +95,13 @@ template <typename TIntList> struct IntAsyncListTest : public ::testing::Test {
     std::vector<int> concurrentV;
 
     // ignore first (
-    ss.seekg(1);  
+    ss.seekg(1);
     sc.seekg(1);
 
     std::string token;
     int number;
     // convert serialList to vector
-    while(std::getline(ss, token, ',')) {
+    while (std::getline(ss, token, ',')) {
       std::stringstream num(token);
       num >> number;
       serialV.push_back(number);
@@ -108,11 +109,11 @@ template <typename TIntList> struct IntAsyncListTest : public ::testing::Test {
     std::sort(serialV.begin(), serialV.end());
     // std::cout << "serialVector: ";
     // for (auto const& n : serialV)
-    //   std::cout << n << ',';    
+    //   std::cout << n << ',';
     // std::cout << std::endl;
 
     // convert concurrentList to vector
-    while(std::getline(sc, token, ',')) {
+    while (std::getline(sc, token, ',')) {
       std::stringstream num(token);
       num >> number;
       concurrentV.push_back(number);
@@ -127,7 +128,6 @@ template <typename TIntList> struct IntAsyncListTest : public ::testing::Test {
   }
 };
 
-
 // Google test needs this declaration before the type-parameterized tests are
 // created
 TYPED_TEST_CASE_P(IntAsyncListTest);
@@ -136,19 +136,19 @@ TYPED_TEST_P(IntAsyncListTest, CanInsertAndRemoveItemsWithoutDeadlock) {
   std::thread threads[kNumThreads];
 
   EXPECT_TRUE(this->concurrentList.Empty());
-  //std::cout << "InitialList: " << this->serialList << std::endl;
+  // std::cout << "InitialList: " << this->serialList << std::endl;
 
   /* create concurrent list*/
   for (int i = 0; i < kNumThreads; ++i)
     threads[i] = std::thread(&IntAsyncListTest<TypeParam>::DoInsert, this, i);
-  
+
   std::for_each(threads, threads + kNumThreads,
                 std::mem_fn(&std::thread::join));
 
   constexpr unsigned totalInts = kNumThreads * kIntsPerThread;
   EXPECT_EQ(totalInts, this->concurrentList.Size());
   /* check serial and concurrent lists are equal (handles reordering) */
-  //EXPECT_TRUE(IntAsyncListTest<TypeParam>::CompareLists());
+  // EXPECT_TRUE(IntAsyncListTest<TypeParam>::CompareLists());
 
   /* remove all elements from serial list */
   IntAsyncListTest<TypeParam>::SerialRemoveAll();
@@ -159,12 +159,11 @@ TYPED_TEST_P(IntAsyncListTest, CanInsertAndRemoveItemsWithoutDeadlock) {
 
   std::for_each(threads, threads + kNumThreads,
                 std::mem_fn(&std::thread::join));
-  
+
   /* check serial and concurrent lists are equal */
   EXPECT_TRUE(this->concurrentList.Empty());
-  EXPECT_TRUE(IntAsyncListTest<TypeParam>::CompareLists());  
+  EXPECT_TRUE(IntAsyncListTest<TypeParam>::CompareLists());
 }
-
 
 REGISTER_TYPED_TEST_CASE_P(IntAsyncListTest,
                            CanInsertAndRemoveItemsWithoutDeadlock);

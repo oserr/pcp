@@ -91,9 +91,10 @@ LockFreeNode<T> *LockFreeList<T>::get_unmarked(LockFreeNode<T> *addr) {
 }
 
 template <typename T>
-LockFreeNode<T> *LockFreeList<T>::get_next_unmarked(LockFreeNode<T> *node) const {
+LockFreeNode<T> *
+LockFreeList<T>::get_next_unmarked(LockFreeNode<T> *node) const {
   LockFreeNode<T> *next = get_unmarked(node->next);
-  while(next != tail && is_marked(next->next)){
+  while (next != tail && is_marked(next->next)) {
     next = get_unmarked(next->next);
   }
   return next;
@@ -308,8 +309,8 @@ bool operator==(const LockFreeList<T> &lhs, const LockFreeList<T> &rhs) {
   LockFreeNode<T> *lhs_node = lhs.get_next_unmarked(lhs.head);
   LockFreeNode<T> *rhs_node = rhs.get_next_unmarked(rhs.head);
 
-  while(lhs_node != lhs.tail && rhs_node != rhs.tail){
-    if(lhs_node->value != rhs_node->value){
+  while (lhs_node != lhs.tail && rhs_node != rhs.tail) {
+    if (lhs_node->value != rhs_node->value) {
       return false;
     }
     lhs_node = lhs.get_next_unmarked(lhs_node);
