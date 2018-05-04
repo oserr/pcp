@@ -3,13 +3,13 @@
 
 #include "gtest/gtest.h"
 
-#include "dllist.h"
 #include "coarse_grain_list.h"
+#include "dllist.h"
 #include "fine_grain_list.h"
-#include "nonblocking_list.h"
-#include "lockfree_list.h"
 #include "hashmap.h"
 #include "libcuckoo_hashmap.h"
+#include "lockfree_list.h"
+#include "nonblocking_list.h"
 
 namespace {
 
@@ -90,12 +90,11 @@ using NonBlockingListStringHashMap =
     HashMap<std::string, std::string, NonBlockingList>;
 using LockFreeListStringHashMap =
     HashMap<std::string, std::string, LockFreeList>;
-using LibCuckooStringHashMap =
-    LibCuckooHashMap<std::string, std::string>;
+using LibCuckooStringHashMap = LibCuckooHashMap<std::string, std::string>;
 
 REGISTER_TYPED_TEST_CASE_P(StringHashMapTest, SizeWorksCorrectly,
                            HasWorksCorrectly, InsertGetWorksCorrectly,
-                           GetsNonExistingWorksCorrectly, 
+                           GetsNonExistingWorksCorrectly,
                            ReadWithSubscriptWorksCorrectly,
                            RemoveWorksCorrectly);
 
@@ -107,7 +106,7 @@ INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, StringHashMapTest,
 INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, StringHashMapTest,
                               NonBlockingListStringHashMap);
 INSTANTIATE_TYPED_TEST_CASE_P(LockFreeList, StringHashMapTest,
-                               LockFreeListStringHashMap);
+                              LockFreeListStringHashMap);
 INSTANTIATE_TYPED_TEST_CASE_P(LibCuckooHashMap, StringHashMapTest,
                               LibCuckooStringHashMap);
 

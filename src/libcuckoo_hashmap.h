@@ -47,7 +47,7 @@ template <typename K, typename V> struct LibCuckooHashMap {
  */
 template <typename K, typename V>
 bool LibCuckooHashMap<K, V>::Insert(K key, V value) {
- return table.insert(key, value);
+  return table.insert(key, value);
 }
 
 /**
@@ -55,8 +55,7 @@ bool LibCuckooHashMap<K, V>::Insert(K key, V value) {
  * @param key The key to look for.
  * @return True if the key is removed from the map, false otherwise.
  */
-template <typename K, typename V>
-bool LibCuckooHashMap<K, V>::Remove(K key) {
+template <typename K, typename V> bool LibCuckooHashMap<K, V>::Remove(K key) {
   return table.erase(key);
 }
 
@@ -83,16 +82,12 @@ unsigned LibCuckooHashMap<K, V>::Size() const noexcept {
  * @param key The key to look for.
  * @return Reference to the value, null if there is no such key
  */
-template <typename K, typename V>
-V LibCuckooHashMap<K, V>::operator[](K key) {
+template <typename K, typename V> V LibCuckooHashMap<K, V>::operator[](K key) {
   V value;
-  if(table.find(key, value)){
+  if (table.find(key, value)) {
     return value;
-  }
-  else{
+  } else {
     table.insert(key, value);
     return value;
   }
 }
-
-

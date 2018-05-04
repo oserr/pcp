@@ -235,7 +235,7 @@ template <typename T> bool LockFreeList<T>::Contains(T value) const noexcept {
 /**
  * Checks if an element exists in the list
  * @param value The value to look for in the list.
- * @return True if the value was found, false otherwise. 
+ * @return True if the value was found, false otherwise.
  * Overwrites value with the values of the element found.
  */
 template <typename T> bool LockFreeList<T>::Find(T &value) const noexcept {

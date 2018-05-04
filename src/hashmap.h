@@ -27,7 +27,11 @@ struct HashMap {
     Element(K key, V value) : key(std::move(key)), value(std::move(value)) {}
     Element(K key) : key(std::move(key)) {}
     Element(const Element &e) = default;
-    Element &operator=(const Element &e) {key = e.key; value = e.value; return *this;}
+    Element &operator=(const Element &e) {
+      key = e.key;
+      value = e.value;
+      return *this;
+    }
     bool operator==(const Element &e) { return key == e.key; }
     bool operator!=(const Element &e) { return !(key == e.key); }
     friend std::ostream &operator<<(std::ostream &os, const Element &e) {
@@ -124,7 +128,7 @@ V HashMap<K, V, TList>::operator[](K key) {
     return e.value;
   } else {
     // could be changed to throw exception
-    if(buckets[bucket].InsertUnique(e)){
+    if (buckets[bucket].InsertUnique(e)) {
       size++;
     }
     return e.value;
