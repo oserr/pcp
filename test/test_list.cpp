@@ -100,14 +100,14 @@ TYPED_TEST_P(IntListTest, FindWorksCorrectly) {
     this->intList.Insert(num);
 
   for (auto num : numbers) {
-    auto ptr = this->intList.Find(num);
-    EXPECT_TRUE(ptr != nullptr and num == *ptr);
+    bool r = this->intList.Find(num);
+    EXPECT_TRUE(r);
   }
 
   int otherNum[] = {100, 200, 300, 400};
   for (auto num : otherNum) {
-    auto ptr = this->intList.Find(num);
-    EXPECT_EQ(nullptr, ptr);
+    bool r = this->intList.Find(num);
+    EXPECT_FALSE(r);
   }
 }
 
