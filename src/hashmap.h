@@ -27,6 +27,11 @@ struct HashMap {
     Element(K key, V value) : key(std::move(key)), value(std::move(value)) {}
     Element(K key) : key(std::move(key)) {}
     Element(const Element &e) = default;
+    Element &operator=(const Element &e) {
+      key = e.key;
+      value = e.value;
+      return *this;
+    }
     bool operator==(const Element &e) { return key == e.key; }
     bool operator!=(const Element &e) { return not(*this == e); }
     friend std::ostream &operator<<(std::ostream &os, const Element &e) {
@@ -57,7 +62,7 @@ struct HashMap {
   bool Remove(K key);
   bool Has(K key) const noexcept;
   unsigned Size() const noexcept;
-  V &operator[](K key);
+  V operator[](K key);
 };
 
 /**
@@ -115,17 +120,18 @@ unsigned HashMap<K, V, TList>::Size() const noexcept {
  * @return Reference to the value, null if there is no such key
  */
 template <typename K, typename V, template <typename> class TList>
-V &HashMap<K, V, TList>::operator[](K key) {
+V HashMap<K, V, TList>::operator[](K key) {
   Element e(key);
   auto bucket = hasher(key) % nBuckets;
-  auto elem = buckets[bucket].Find(e);
-  if (elem) {
-    return elem->value;
+  bool flag = buckets[bucket].Find(e);
+  if (flag) {
+    return e.value;
   } else {
     // could be changed to throw exception
-    buckets[bucket].Insert(e);
-    size++;
-    return buckets[bucket].Find(e)->value;
+    if (buckets[bucket].InsertUnique(e)) {
+      size++;
+    }
+    return e.value;
   }
 }
 

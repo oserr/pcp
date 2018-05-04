@@ -25,7 +25,7 @@ template <typename T> struct DlList {
   virtual bool InsertUnique(T value);
   virtual bool Remove(T value) noexcept;
   virtual bool Contains(T value) const noexcept;
-  virtual T *Find(T value) const noexcept;
+  virtual bool Find(T &value) const noexcept;
   virtual unsigned Size() const noexcept;
   virtual bool Empty() const noexcept;
 };
@@ -134,11 +134,12 @@ template <typename T> bool DlList<T>::Contains(T value) const noexcept {
   return false;
 }
 
-template <typename T> T *DlList<T>::Find(T value) const noexcept {
+template <typename T> bool DlList<T>::Find(T &value) const noexcept {
   auto node = head;
   while (node) {
     if (value == node->value) {
-      return &node->value;
+      value = node->value;
+      return true;
     }
     node = node->next;
   }

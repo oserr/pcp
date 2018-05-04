@@ -7,6 +7,8 @@
 #include "dllist.h"
 #include "fine_grain_list.h"
 #include "hashmap.h"
+#include "libcuckoo_hashmap.h"
+#include "lockfree_list.h"
 #include "nonblocking_list.h"
 
 namespace {
@@ -56,13 +58,12 @@ TYPED_TEST_P(StringHashMapTest, GetsNonExistingWorksCorrectly) {
   EXPECT_EQ(2u, this->hm.Size());
 }
 
-TYPED_TEST_P(StringHashMapTest, WriteWithSubscriptWorksCorrectly) {
+TYPED_TEST_P(StringHashMapTest, ReadWithSubscriptWorksCorrectly) {
   this->hm.Insert("color", "blue");
-  this->hm["hair"] = "brown";
-  this->hm["color"] = "yellow";
+  this->hm.Insert("hair", "brown");
 
   EXPECT_EQ("brown", this->hm["hair"]);
-  EXPECT_EQ("yellow", this->hm["color"]);
+  EXPECT_EQ("blue", this->hm["color"]);
   EXPECT_EQ(2u, this->hm.Size());
 }
 
@@ -87,12 +88,16 @@ using FineGrainListStringHashMap =
     HashMap<std::string, std::string, FineGrainList>;
 using NonBlockingListStringHashMap =
     HashMap<std::string, std::string, NonBlockingList>;
+using LockFreeListStringHashMap =
+    HashMap<std::string, std::string, LockFreeList>;
+using LibCuckooStringHashMap = LibCuckooHashMap<std::string, std::string>;
 
 REGISTER_TYPED_TEST_CASE_P(StringHashMapTest, SizeWorksCorrectly,
                            HasWorksCorrectly, InsertGetWorksCorrectly,
                            GetsNonExistingWorksCorrectly,
-                           WriteWithSubscriptWorksCorrectly,
+                           ReadWithSubscriptWorksCorrectly,
                            RemoveWorksCorrectly);
+
 INSTANTIATE_TYPED_TEST_CASE_P(DlList, StringHashMapTest, DlListStringHashMap);
 INSTANTIATE_TYPED_TEST_CASE_P(CoarseGrainList, StringHashMapTest,
                               CoarseGrainListStringHashMap);
@@ -100,5 +105,9 @@ INSTANTIATE_TYPED_TEST_CASE_P(FineGrainList, StringHashMapTest,
                               FineGrainListStringHashMap);
 INSTANTIATE_TYPED_TEST_CASE_P(NonBlockingList, StringHashMapTest,
                               NonBlockingListStringHashMap);
+INSTANTIATE_TYPED_TEST_CASE_P(LockFreeList, StringHashMapTest,
+                              LockFreeListStringHashMap);
+INSTANTIATE_TYPED_TEST_CASE_P(LibCuckooHashMap, StringHashMapTest,
+                              LibCuckooStringHashMap);
 
 } // namespace

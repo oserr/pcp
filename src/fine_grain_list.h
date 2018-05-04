@@ -57,7 +57,7 @@ template <typename T> struct FineGrainList {
   bool InsertUnique(T value);
   bool Remove(T value) noexcept;
   bool Contains(T value) const noexcept;
-  T *Find(T value) const noexcept;
+  bool Find(T &value) const noexcept;
   unsigned Size() const noexcept;
   bool Empty() const noexcept;
 };
@@ -260,20 +260,20 @@ template <typename T> bool FineGrainList<T>::Contains(T value) const noexcept {
   return false;
 }
 
-template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
+template <typename T> bool FineGrainList<T>::Find(T &value) const noexcept {
   mtx.lock();
 
   if (not head) {
     mtx.unlock();
-    return nullptr;
+    return false;
   }
 
   head->mtx.lock();
   if (value == head->value) {
-    auto ptr = &head->value;
+    value = head->value;
     head->mtx.unlock();
     mtx.unlock();
-    return ptr;
+    return true;
   }
 
   auto prev = head;
@@ -283,10 +283,10 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
   while (curr) {
     curr->mtx.lock();
     if (value == curr->value) {
-      auto ptr = &curr->value;
+      value = curr->value;
       curr->mtx.unlock();
       prev->mtx.unlock();
-      return ptr;
+      return true;
     }
     auto prevmtx = &prev->mtx;
     prev = curr;
@@ -296,7 +296,7 @@ template <typename T> T *FineGrainList<T>::Find(T value) const noexcept {
 
   prev->mtx.unlock();
 
-  return nullptr;
+  return false;
 }
 
 /**
