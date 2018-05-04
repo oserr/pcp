@@ -15,7 +15,7 @@ date_now=$(date)
 echo "##### Job started at: ${date_now} #####"
 echo
 
-${program} -n 1000000 --inserts 0.5 --removals 0.25 --lookups 0.25 --preload 0.5
+${program} -n 100000 --inserts 0.5 --removals 0.25 --lookups 0.25 --preload 0.5
 
 date_now=$(date)
 echo
