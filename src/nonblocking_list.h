@@ -86,7 +86,7 @@ template <typename T> struct NonBlockingList {
   bool InsertUnique(T value);
   bool Remove(T value) noexcept;
   bool Contains(T value) const noexcept;
-  T *Find(T value) const noexcept;
+  bool Find(T &value) const noexcept;
   unsigned Size() const noexcept;
   bool Empty() const noexcept;
 };
@@ -308,20 +308,20 @@ bool NonBlockingList<T>::Contains(T value) const noexcept {
   return false;
 }
 
-template <typename T> T *NonBlockingList<T>::Find(T value) const noexcept {
+template <typename T> bool NonBlockingList<T>::Find(T &value) const noexcept {
   lck.ReadLock();
 
   if (not head) {
     lck.ReadUnlock();
-    return nullptr;
+    return false;
   }
 
   head->lck.ReadLock();
   if (value == head->value) {
-    auto ptr = &head->value;
+    value = head->value;
     head->lck.ReadUnlock();
     lck.ReadUnlock();
-    return ptr;
+    return true;
   }
 
   auto prev = head;
@@ -331,10 +331,10 @@ template <typename T> T *NonBlockingList<T>::Find(T value) const noexcept {
   while (curr) {
     curr->lck.ReadLock();
     if (value == curr->value) {
-      auto ptr = &curr->value;
+      value = head->value;
       curr->lck.ReadUnlock();
       prev->lck.ReadUnlock();
-      return ptr;
+      return true;
     }
     auto prevlck = &prev->lck;
     prev = curr;
@@ -344,7 +344,7 @@ template <typename T> T *NonBlockingList<T>::Find(T value) const noexcept {
 
   prev->lck.ReadUnlock();
 
-  return nullptr;
+  return false;
 }
 
 /**

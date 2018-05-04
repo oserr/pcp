@@ -66,6 +66,7 @@ template <typename T> struct LockFreeList {
   virtual bool InsertUnique(T value);
   virtual bool Remove(T value) noexcept;
   virtual bool Contains(T value) const noexcept;
+  virtual bool Find(T &value) const noexcept;
   virtual unsigned Size() const noexcept;
   virtual bool Empty() const noexcept;
 
@@ -186,6 +187,7 @@ template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
 /**
  * Removes an element from the list if the element is found.
  * @param value The value to remove from the list.
+ * @return True if the value was found, false otherwise.
  */
 template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
   LockFreeNode<T> *right_node, *left_node, *right_node_next;
@@ -217,11 +219,30 @@ template <typename T> bool LockFreeList<T>::Remove(T value) noexcept {
 /**
  * Checks if an element exists in the list
  * @param value The value to look for in the list.
+ * @return True if the value was found, false otherwise.
  */
 template <typename T> bool LockFreeList<T>::Contains(T value) const noexcept {
   auto node = get_unmarked(head->next);
   while (node != tail) {
     if (value == node->value && !is_marked(node->next)) {
+      return true;
+    }
+    node = get_unmarked(node->next);
+  }
+  return false;
+}
+
+/**
+ * Checks if an element exists in the list
+ * @param value The value to look for in the list.
+ * @return True if the value was found, false otherwise.
+ * Overwrites value with the values of the element found.
+ */
+template <typename T> bool LockFreeList<T>::Find(T &value) const noexcept {
+  auto node = get_unmarked(head->next);
+  while (node != tail) {
+    if (value == node->value && !is_marked(node->next)) {
+      value = node->value;
       return true;
     }
     node = get_unmarked(node->next);

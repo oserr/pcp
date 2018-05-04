@@ -25,7 +25,7 @@ template <typename T> struct CoarseGrainList : DlList<T> {
   bool InsertUnique(T value) override;
   bool Remove(T value) noexcept;
   bool Contains(T value) const noexcept override;
-  T *Find(T value) const noexcept override;
+  bool Find(T &value) const noexcept override;
   unsigned Size() const noexcept override;
   bool Empty() const noexcept override;
 };
@@ -68,7 +68,7 @@ bool CoarseGrainList<T>::Contains(T value) const noexcept {
   return DlList<T>::Contains(value);
 }
 
-template <typename T> T *CoarseGrainList<T>::Find(T value) const noexcept {
+template <typename T> bool CoarseGrainList<T>::Find(T &value) const noexcept {
   LockGuard lck(mtx);
   return DlList<T>::Find(value);
 }

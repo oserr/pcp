@@ -1,13 +1,14 @@
+include_directories(../thirdparty/libcuckoo/install/include)
+
 add_library(synch
     benchmark_runner.h
     benchmark_runner.cpp
-    coarse_grain_list.h
     dllist.h
-    dlnode.h
-    fine_grain_list.h
-    hashmap.h
-    lockfree_list.h
+    coarse_grain_list.h
     nonblocking_list.h
+    lockfree_list.h
+    hashmap.h
+    libcuckoo_hashmap.h
     util.h
     util.cpp
 )
