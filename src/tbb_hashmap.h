@@ -13,7 +13,8 @@
 template <typename K, typename V> struct TbbHashMap {
   using size_type = typename tbb::concurrent_hash_map<K, V>::size_type;
   using accessor = typename tbb::concurrent_hash_map<K, V>::accessor;
-  using const_accessor = typename tbb::concurrent_hash_map<K, V>::const_accessor;
+  using const_accessor =
+      typename tbb::concurrent_hash_map<K, V>::const_accessor;
   constexpr static size_type NUM_BUCKETS = 1000;
   tbb::concurrent_hash_map<K, V> table;
 

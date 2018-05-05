@@ -10,6 +10,7 @@
 #include "libcuckoo_hashmap.h"
 #include "lockfree_list.h"
 #include "nonblocking_list.h"
+#include "tbb_hashmap.h"
 
 namespace {
 
@@ -91,6 +92,7 @@ using NonBlockingListStringHashMap =
 using LockFreeListStringHashMap =
     HashMap<std::string, std::string, LockFreeList>;
 using LibCuckooStringHashMap = LibCuckooHashMap<std::string, std::string>;
+using TbbStringHashMap = TbbHashMap<std::string, std::string>;
 
 REGISTER_TYPED_TEST_CASE_P(StringHashMapTest, SizeWorksCorrectly,
                            HasWorksCorrectly, InsertGetWorksCorrectly,
@@ -109,5 +111,6 @@ INSTANTIATE_TYPED_TEST_CASE_P(LockFreeList, StringHashMapTest,
                               LockFreeListStringHashMap);
 INSTANTIATE_TYPED_TEST_CASE_P(LibCuckooHashMap, StringHashMapTest,
                               LibCuckooStringHashMap);
+INSTANTIATE_TYPED_TEST_CASE_P(TbbHashMap, StringHashMapTest, TbbStringHashMap);
 
 } // namespace
