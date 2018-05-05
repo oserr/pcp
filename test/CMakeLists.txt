@@ -3,6 +3,7 @@ include_directories(
     ../thirdparty/libcuckoo/install/include
     ${GTEST_INC}
     ${GMOCK_INC}
+    ${TBB_INC}
 )
 # One executable for all unit tests.
 add_executable(test_all
@@ -12,14 +13,7 @@ add_executable(test_all
     test_hashmap.cpp
     test_lockfree.cpp
 )
-target_link_libraries(test_all libgtest ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(test_all libgtest ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBS})
 
-add_executable(test_hash
-    test_hashmap.cpp
-)
-target_link_libraries(test_hash libgtest)
-
-add_executable(test_lockfreelist
-    test_lockfree.cpp
-)
+add_executable(test_lockfreelist test_lockfree.cpp)
 target_link_libraries(test_lockfreelist libgtest)
