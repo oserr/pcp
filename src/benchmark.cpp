@@ -23,8 +23,10 @@
 #include "dllist.h"
 #include "fine_grain_list.h"
 #include "hashmap.h"
+#include "libcuckoo_hashmap.h"
 #include "lockfree_list.h"
 #include "nonblocking_list.h"
+#include "tbb_hashmap.h"
 
 namespace {
 // Aliases
@@ -134,6 +136,8 @@ int main(int argc, char *argv[]) {
   results.push_back(runner.RunMap<FineGrainListMap>("FineGrainListMap"));
   results.push_back(runner.RunMap<NonBlockingListMap>("NonBlockingListMap"));
   results.push_back(runner.RunMap<LockFreeListMap>("LockFreeListMap"));
+  results.push_back(runner.RunMap<LibCuckooHashMap>("LibCuckooHashMap"));
+  results.push_back(runner.RunMap<TbbHashMap>("TbbHashMap"));
 
   printResults(results, params, isPrettyFormat);
   std::exit(EXIT_SUCCESS);
