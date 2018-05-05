@@ -14,6 +14,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <set>
 #include <string>
 #include <thread>
 #include <vector>
@@ -27,6 +28,7 @@
 #include "lockfree_list.h"
 #include "nonblocking_list.h"
 #include "tbb_hashmap.h"
+#include "util.h"
 
 namespace {
 // Aliases
@@ -45,6 +47,7 @@ void usageErr(const char *name);
 void checkArgs(const RunnerParams &params);
 void printResults(const std::vector<RunnerResults> &results,
                   const RunnerParams &params, bool pretty);
+std::set<std::string> getTypeNames(const std::string &names, const char *prog);
 } // anonymous namespace
 
 int main(int argc, char *argv[]) {
@@ -60,8 +63,12 @@ int main(int argc, char *argv[]) {
       {"min-threads", required_argument, nullptr, 'm'},
       {"max-threads", required_argument, nullptr, 'x'},
       {"pretty", no_argument, nullptr, 'f'},
+      {"type", required_argument, nullptr, 1000},
+      {"map-only", no_argument, nullptr, 1001},
       {0, 0, 0, 0}};
   bool isPrettyFormat = false;
+  bool isMapOnly = false;
+  std::string types;
   RunnerParams params;
   int opt;
   while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:m:x:", longOptions,
@@ -111,33 +118,60 @@ int main(int argc, char *argv[]) {
     case 'f':
       isPrettyFormat = true;
       break;
+    case 1000:
+      types = optarg;
+      if (types.empty())
+        usageErr(argv[0]);
+      break;
+    case 1001:
+      isMapOnly = true;
+      break;
     case '?':
     default:
       usageErr(argv[0]);
     }
   }
 
+  auto typeNames = getTypeNames(types, argv[0]);
   checkArgs(params);
   std::vector<RunnerResults> results;
   BenchmarkRunner runner(params);
 
   // Lists
-
-  results.push_back(runner.RunListSingle<DlList>("DlList"));
-  results.push_back(runner.RunList<CoarseGrainList>("CoarseGrainList"));
-  results.push_back(runner.RunList<FineGrainList>("FineGrainList"));
-  results.push_back(runner.RunList<NonBlockingList>("NonBlockingList"));
-  results.push_back(runner.RunList<LockFreeList>("LockFreeList"));
+  if (not isMapOnly) {
+    for (auto &name : typeNames) {
+      if (name == "single")
+        results.push_back(runner.RunListSingle<DlList>("DlList"));
+      else if (name == "coarsegrain")
+        results.push_back(runner.RunList<CoarseGrainList>("CoarseGrainList"));
+      else if (name == "finegrain")
+        results.push_back(runner.RunList<FineGrainList>("FineGrainList"));
+      else if (name == "spinning")
+        results.push_back(runner.RunList<NonBlockingList>("NonBlockingList"));
+      else if (name == "lockfree")
+        results.push_back(runner.RunList<LockFreeList>("LockFreeList"));
+    }
+  }
 
   // Maps
-
-  results.push_back(runner.RunMapSingle<DlListMap>("DlListMap"));
-  results.push_back(runner.RunMap<CoarseGrainListMap>("CoarseGrainListMap"));
-  results.push_back(runner.RunMap<FineGrainListMap>("FineGrainListMap"));
-  results.push_back(runner.RunMap<NonBlockingListMap>("NonBlockingListMap"));
-  results.push_back(runner.RunMap<LockFreeListMap>("LockFreeListMap"));
-  results.push_back(runner.RunMap<LibCuckooHashMap>("LibCuckooHashMap"));
-  results.push_back(runner.RunMap<TbbHashMap>("TbbHashMap"));
+  for (auto &name : typeNames) {
+    if (name == "single")
+      results.push_back(runner.RunMapSingle<DlListMap>("DlListMap"));
+    else if (name == "coarsegrain")
+      results.push_back(
+          runner.RunMap<CoarseGrainListMap>("CoarseGrainListMap"));
+    else if (name == "finegrain")
+      results.push_back(runner.RunMap<FineGrainListMap>("FineGrainListMap"));
+    else if (name == "spinning")
+      results.push_back(
+          runner.RunMap<NonBlockingListMap>("NonBlockingListMap"));
+    else if (name == "lockfree")
+      results.push_back(runner.RunMap<LockFreeListMap>("LockFreeListMap"));
+    else if (name == "cuckoo")
+      results.push_back(runner.RunMap<LibCuckooHashMap>("LibCuckooHashMap"));
+    else if (name == "tbb")
+      results.push_back(runner.RunMap<TbbHashMap>("TbbHashMap"));
+  }
 
   printResults(results, params, isPrettyFormat);
   std::exit(EXIT_SUCCESS);
@@ -188,10 +222,23 @@ void usage(const char *name) {
   std::printf("\t\tvirtual cores on the machine is used by default.\n");
   std::printf("\t-f  --pretty\n");
   std::printf("\t\tOutputs the results in a more readable format.\n");
+  std::printf("\t--type\n");
+  std::printf("\t\tOne or more types to benchmark. If more than one is\n");
+  std::printf("\t\tprovided then they must be separated by a comma. Valid\n");
+  std::printf("\t\tnames are:\n");
+  std::printf("\t\t- single (runs DlList and DlListHashMap)\n");
+  std::printf("\t\t- coarsegrain\n");
+  std::printf("\t\t- finegrain\n");
+  std::printf("\t\t- spinning\n");
+  std::printf("\t\t- lockfree\n");
+  std::printf("\t\t- cuckoo\n");
+  std::printf("\t\t- tbb\n");
+  std::printf("\t--map-only\n");
+  std::printf("\t\tOnly runs hash map tests.\n");
 }
 
 void usageErr(const char *name) {
-  std::printf("Error: unexpected argument or option provided\n");
+  std::printf("Error: missing argument, wrong option, or incorrect argument\n");
   usage(name);
   std::exit(EXIT_FAILURE);
 }
@@ -234,6 +281,25 @@ void printResults(const std::vector<RunnerResults> &results,
         std::printf("\t%u threads - %.5f seconds\n", j++, *first);
     }
   }
+}
+
+std::set<std::string> getTypeNames(const std::string &names, const char *prog) {
+  static const std::set<std::string> kTypeNames = {
+      "single",   "coarsegrain", "finegrain", "spin",
+      "lockfree", "cuckoo",      "tbb"};
+  auto words = split(names, ',');
+  if (words.empty())
+    return kTypeNames;
+  auto last = kTypeNames.end();
+  std::set<std::string> types;
+  for (auto &w : words) {
+    w = toLower(w);
+    if (kTypeNames.find(w) != last)
+      types.insert(w);
+    else
+      usageErr(prog);
+  }
+  return types;
 }
 
 } // anonymous namespace
