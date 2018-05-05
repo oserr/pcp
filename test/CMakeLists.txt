@@ -14,6 +14,3 @@ add_executable(test_all
     test_lockfree.cpp
 )
 target_link_libraries(test_all libgtest ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBS})
-
-add_executable(test_lockfreelist test_lockfree.cpp)
-target_link_libraries(test_lockfreelist libgtest)
