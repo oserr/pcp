@@ -14,7 +14,7 @@
 
 namespace {
 
-constexpr int kNumThreads = 8;
+constexpr int kNumThreads = 4;
 // At 10000 the tests start to take a little longer to run.
 constexpr int kIntsPerThread = 10000;
 
