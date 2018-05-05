@@ -17,4 +17,4 @@ add_library(synch
     util.cpp
 )
 add_executable(benchmark benchmark.cpp)
-target_link_libraries(benchmark synch ${TBB_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(benchmark synch libtbb ${CMAKE_THREAD_LIBS_INIT})

@@ -16,7 +16,7 @@ add_executable(test_all
 )
 target_link_libraries(test_all
     synch
-    libgtest
     ${CMAKE_THREAD_LIBS_INIT}
-    ${TBB_LIBS}
+    libgtest
+    libtbb
 )

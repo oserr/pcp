@@ -11,10 +11,11 @@ ExternalProject_Add(
     INSTALL_COMMAND ""
 )
 ExternalProject_Get_Property(tbb source_dir binary_dir)
-
-set(TBB_INC ${source_dir}/include)
-set(TBB_LIBS
+add_library(libtbb INTERFACE)
+add_dependencies(libtbb tbb)
+target_link_libraries(libtbb INTERFACE
     ${binary_dir}/libtbb.so
     ${binary_dir}/libtbbmalloc.so
     ${binary_dir}/libtbbmalloc_proxy.so
 )
+set(TBB_INC ${source_dir}/include)
