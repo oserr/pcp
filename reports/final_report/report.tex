@@ -90,6 +90,13 @@ style=ieee
 \maketitle
 
 \section*{Summary}
+We implemented a set of serial and concurrent linked lists and hash maps using
+different synchronization mechanisms, including coarse-grained locks,
+fine-grained locks, spinning-reader-writer locks, and lock free. We then
+compared the performance of these data structures under different use-profiles.
+Finally, we compared the performance of our hash maps with Intel's Thread
+Building Block's (TBB) and libcuckoo's concurrent hash maps under different
+use-profiles.
 
 \section*{Background}
 
@@ -133,3 +140,4 @@ Equal work was performed by both partners.
 \printbibliography
 
 \end{document}
+\grid
