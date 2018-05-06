@@ -15,3 +15,6 @@
 
 # Ignore build dir
 build/*
+
+# Ignore jupyter notebook checkpoints
+tools/visuals/.ipynb_checkpoints/*

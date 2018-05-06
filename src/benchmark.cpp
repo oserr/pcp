@@ -349,7 +349,7 @@ void printResults(const std::vector<RunnerResults> &results,
 
 std::set<std::string> getTypeNames(const std::string &names, const char *prog) {
   static const std::set<std::string> kTypeNames = {
-      "single",   "coarsegrain", "finegrain", "spin",
+      "single",   "coarsegrain", "finegrain", "spinning",
       "lockfree", "cuckoo",      "tbb"};
   auto words = split(names, ',');
   if (words.empty())
