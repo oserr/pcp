@@ -5,6 +5,8 @@
  */
 
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <cassert>
@@ -18,6 +20,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <fstream>
 
 #include "benchmark_runner.h"
 #include "coarse_grain_list.h"
@@ -65,13 +68,15 @@ int main(int argc, char *argv[]) {
       {"pretty", no_argument, nullptr, 'f'},
       {"type", required_argument, nullptr, 1000},
       {"map-only", no_argument, nullptr, 1001},
+      {"map-loadfactor", required_argument, nullptr, 'u'},
+      {"outdir", required_argument, nullptr, 'o'},
       {0, 0, 0, 0}};
   bool isPrettyFormat = false;
   bool isMapOnly = false;
   std::string types;
   RunnerParams params;
   int opt;
-  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:m:x:", longOptions,
+  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:m:x:u:o:", longOptions,
                             nullptr)) != -1) {
     switch (opt) {
     case 'h':
@@ -117,6 +122,12 @@ int main(int argc, char *argv[]) {
       break;
     case 'f':
       isPrettyFormat = true;
+      break;
+    case 'u':
+      params.mapLoadFactor = std::stoul(optarg);
+      break;
+    case 'o':
+      params.outDirectory = optarg;
       break;
     case 1000:
       types = optarg;
@@ -222,6 +233,8 @@ void usage(const char *name) {
   std::printf("\t\tvirtual cores on the machine is used by default.\n");
   std::printf("\t-f  --pretty\n");
   std::printf("\t\tOutputs the results in a more readable format.\n");
+  std::printf("\t-u --map-loadfactor <FLOAT>\n");
+  std::printf("\t\tRelation between the number of elements to insert and the number of buckets in the map\n");
   std::printf("\t--type\n");
   std::printf("\t\tOne or more types to benchmark. If more than one is\n");
   std::printf("\t\tprovided then they must be separated by a comma. Valid\n");
@@ -256,6 +269,15 @@ void checkArgs(const RunnerParams &params) {
 
 void printResults(const std::vector<RunnerResults> &results,
                   const RunnerParams &params, bool pretty = false) {
+  //std::ostream *outfile = std::cout;
+  if(!params.outDirectory.empty()){
+    std::string filename = "n" + std::to_string(params.n).substr (0,4) + "_i" + std::to_string(params.inserts).substr (0,4) + "_r" + std::to_string(params.removals).substr (0,4) + "_l" + std::to_string(params.lookups).substr (0,4) + "_u" + std::to_string(params.mapLoadFactor).substr (0,4);
+    mkdir(params.outDirectory.c_str(), S_IRWXU);
+    std::freopen((params.outDirectory + "/" + filename).c_str(), "w", stdout);
+    //outfile.open (params.outDirectory + "/" + filename, std::ofstream::out);
+    // std::cout.rdbuf(outfile.rdbuf());
+    // std::cout.rdbuf(outfile.rdbuf());
+  }
   if (not pretty) {
     std::cout << "list,cores,minThreads,maxThreads,n,inserts,removals,"
               << "lookups,scalingMode,withAffinity,preload,runtimes...\n";
