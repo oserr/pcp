@@ -38,7 +38,7 @@ struct RunnerParams {
   static const unsigned nCores;
   unsigned minThreads{1};
   unsigned maxThreads{nCores};
-  unsigned mapLoadFactor{1};
+  float mapLoadFactor{1};
   std::string outDirectory{""};
   std::string structs;
 
@@ -229,7 +229,7 @@ RunnerResults BenchmarkRunner::RunMapSingle(const std::string &mapName) {
   using namespace std::chrono;
   using MapType = TMap<int, int>;
   RunnerResults results(mapName, params);
-  MapType hashMap(params.n / params.mapLoadFactor);
+  MapType hashMap( (int) (params.n / params.mapLoadFactor) );
   auto buffers = PreloadMap(hashMap, 1);
   assert(buffers.size() == 1);
   auto timeStart = steady_clock::now();
@@ -248,8 +248,8 @@ RunnerResults BenchmarkRunner::RunMap(const std::string &mapName) {
   std::thread threads[params.maxThreads];
   for (size_t c = params.minThreads; c <= params.maxThreads; ++c) {
     MapType hashMap(params.scalingMode == ScalingMode::Problem
-                        ? params.n / params.mapLoadFactor
-                        : (params.n * c) / params.mapLoadFactor);
+                        ? (int) (params.n / params.mapLoadFactor)
+                        : (int) ((params.n * c) / params.mapLoadFactor));
     auto buffers = PreloadMap(hashMap, c);
     auto timeStart = steady_clock::now();
     for (size_t t = 1; t < c; ++t) {

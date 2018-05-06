@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
       isPrettyFormat = true;
       break;
     case 'u':
-      params.mapLoadFactor = std::stoul(optarg);
+      params.mapLoadFactor = std::stof(optarg);
       break;
     case 'o':
       params.outDirectory = optarg;
@@ -304,7 +304,7 @@ void checkArgs(const RunnerParams &params) {
 void printResults(const std::vector<RunnerResults> &results,
                   const RunnerParams &params, bool pretty = false) {
   if (!params.outDirectory.empty()) {
-    std::string filename = "n" + std::to_string(params.n).substr(0, 4) + "_i" +
+    std::string filename = "n" + std::to_string(params.n) + "_i" +
                            std::to_string(params.inserts).substr(0, 4) + "_r" +
                            std::to_string(params.removals).substr(0, 4) + "_l" +
                            std::to_string(params.lookups).substr(0, 4) + "_u" +

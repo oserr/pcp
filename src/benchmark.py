@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # benchmark script 
 
 import subprocess
@@ -5,17 +6,18 @@ import sys
 import os
 import os.path
 import getopt
+import socket
 
 numbers = 1000000
 
 # format: [ benchmarkname n inserts removes lookoups struct outputfile  ]
 benchmarkList = {
-    "insert_heavy": (numbers, 0.8, 0.1, 0.1, 0.2, 1, "../data/ghc/",),
-    "insert_medium": (numbers, 0.5, 0.25, 0.25, 0.5, 1, "../data/ghc/"),
-    "lookup_heavy": (numbers, 0.1, 0.1, 0.8, 0.9, 1, "../data/ghc/"),
-    "lookup_medium": (numbers, 0.25, 0.25, 0.5, 0.75, 1, "../data/ghc/"),
-    "removal_heavy": (numbers, 0.1, 0.8, 0.1, 0.9, 1, "../data/ghc/"),
-    "removal_medium": (numbers, 0.25, 0.5, 0.25, 0.75, 1, "../data/ghc/"), 
+    "insert_heavy": (numbers, 0.8, 0.1, 0.1, 0.2, 0.8),
+    "insert_medium": (numbers, 0.5, 0.25, 0.25, 0.5, 0.8),
+    "lookup_heavy": (numbers, 0.1, 0.1, 0.8, 0.9, 0.8),
+    "lookup_medium": (numbers, 0.25, 0.25, 0.5, 0.75, 0.8),
+    "removal_heavy": (numbers, 0.1, 0.8, 0.1, 0.9, 0.8),
+    "removal_medium": (numbers, 0.25, 0.5, 0.25, 0.75, 0.8), 
 }
 
 
@@ -31,7 +33,7 @@ def usage(fname):
 
 
 def cmd(numbers, inserts, removes, lookups, preload, mapload, outputDir, datastruct):
-    cmd = ["./src/benchmark"] + ["-n", str(numbers), "--inserts", str(inserts), "--removals", str(removes), "--lookups", str(lookups), "--preload", str(preload), "-u", str(mapload), "-o", outputDir, "-d", datastruct ]
+    cmd = ["../build/src/benchmark"] + ["-n", str(numbers), "--inserts", str(inserts), "--removals", str(removes), "--lookups", str(lookups), "--preload", str(preload), "-u", str(mapload), "-o", outputDir, "-d", datastruct ]
     gcmdLine = " ".join(cmd)
     print gcmdLine
     try:
@@ -49,6 +51,13 @@ def run(name, args):
     optlist, args = getopt.getopt(args, "hd:b:")
     benchmarks = []
     datastruct = ""
+
+    # identify lateday or ghc
+    machine = socket.gethostname()
+    if "latedays" in machine:
+      outputDir = "../data/latedays/"
+    else:
+      outputDir = "../data/ghc/"
 
     # read parameters
     for (opt, val) in optlist:
@@ -78,7 +87,7 @@ def run(name, args):
 
     # run benchmarks
     for bparams in benchmarks:
-      (numbers, inserts, removes, lookups, preload, mapload, outputDir) = bparams
+      (numbers, inserts, removes, lookups, preload, mapload) = bparams
       cmd(numbers, inserts, removes, lookups, preload, mapload, outputDir, datastruct)
 
 
