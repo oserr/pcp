@@ -9,6 +9,8 @@
 *.bcf
 *.blg
 *.run.xml
+*.eps
+*.pdf
 
 # Ignore mac files
 .DS_Store
