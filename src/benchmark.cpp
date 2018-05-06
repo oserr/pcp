@@ -14,13 +14,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <set>
 #include <string>
 #include <thread>
 #include <vector>
-#include <fstream>
 
 #include "benchmark_runner.h"
 #include "coarse_grain_list.h"
@@ -234,7 +234,8 @@ void usage(const char *name) {
   std::printf("\t-f  --pretty\n");
   std::printf("\t\tOutputs the results in a more readable format.\n");
   std::printf("\t-u --map-loadfactor <FLOAT>\n");
-  std::printf("\t\tRelation between the number of elements to insert and the number of buckets in the map\n");
+  std::printf("\t\tRelation between the number of elements to insert and the "
+              "number of buckets in the map\n");
   std::printf("\t--type\n");
   std::printf("\t\tOne or more types to benchmark. If more than one is\n");
   std::printf("\t\tprovided then they must be separated by a comma. Valid\n");
@@ -269,12 +270,16 @@ void checkArgs(const RunnerParams &params) {
 
 void printResults(const std::vector<RunnerResults> &results,
                   const RunnerParams &params, bool pretty = false) {
-  //std::ostream *outfile = std::cout;
-  if(!params.outDirectory.empty()){
-    std::string filename = "n" + std::to_string(params.n).substr (0,4) + "_i" + std::to_string(params.inserts).substr (0,4) + "_r" + std::to_string(params.removals).substr (0,4) + "_l" + std::to_string(params.lookups).substr (0,4) + "_u" + std::to_string(params.mapLoadFactor).substr (0,4);
+  // std::ostream *outfile = std::cout;
+  if (!params.outDirectory.empty()) {
+    std::string filename = "n" + std::to_string(params.n).substr(0, 4) + "_i" +
+                           std::to_string(params.inserts).substr(0, 4) + "_r" +
+                           std::to_string(params.removals).substr(0, 4) + "_l" +
+                           std::to_string(params.lookups).substr(0, 4) + "_u" +
+                           std::to_string(params.mapLoadFactor).substr(0, 4);
     mkdir(params.outDirectory.c_str(), S_IRWXU);
     std::freopen((params.outDirectory + "/" + filename).c_str(), "w", stdout);
-    //outfile.open (params.outDirectory + "/" + filename, std::ofstream::out);
+    // outfile.open (params.outDirectory + "/" + filename, std::ofstream::out);
     // std::cout.rdbuf(outfile.rdbuf());
     // std::cout.rdbuf(outfile.rdbuf());
   }

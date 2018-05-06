@@ -228,7 +228,7 @@ RunnerResults BenchmarkRunner::RunMapSingle(const std::string &mapName) {
   using namespace std::chrono;
   using MapType = TMap<int, int>;
   RunnerResults results(mapName, params);
-  MapType hashMap(params.n / params.mapLoadFactor); 
+  MapType hashMap(params.n / params.mapLoadFactor);
   auto buffers = PreloadMap(hashMap, 1);
   assert(buffers.size() == 1);
   auto timeStart = steady_clock::now();
@@ -246,8 +246,9 @@ RunnerResults BenchmarkRunner::RunMap(const std::string &mapName) {
   RunnerResults results(mapName, params);
   std::thread threads[params.maxThreads];
   for (size_t c = params.minThreads; c <= params.maxThreads; ++c) {
-    MapType hashMap(params.scalingMode == ScalingMode::Problem ? params.n / params.mapLoadFactor
-                                                               : (params.n * c) / params.mapLoadFactor);
+    MapType hashMap(params.scalingMode == ScalingMode::Problem
+                        ? params.n / params.mapLoadFactor
+                        : (params.n * c) / params.mapLoadFactor);
     auto buffers = PreloadMap(hashMap, c);
     auto timeStart = steady_clock::now();
     for (size_t t = 1; t < c; ++t) {
@@ -259,7 +260,7 @@ RunnerResults BenchmarkRunner::RunMap(const std::string &mapName) {
       threads[t].join();
     auto dur = steady_clock::now() - timeStart;
     auto runTime = duration_cast<duration<double>>(dur).count();
-    results.runTimes.push_back(runTime);  
+    results.runTimes.push_back(runTime);
   }
   return results;
 }
