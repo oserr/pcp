@@ -8,7 +8,7 @@
 # generated on stderr will show up in the file latedays.sh.eNNNNN.
 
 # Limit execution time to 20 minutes
-#PBS -lwalltime=0:20:00
+#PBS -lwalltime=1:00:00
 # Allocate all available CPUs on a single node
 #PBS -l nodes=1:ppn=24
 

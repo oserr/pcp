@@ -8,16 +8,17 @@ import os.path
 import getopt
 import socket
 
-numbers = 1000000
+numbers = 50000
+mapLoad = 0.7
 
 # format: [ benchmarkname n inserts removes lookoups struct outputfile  ]
 benchmarkList = {
-    "insert_heavy": (numbers, 0.8, 0.1, 0.1, 0.2, 0.8),
-    "insert_medium": (numbers, 0.5, 0.25, 0.25, 0.5, 0.8),
-    "lookup_heavy": (numbers, 0.1, 0.1, 0.8, 0.9, 0.8),
-    "lookup_medium": (numbers, 0.25, 0.25, 0.5, 0.75, 0.8),
-    "removal_heavy": (numbers, 0.1, 0.8, 0.1, 0.9, 0.8),
-    "removal_medium": (numbers, 0.25, 0.5, 0.25, 0.75, 0.8), 
+    "insert_heavy": (numbers, 0.8, 0.1, 0.1, 0.2, mapLoad),
+    "insert_medium": (numbers, 0.5, 0.25, 0.25, 0.5, mapLoad),
+    "lookup_heavy": (numbers, 0.1, 0.1, 0.8, 0.9, mapLoad),
+    "lookup_medium": (numbers, 0.25, 0.25, 0.5, 0.75, mapLoad),
+    "removal_heavy": (numbers, 0.1, 0.8, 0.1, 0.9, mapLoad),
+    "removal_medium": (numbers, 0.25, 0.5, 0.25, 0.75, mapLoad), 
 }
 
 
@@ -54,10 +55,10 @@ def run(name, args):
 
     # identify lateday or ghc
     machine = socket.gethostname()
-    if "latedays" in machine:
-      outputDir = "../data/latedays/"
-    else:
+    if "ghc" in machine:
       outputDir = "../data/ghc/"
+    else:
+      outputDir = "../data/latedays/"
 
     # read parameters
     for (opt, val) in optlist:
