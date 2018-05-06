@@ -5,6 +5,8 @@
  */
 
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <cassert>
@@ -12,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <set>
@@ -65,13 +68,18 @@ int main(int argc, char *argv[]) {
       {"pretty", no_argument, nullptr, 'f'},
       {"type", required_argument, nullptr, 1000},
       {"map-only", no_argument, nullptr, 1001},
+      {"map-loadfactor", required_argument, nullptr, 'u'},
+      {"outdir", required_argument, nullptr, 'o'},
+      {"datastruct", required_argument, nullptr, 'd'},
       {0, 0, 0, 0}};
   bool isPrettyFormat = false;
   bool isMapOnly = false;
+  bool runList = false;
+  bool runMap = false;
   std::string types;
   RunnerParams params;
   int opt;
-  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:m:x:", longOptions,
+  while ((opt = getopt_long(argc, argv, "hn:i:r:l:s:ap:m:x:u:o:d:", longOptions,
                             nullptr)) != -1) {
     switch (opt) {
     case 'h':
@@ -118,6 +126,30 @@ int main(int argc, char *argv[]) {
     case 'f':
       isPrettyFormat = true;
       break;
+    case 'u':
+      params.mapLoadFactor = std::stoul(optarg);
+      break;
+    case 'o':
+      params.outDirectory = optarg;
+      break;
+    case 'd':
+      switch (optarg[0]) {
+      case 'b':
+        runList = runMap = true;
+        params.structs = "both";
+        break;
+      case 'l':
+        runList = true;
+        params.structs = "list";
+        break;
+      case 'm':
+        runMap = true;
+        params.structs = "map";
+        break;
+      default:
+        usageErr(argv[0]);
+      }
+      break;
     case 1000:
       types = optarg;
       if (types.empty())
@@ -137,8 +169,13 @@ int main(int argc, char *argv[]) {
   std::vector<RunnerResults> results;
   BenchmarkRunner runner(params);
 
+  if (!runList && !runMap) {
+    runList = not isMapOnly;
+    runMap = 1;
+  }
+
   // Lists
-  if (not isMapOnly) {
+  if (runList) {
     for (auto &name : typeNames) {
       if (name == "single")
         results.push_back(runner.RunListSingle<DlList>("DlList"));
@@ -153,24 +190,26 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Maps
-  for (auto &name : typeNames) {
-    if (name == "single")
-      results.push_back(runner.RunMapSingle<DlListMap>("DlListMap"));
-    else if (name == "coarsegrain")
-      results.push_back(
-          runner.RunMap<CoarseGrainListMap>("CoarseGrainListMap"));
-    else if (name == "finegrain")
-      results.push_back(runner.RunMap<FineGrainListMap>("FineGrainListMap"));
-    else if (name == "spinning")
-      results.push_back(
-          runner.RunMap<NonBlockingListMap>("NonBlockingListMap"));
-    else if (name == "lockfree")
-      results.push_back(runner.RunMap<LockFreeListMap>("LockFreeListMap"));
-    else if (name == "cuckoo")
-      results.push_back(runner.RunMap<LibCuckooHashMap>("LibCuckooHashMap"));
-    else if (name == "tbb")
-      results.push_back(runner.RunMap<TbbHashMap>("TbbHashMap"));
+  if (runMap) {
+    // Maps
+    for (auto &name : typeNames) {
+      if (name == "single")
+        results.push_back(runner.RunMapSingle<DlListMap>("DlListMap"));
+      else if (name == "coarsegrain")
+        results.push_back(
+            runner.RunMap<CoarseGrainListMap>("CoarseGrainListMap"));
+      else if (name == "finegrain")
+        results.push_back(runner.RunMap<FineGrainListMap>("FineGrainListMap"));
+      else if (name == "spinning")
+        results.push_back(
+            runner.RunMap<NonBlockingListMap>("NonBlockingListMap"));
+      else if (name == "lockfree")
+        results.push_back(runner.RunMap<LockFreeListMap>("LockFreeListMap"));
+      else if (name == "cuckoo")
+        results.push_back(runner.RunMap<LibCuckooHashMap>("LibCuckooHashMap"));
+      else if (name == "tbb")
+        results.push_back(runner.RunMap<TbbHashMap>("TbbHashMap"));
+    }
   }
 
   printResults(results, params, isPrettyFormat);
@@ -222,6 +261,14 @@ void usage(const char *name) {
   std::printf("\t\tvirtual cores on the machine is used by default.\n");
   std::printf("\t-f  --pretty\n");
   std::printf("\t\tOutputs the results in a more readable format.\n");
+  std::printf("\t-u --map-loadfactor <FLOAT>\n");
+  std::printf("\t\tRelation between the number of elements to insert and the "
+              "number of buckets in the map\n");
+  std::printf("\t-o --outdir <directory>\n");
+  std::printf("\t\tDirectory where to write the result file\n");
+  std::printf("\t-d --datastruct <l|m|b>\n");
+  std::printf("\t\tSelect which data structures should be run by benchmark, "
+              "where m represents map, l list, and b both.\n");
   std::printf("\t--type\n");
   std::printf("\t\tOne or more types to benchmark. If more than one is\n");
   std::printf("\t\tprovided then they must be separated by a comma. Valid\n");
@@ -256,6 +303,23 @@ void checkArgs(const RunnerParams &params) {
 
 void printResults(const std::vector<RunnerResults> &results,
                   const RunnerParams &params, bool pretty = false) {
+  if (!params.outDirectory.empty()) {
+    std::string filename = "n" + std::to_string(params.n).substr(0, 4) + "_i" +
+                           std::to_string(params.inserts).substr(0, 4) + "_r" +
+                           std::to_string(params.removals).substr(0, 4) + "_l" +
+                           std::to_string(params.lookups).substr(0, 4) + "_u" +
+                           std::to_string(params.mapLoadFactor).substr(0, 4) +
+                           "_" + params.structs;
+    if (mkdir(params.outDirectory.c_str(), S_IRWXU) != 0) {
+      if (errno != 17) {
+        // not "File exists" error
+        std::fprintf(stderr, "ERROR %d: unable to mkdir; %s\n", errno,
+                     strerror(errno));
+        exit(1);
+      }
+    }
+    std::freopen((params.outDirectory + "/" + filename).c_str(), "w", stdout);
+  }
   if (not pretty) {
     std::cout << "list,cores,minThreads,maxThreads,n,inserts,removals,"
               << "lookups,scalingMode,withAffinity,preload,runtimes...\n";
