@@ -272,7 +272,6 @@ void checkArgs(const RunnerParams &params) {
 
 void printResults(const std::vector<RunnerResults> &results,
                   const RunnerParams &params, bool pretty = false) {
-  // std::ostream *outfile = std::cout;
   if (!params.outDirectory.empty()) {
     std::string filename = "n" + std::to_string(params.n).substr(0, 4) + "_i" +
                            std::to_string(params.inserts).substr(0, 4) + "_r" +
@@ -281,9 +280,6 @@ void printResults(const std::vector<RunnerResults> &results,
                            std::to_string(params.mapLoadFactor).substr(0, 4);
     mkdir(params.outDirectory.c_str(), S_IRWXU);
     std::freopen((params.outDirectory + "/" + filename).c_str(), "w", stdout);
-    // outfile.open (params.outDirectory + "/" + filename, std::ofstream::out);
-    // std::cout.rdbuf(outfile.rdbuf());
-    // std::cout.rdbuf(outfile.rdbuf());
   }
   if (not pretty) {
     std::cout << "list,cores,minThreads,maxThreads,n,inserts,removals,"
