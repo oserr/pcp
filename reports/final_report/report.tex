@@ -92,13 +92,141 @@ style=ieee
 \section*{Summary}
 We implemented a set of serial and concurrent linked lists and hash maps using
 different synchronization mechanisms, including coarse-grained locks,
-fine-grained locks, spinning-reader-writer locks, and lock free. We then
-compared the performance of these data structures under different use-profiles.
-Finally, we compared the performance of our hash maps with Intel's Thread
-Building Block's (TBB) and libcuckoo's concurrent hash maps under different
+fine-grained locks, fine-grained spinning-reader-writer locks, and lock free. We
+then compared the performance of these data structures under different
+use-profiles. Finally, we compared the performance of our hash maps with Intel's
+Thread Building Block's (TBB) and libcuckoo's concurrent hash maps under different
 use-profiles.
 
 \section*{Background}
+
+\subsection*{Linked List}
+Linked lists are a simple data structure that is simply made up of zero or more
+nodes connected in serial via pointer links, where each node contains a data
+value, and a link to the next node. The basic operations they support are
+insertion, removal, and lookup. Insertions take an input data value, create a
+new node with the data value, and insert the node somewhere in the list,
+typically the front or back of the list. Removals take an input data value,
+search for a node containing the item, and remove the node from the list.
+Lookups take an input data value, search for a node containing the value, and
+return a reference/pointer to the data value or the node containing the value.
+
+Linked lists are not inherently parallel, because typically operations begin at
+the head of the list, and so there is an intrinsic bottleneck; however,
+enhancing a linked list's concurrency is still worthwhile the effort because
+they are convenient to use and are often the foundation for other data
+structures which we might also need to be concurrent, such as stacks, queues,
+hashmaps, skip-lists, etc. Furthermore, many algorithms rely on {\em list-like}
+data structures, e.g., depth-first search uses a stack for the list of nodes in
+the frontier, and to make them concurrent it may be necessary to start with the
+list. Note the emphasis on {\em list-like}, because in some cases it may be
+preferable to use an array.
+
+The first concern in making a list concurrent is making it thread-safe. This is
+easliy accomplished by locking the whole list for any operation, but prevents us
+from exploiting parallelism. Despite the lack of a parallel-friendly nature,
+there is still plenty of opportunity to parallelize operations on a linked list,
+especially if different threads work on different nodes. Ideally, read-only
+operations should be completely parallel, but even modify operations can be
+parallel if nodes to be modified are not neighbors. Ultimately, to parallelize
+operations on a linked list we must use some kind of synchronization technique
+to avoid corrupting the list.
+
+Thus, we looked at the following techniques, each of which, in theory, has its
+own set of advantages and disadvantages:
+
+\begin{itemize}
+% Coarse grain locks
+\item Coarse grain locks
+\begin{itemize}
+\item Advantages
+\begin{itemize}
+\item Eeasy to implement.
+\item Only one lock per list. From a resource perspective, this is an advantage.
+\end{itemize}
+\item Disadvantages
+\begin{itemize}
+\item Locks the whole list, removing opportunities for parallelization.
+\end{itemize}
+\end{itemize}
+
+% Fine grain locks
+\item Fine grain locks
+\begin{itemize}
+\item Advantages
+\begin{itemize}
+\item More opportunities for parallelization, since only nodes are locked.
+\end{itemize}
+\item Disadvantages
+\begin{itemize}
+\item
+More difficult to implement than coarse-grain locks, because locking occurs on
+every node-hop.
+\item
+The number of locks is linear with the lenght of the list, requiring more
+resources.
+\item
+Traversing the list is more expensive and less efficient, because node-hops
+requires getting a hold of a lock.
+\end{itemize}
+\end{itemize}
+
+% Spinning locks
+\item Fine-grained spinning reader-writer locks
+\begin{itemize}
+\item Advantages
+\begin{itemize}
+\item More opportunities for parallelization, since only nodes are locked.
+\item
+May lead to better performance if it is to the application's advantage to not
+have threads descheduled by the operating system, or if increased bus contention
+does not affect appliction adversely.
+\item
+Potentially greater parallelism than fine-grained locks because nodes can have
+multiple readers.
+\end{itemize}
+\item Disadvantages
+\begin{itemize}
+\item
+More difficult to implement than coarse-grain locks, but same level of
+difficulty as plain fine-grained locks.
+\item
+The number of locks is linear with the lenght of the list, requiring more
+resources.
+\item
+Traversing the list is more expensive and less efficient, because node-hops
+requires getting a hold of a lock.
+\item
+May lead to worse performance if it is to the application's disadvantage to not
+have threads descheduled by the operating system, or if increased bus contention
+affects the appliction adversely.
+\item
+Potentially greater chance of starvation for writers if system has few writers
+and many readers.
+\end{itemize}
+\end{itemize}
+
+% Lock free
+\item Lock free
+\begin{itemize}
+\item Advantages
+\begin{itemize}
+\item Best opportunities for parallelization, since nothing is locked.
+\item
+Potentially zero additional cost in terms of resources, since nodes do not
+require locks.
+\end{itemize}
+\item Disadvantages
+\begin{itemize}
+\item
+More difficult to implement than fine-grained locks, because nothing is locked,
+and must use atomic CAS operations, which are difficult to reason about.
+\item
+Traversing the list is slightly more expensive than with coarse-grained locks,
+since atomic CAS must be used along the way.
+\end{itemize}
+\end{itemize}
+\end{itemize}
 
 \section*{Approach}
 
