@@ -236,6 +236,8 @@ void usage(const char *name) {
   std::printf("\t-u --map-loadfactor <FLOAT>\n");
   std::printf("\t\tRelation between the number of elements to insert and the "
               "number of buckets in the map\n");
+  std::printf("\t-o --outdir <directory>\n");
+  std::printf("\t\tDirectory where to write the result file\n");
   std::printf("\t--type\n");
   std::printf("\t\tOne or more types to benchmark. If more than one is\n");
   std::printf("\t\tprovided then they must be separated by a comma. Valid\n");
