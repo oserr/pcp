@@ -41,7 +41,7 @@ struct RunnerParams {
   unsigned mapLoadFactor{1};
   std::string outDirectory{""};
   std::string structs;
-  
+
   RunnerParams() = default;
   RunnerParams(size_t n, float inserts, float removals, float lookups)
       : n(n), inserts(inserts), removals(removals), lookups(lookups) {}

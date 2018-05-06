@@ -134,20 +134,20 @@ int main(int argc, char *argv[]) {
       break;
     case 'd':
       switch (optarg[0]) {
-        case 'b':
-          runList = runMap = true;
-          params.structs = "both";
-          break;
-        case 'l':
-          runList = true;
-          params.structs = "list";
-          break;
-        case 'm':
-          runMap = true;
-          params.structs = "map";
-          break;
-        default:
-          usageErr(argv[0]);
+      case 'b':
+        runList = runMap = true;
+        params.structs = "both";
+        break;
+      case 'l':
+        runList = true;
+        params.structs = "list";
+        break;
+      case 'm':
+        runMap = true;
+        params.structs = "map";
+        break;
+      default:
+        usageErr(argv[0]);
       }
       break;
     case 1000:
@@ -169,10 +169,9 @@ int main(int argc, char *argv[]) {
   std::vector<RunnerResults> results;
   BenchmarkRunner runner(params);
 
-  if(!runList && !runMap){
+  if (!runList && !runMap) {
     runList = not isMapOnly;
     runMap = 1;
-    
   }
 
   // Lists
@@ -191,7 +190,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if(runMap){
+  if (runMap) {
     // Maps
     for (auto &name : typeNames) {
       if (name == "single")
@@ -211,8 +210,8 @@ int main(int argc, char *argv[]) {
       else if (name == "tbb")
         results.push_back(runner.RunMap<TbbHashMap>("TbbHashMap"));
     }
-  } 
-  
+  }
+
   printResults(results, params, isPrettyFormat);
   std::exit(EXIT_SUCCESS);
 }
@@ -268,7 +267,8 @@ void usage(const char *name) {
   std::printf("\t-o --outdir <directory>\n");
   std::printf("\t\tDirectory where to write the result file\n");
   std::printf("\t-d --datastruct <l|m|b>\n");
-  std::printf("\t\tSelect which data structures should be run by benchmark, where m represents map, l list, and b both.\n");
+  std::printf("\t\tSelect which data structures should be run by benchmark, "
+              "where m represents map, l list, and b both.\n");
   std::printf("\t--type\n");
   std::printf("\t\tOne or more types to benchmark. If more than one is\n");
   std::printf("\t\tprovided then they must be separated by a comma. Valid\n");
@@ -308,12 +308,13 @@ void printResults(const std::vector<RunnerResults> &results,
                            std::to_string(params.inserts).substr(0, 4) + "_r" +
                            std::to_string(params.removals).substr(0, 4) + "_l" +
                            std::to_string(params.lookups).substr(0, 4) + "_u" +
-                           std::to_string(params.mapLoadFactor).substr(0, 4) + "_" +
-                           params.structs;
-    if(mkdir(params.outDirectory.c_str(), S_IRWXU) != 0){
-      if(errno != 17){
+                           std::to_string(params.mapLoadFactor).substr(0, 4) +
+                           "_" + params.structs;
+    if (mkdir(params.outDirectory.c_str(), S_IRWXU) != 0) {
+      if (errno != 17) {
         // not "File exists" error
-        std::fprintf(stderr, "ERROR %d: unable to mkdir; %s\n", errno, strerror(errno));
+        std::fprintf(stderr, "ERROR %d: unable to mkdir; %s\n", errno,
+                     strerror(errno));
         exit(1);
       }
     }
