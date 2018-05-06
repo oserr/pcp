@@ -15,7 +15,7 @@ date_now=$(date)
 echo "##### Job started at: ${date_now} #####"
 echo
 
-${program} -n 1000000 --lookups 1 --preload 1 --map-only
+${program} -n 10000000 --lookups 1 --preload 1 --map-only
 
 date_now=$(date)
 echo
