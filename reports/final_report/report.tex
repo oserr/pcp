@@ -84,12 +84,14 @@ style=ieee
     commentstyle=\color{orange}\ttfamily,
     morecomment=[l][\color{magenta}]{\#},
     breaklines=true,
-    morekeywords={nullptr,noexcept}
+    morekeywords={nullptr,noexcept},
+    xleftmargin=.1\textwidth,
+    xrightmargin=.1\textwidth,
 }
 
 \maketitle
 
-\section*{Summary}
+\section{Summary}
 We implemented a set of serial and concurrent linked lists and hash maps using
 different synchronization mechanisms, including coarse-grained locks,
 fine-grained locks, fine-grained spinning-reader-writer locks, and lock free. We
@@ -98,9 +100,9 @@ use-profiles. Finally, we compared the performance of our hash maps with Intel's
 Thread Building Block's (TBB) and libcuckoo's concurrent hash maps under different
 use-profiles.
 
-\section*{Background}
+\section{Background}
 
-\subsection*{Linked List}
+\subsection{Linked List} \label{ssec:bglist}
 Linked lists are a simple data structure that is simply made up of zero or more
 nodes connected in serial via pointer links, where each node contains a data
 value, and a link to the next node. The basic operations they support are
@@ -228,8 +230,8 @@ since atomic CAS must be used along the way.
 \end{itemize}
 \end{itemize}
 
-\section*{Technologies used}
-\subsection*{Language}
+\section{Technologies used}
+\subsection{Language}
 We used C++11 because it would allow us to work at a high level of abstraction,
 making it easy for us to think about lists and nodes as objects, while also
 allowing us to work close to the metal, allowing us to control memory allocation
@@ -237,27 +239,106 @@ and directly reference memory addresses. Furthermore, C++11 overloaded operators
 makes it easy to work with atomic primitives, and this proved useful for
 implementing a spinning-reader-writer lock, and the lock-free list.
 
-\subsection*{Target machines}
+\subsection{Target machines}
 Our target machines were latedays cluster and GHC machines, because they are
 x86-64, use the Linux operating system, and support a decent number of threads,
 enough to see clear patterns in our experiment results.
 
-\subsection*{External libraries}
+% Mention that we did not use a specific machine on the latedays cluster, and
+% Omar used ghc 28. Which one did Patricio use?
+
+\subsection{External libraries}
 In addition to comparing the different synchronization techniques we also wanted
 to compare our concurrent data structures with an external library to get an
-idea of the caliber of our implementation, and for fun! We were not able to find
-in time a library that implemented a plain vanilla concurrent linked list (TBB
-implements concurrent deques and vectors, but not a list), but we did compare
-TBB's and libcukoo's concurrent hash map with ours.
+idea of the caliber of our implementation, and ofcourse for fun as well! We were
+not able to find in time a library that implemented a plain vanilla concurrent
+linked list (TBB implements concurrent deques and vectors, but not a list), but
+we did compare TBB's and libcukoo's concurrent hash map with ours.
 
-\section*{Approach}
+% Also used GoogleTest lib
+
+\section{Approach}
+
+\subsection{Overview}
+At a high level, our approach consisted of the following steps:
+\begin{enumerate}
+\item
+Implement a serial linked list.
+\item
+Implement a template hashmap where the bucket type is parametrized.
+\item
+Implement concurrent linked lists with the synchronization mechanisms listed in
+section~\ref{ssec:bglist}.
+\item
+Create hashmaps with different bucket types by plugging in the lists to the
+template hashmap.
+\item
+Create serial and asynchronous correctness tests for the lists and hashmaps.
+\item
+Create a benchmarking harness to test the lists and hashmaps, including TBB and
+libcuckoo hashmaps, with different use-profiles.
+\end{enumerate}
+
+\subsection{Implementing serial linked list}
+The most important aspect of our serial linked list is the interface we chose to
+implement, depicted in figure~\ref{fig:dllist}. Our goal was to make it simple
+to test insertions, lookups, and removals, and we used the same interface with
+the concurrent lists. The member function names are self-explanatory. The
+difference between {\tt Insert} and {\tt InsertUnique} is that the former
+inserts elements at the head of the list, while the latter traverses the list to
+the end, and inserts an element at the tail of the list {\em only} if the
+element is not found. The purpose of {\tt InsertUnique} is to be used for
+hashmap insertion, thus preserving a hashmap's invariant of unique keys.
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}[numbers=left]
+template <typename T> struct DlList {
+  virtual ~DlList();
+  virtual DlNode<T> *Insert(T value);
+  virtual bool InsertUnique(T value);
+  virtual bool Remove(T value) noexcept;
+  virtual bool Contains(T value) const noexcept;
+};
+\end{lstlisting}
+\caption{Serial linked list interface. Some details have been omitted.}
+\label{fig:dllist}
+\end{center}
+\end{figure}
+
+\subsection{Implementing template hashmap}
+Figure~\ref{fig:hashmap} contains the part of the interface that we tested in
+the benchmarks. The two relevant aspects are that the bucket type is
+parametrized by template {\tt TList}, and that the number of buckets can be
+configured at runtime. We used C++ {\tt std::hash} template to compute key
+hashes. Other than think wrappers for TBB's and libcuckoo's hashmaps, we did not
+have to create any other hashmaps because we were able to parametrize the hash
+map with all of the concurrent lists we implemented.
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}[numbers=left]
+template <typename K, typename V, template <typename> class TList>
+struct HashMap {
+  std::unique_ptr<TList<Element>[]> buckets;
+  HashMap(size_t nBuckets)
+      : buckets(new TList<Element>[nBuckets]), nBuckets(nBuckets) {}
+  bool Insert(K key, V value);
+  bool Remove(K key);
+  bool Has(K key) const noexcept;
+};
+\end{lstlisting}
+\caption{Partial interface for serial hashmap.}
+\label{fig:hashmap}
+\end{center}
+\end{figure}
 
 
-\section*{Results}
+\section{Results}
 
-\section*{Conclusion}
+\section{Conclusion}
 
-\section*{Division of Work}
+\section{Division of Work}
 Equal work was performed by both partners.
 
 %lateday_combined_list_insert_10_lookup_10_removal_80.png
