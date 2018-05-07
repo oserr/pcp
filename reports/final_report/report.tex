@@ -442,18 +442,25 @@ struct RwLock {
 \subsection{Lock free list}
 
 \subsection{Correctness tests}
-
-Things to say about correctness tests:
-\begin{itemize}
-\item
-Implemented type-parameterized tests for the hash map and the lists using google
-test.
-\item
-One set of tests checks correct expected behavior in terms of functionality.
-\item
-One set of tests checks that data structures behave correctly with multiple
-threads, including that there are no deadlocks or corruption.
-\end{itemize}
+We used GoogleTest to create tests. Before running any benchmarks, we wanted to
+make sure that our implementations were correct with respect to the invariants
+of the data structures, and that they behaved correctly in an asynchronous
+environment. For this, we used GoogleTest, and relied on type-parametrized
+fixtures to create a set of tests for the lists and hashmaps. The GoogleTest
+type-parametrized fixture allowed us to use the same set of tests for any list
+or hashmap that supported the interface we created. Thus, after creating the
+tests, it was simply a matter of adding a line to register the type that we
+wanted to test, and GoogleTest would generate the set of tests we defined for
+the type being registered. The only exception to this was the lock free list.
+Even though it supported the same interface, the internal representation of lock
+free lists used atomic pointers rather than raw pointers, and prevented us from
+reusing the same harness becuase it relied on pointer semantics. We could have
+overloaded the arrow operator for the node, i.e., {\tt operator->()}, but
+instead chose to create a new set of tests for the lock free list. We created
+one set of tests that were single-threaded to test the lists' and hashmap's
+interface, and another set of tests that were multi-threaded to ensure that we
+did not get any deadlocks and that that data structures remained in a consistent
+state.
 
 \subsection{Benchmarking harness}
 
