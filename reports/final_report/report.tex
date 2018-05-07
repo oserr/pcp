@@ -443,16 +443,39 @@ struct RwLock {
 
 \subsection{Correctness tests}
 
+Things to say about correctness tests:
+\begin{itemize}
+\item
+Implemented type-parameterized tests for the hash map and the lists using google
+test.
+\item
+One set of tests checks correct expected behavior in terms of functionality.
+\item
+One set of tests checks that data structures behave correctly with multiple
+threads, including that there are no deadlocks or corruption.
+\end{itemize}
+
 \subsection{Benchmarking harness}
 
-\subsection{Benchmarking tests}
+Things to say about benchmark harness:
+\begin{itemize}
+\item
+How can test runner be parameterized? E.g., hashmap load factor, percentage of
+insertions vs removals, core affinity, etc.
+\item
+What use-profiles can harness emulate? Insertion heavy, lookup heavy.
+\item
+How does the benchmark handle the thread counts?
+\item
+How does the runner decide what operation to perform?
+\end{itemize}
 
 \section{Results}
 
-\section{Conclusion}
+\subsection{Benchmarking tests}
+Talk about use-profiles that we used. Machines that we used.
 
-\section{Division of Work}
-Equal work was performed by both partners.
+\subsection{List results}
 
 %lateday_combined_list_insert_10_lookup_10_removal_80.png
 %lateday_combined_list_insert_10_lookup_80_removal_10.png
@@ -460,13 +483,6 @@ Equal work was performed by both partners.
 %lateday_combined_list_insert_25_lookup_50_removal_25.png
 %lateday_combined_list_insert_50_lookup_25_removal_25.png
 %lateday_combined_list_insert_80_lookup_10_removal_10.png
-
-%lateday_combined_map_insert_10_lookup_10_removal_80.png
-%lateday_combined_map_insert_10_lookup_80_removal_10.png
-%lateday_combined_map_insert_25_lookup_25_removal_50.png
-%lateday_combined_map_insert_25_lookup_50_removal_25.png
-%lateday_combined_map_insert_50_lookup_25_removal_25.png
-%lateday_combined_map_insert_80_lookup_10_removal_10.png
 
 \begin{figure}[h]
 \centering
@@ -477,10 +493,96 @@ Equal work was performed by both partners.
 
 \begin{figure}[h]
 \centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
+\caption{Fig.}
+\label{fig:fig1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
+\caption{Fig.}
+\label{fig:fig1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_50_removal_25}
+\caption{Fig.}
+\label{fig:fig1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
+\caption{Fig.}
+\label{fig:fig1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
+\caption{Fig.}
+\label{fig:fig1}
+\end{figure}
+
+\subsection{Hashmap results}
+
+\begin{figure}[h]
+\centering
 \includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_10_lookup_10_removal_80}
 \caption{Fig.}
 \label{fig:fig2}
 \end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_10_lookup_80_removal_10}
+\caption{Fig.}
+\label{fig:fig2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_25_lookup_25_removal_50}
+\caption{Fig.}
+\label{fig:fig2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_25_lookup_50_removal_25}
+\caption{Fig.}
+\label{fig:fig2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_50_lookup_25_removal_25}
+\caption{Fig.}
+\label{fig:fig2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_80_lookup_10_removal_10}
+\caption{Fig.}
+\label{fig:fig2}
+\end{figure}
+
+\section{Conclusion}
+
+\section{Division of Work}
+Equal work was performed by both partners.
+
+%lateday_combined_map_insert_10_lookup_10_removal_80.png
+%lateday_combined_map_insert_10_lookup_80_removal_10.png
+%lateday_combined_map_insert_25_lookup_25_removal_50.png
+%lateday_combined_map_insert_25_lookup_50_removal_25.png
+%lateday_combined_map_insert_50_lookup_25_removal_25.png
+%lateday_combined_map_insert_80_lookup_10_removal_10.png
+
+
 
 \printbibliography
 
