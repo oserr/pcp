@@ -265,7 +265,7 @@ At a high level, our approach consisted of the following steps:
 \item
 Implement a serial linked list.
 \item
-Implement a template hashmap where the bucket type is parametrized.
+Implement a template hashmap where the bucket type is parameterized.
 \item
 Implement concurrent linked lists with the synchronization mechanisms listed in
 section~\ref{ssec:bglist}.
@@ -279,7 +279,7 @@ Create a benchmarking harness to test the lists and hashmaps, including TBB and
 libcuckoo hashmaps, with different use-profiles.
 \end{enumerate}
 
-\subsection{Implementing serial linked list}
+\subsection{Serial linked list}
 The most important aspect of our serial linked list is the interface we chose to
 implement, depicted in figure~\ref{fig:dllist}. Our goal was to make it simple
 to test insertions, lookups, and removals, and we used the same interface with
@@ -306,13 +306,13 @@ template <typename T> struct DlList {
 \end{center}
 \end{figure}
 
-\subsection{Implementing template hashmap}
+\subsection{Template hashmap}
 Figure~\ref{fig:hashmap} contains the part of the interface that we tested in
 the benchmarks. The two relevant aspects are that the bucket type is
-parametrized by template {\tt TList}, and that the number of buckets can be
+parameterized by template {\tt TList}, and that the number of buckets can be
 configured at runtime. We used C++ {\tt std::hash} template to compute key
-hashes. Other than think wrappers for TBB's and libcuckoo's hashmaps, we did not
-have to create any other hashmaps because we were able to parametrize the hash
+hashes. Other than thin wrappers for TBB's and libcuckoo's hashmaps, we did not
+have to create any other hashmaps because we were able to parameterize the hash
 map with all of the concurrent lists we implemented.
 
 \begin{figure}
@@ -333,6 +333,119 @@ struct HashMap {
 \end{center}
 \end{figure}
 
+\subsection{List with coarse-grained locks}
+To implement this, we created a list that inherited from {\tt DlList}, and
+overrode all of its functions by locking a {\tt std::mutex} before calling the
+base {\tt DlList}'s functions.
+
+\subsection{List with fine-grained locks}
+To implement this, we created a node with a mutex lock, and also added a mutex
+to the list object, which essentially protects the head pointer. The technique
+we used is the hand-over-hand locking technique presented in lecture 17, which
+can be applied to all of the operations performed on the list. The idea behind
+hand-over-hand locking is to hold one lock as you move forward on the list. When
+the lock for the next node is acquired, the lock for the previous node is
+released, and then we try to acquire the next node's lock, and so on until we
+find the node we are looking for.
+
+Figure~\ref{fig:finegrain} contains the full details of how hand-over-hand
+locking is used to implement {\tt Contains}. The first step is to acquire the
+lists' lock in line 3, and then to acquire the first node lock in line 8. The
+first example of hand-over-hand locking occurs between lines 16 to 18, where the
+list lock, i.e, the {\it previous} lock, is released in line 16 before
+attempting to acquire the next node's lock in line 18, and the same
+hand-over-hand locking continues in the while loop in line 27, where the
+previous lock is released, and line 18, where the next lock is acquired.
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}[numbers=left]
+template <typename T> bool
+FineGrainList<T>::Contains(T value) const noexcept {
+  mtx.lock();
+  if (not head) {
+    mtx.unlock();
+    return false;
+  }
+  head->mtx.lock();
+  if (value == head->value) {
+    head->mtx.unlock();
+    mtx.unlock();
+    return true;
+  }
+  auto prev = head;
+  auto curr = head->next;
+  mtx.unlock();
+  while (curr) {
+    curr->mtx.lock();
+    if (value == curr->value) {
+      curr->mtx.unlock();
+      prev->mtx.unlock();
+      return true;
+    }
+    auto prevmtx = &prev->mtx;
+    prev = curr;
+    curr = curr->next;
+    prevmtx->unlock();
+  }
+  prev->mtx.unlock();
+  return false;
+}
+\end{lstlisting}
+\caption{
+Full implementation of {\tt Contains} for list with fine-grained locks.}
+\label{fig:finegrain}
+\end{center}
+\end{figure}
+
+\subsection{List with fine-grained spinning-reader-writer locks}
+The gist of traversing a list with fine-grained locks is fully encompassed in
+hand-over-hand locking, and so we were able to reuse the logic in our
+fine-grained list; however, we did have to implement a spinning-reader-writer
+lock with semantics for locking and unlocking a lock from two different
+perspectives, a reader's and a writer's perspective. The full implementation of
+the lock is provided in figure~\ref{fig:rwlock}. The lock is implemented with a
+C++11 {\tt atomic\_int} primitive that counts the number of readers and writers.
+Upon creation, the counter is initialized to zero. Readers can acquire the lock
+as long as the lock counter is greater or equal to $0$, with $0$ meaning that
+that the lock is not in use, greater than $0$ meaning one or more readers are
+using the lock, and $-1$ meaning a writer is using the lock.
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}
+struct RwLock {
+  std::atomic_int counter{0};
+  void ReadLock() noexcept {
+    int val, old;
+    do {
+      while ((val = counter.load()) < 0);
+      old = val++;
+    } while (not counter.compare_exchange_weak(old, val));
+  }
+  void ReadUnlock() noexcept { --counter; }
+  void WriteLock() noexcept {
+    int val, old;
+    do {
+      while ((val = counter.load()) != 0);
+      old = val--;
+    } while (not counter.compare_exchange_weak(old, val));
+  }
+  void WriteUnlock() noexcept { ++counter; }
+};
+\end{lstlisting}
+\caption{Spinning-writer-reader lock implemented with atomics.}
+\label{fig:rwlock}
+\end{center}
+\end{figure}
+
+\subsection{Lock free list}
+
+\subsection{Correctness tests}
+
+\subsection{Benchmarking harness}
+
+\subsection{Benchmarking tests}
 
 \section{Results}
 
