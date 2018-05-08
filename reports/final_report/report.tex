@@ -102,7 +102,7 @@ use-profiles.
 
 \section{Background}
 
-\subsection{Linked List} \label{ssec:bglist} 
+\subsection{Linked List} \label{ssec:bglist}
 Linked lists are a simple data structure made up of zero or more nodes connected
 in serial via pointer links, where each node contains a data value, and a link
 to the next node. The basic operations they support are insertion, removal, and
@@ -157,7 +157,7 @@ implement, but offer the greatest degree of parallelism because no thread is
 prevented from making progress.
 
 
-\subsection{Hash Maps} \label{ssec:bgmap} 
+\subsection{Hash Maps} \label{ssec:bgmap}
 Hash maps are associative data structures that map a
 key to a value. They provide constant running time for insertion, removal and lookup in the
 average case, making them one of the most useful data structures in computer
@@ -183,8 +183,8 @@ unlike lists, maps are more amenable to parallelization since one can expect tha
 threads operating with different keys will in general be using different buckets, and
 thus contention will be low.
 As we previously mention a real hash map can map different keys to same buckets
-and thus some synchronization will be needed so that the strucuture does not get 
-corrupted. 
+and thus some synchronization will be needed so that the strucuture does not get
+corrupted.
 
 \section{Technologies used}
 \subsection{Language}
@@ -269,6 +269,39 @@ template <typename T> struct DlList {
 \end{lstlisting}
 \caption{Serial linked list interface. Some details have been omitted.}
 \label{fig:dllist}
+\end{center}
+\end{figure}
+
+\subsection{Template hashmap}
+As we described in ~\ref{ssec:bglist}, a hashmap
+needs to handle the case where two keys map to the same bucket. The way we chose
+to handle this scenarios was by using linked lists in each bucket. With
+that approach, implementing a concurrent hashmap becomes easy once we
+implemented the concurrent lists, since C++ allows to use templates in class
+definitions. We then defined the hashmap by way of parameterizing the bucket
+type. Figure~\ref{fig:hashmap} shows the hashmap interface implemented and
+tested in the benchmarks. The two relevant aspects are that the bucket type is
+parameterized by template {\tt TList}, and that the number of buckets can be
+configured at runtime. We used C++ {\tt std::hash} template to compute key
+hashes. Other than thin wrappers for TBB's and libcuckoo's hashmaps, we did not
+had to create any other hashmaps, since as mentioned before we were able to
+parameterize only one with all of the previously implemented concurrent lists.
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}[numbers=left]
+template <typename K, typename V, template <typename> class TList>
+struct HashMap {
+  std::unique_ptr<TList<Element>[]> buckets;
+  HashMap(size_t nBuckets)
+      : buckets(new TList<Element>[nBuckets]), nBuckets(nBuckets) {}
+  bool Insert(K key, V value);
+  bool Remove(K key);
+  bool Has(K key) const noexcept;
+};
+\end{lstlisting}
+\caption{Partial interface for serial hashmap.}
+\label{fig:hashmap}
 \end{center}
 \end{figure}
 
@@ -380,7 +413,7 @@ struct RwLock {
 \end{center}
 \end{figure}
 
-\subsubsection{Lock free list} 
+\subsubsection{Lock free list}
 Lockfree lists were implemented based on
 \cite{Harris}.  If a list would only expose the Insert() and Contains() methods
 it would be trivial to implement without using locks. The only operation that we
@@ -449,40 +482,6 @@ similar to the previous  lists except no locks were defined, and the next
 pointer in the node definition was  declared as atomic. Much of the code was
 adapted from \cite{Harris}. Figure~\ref{fig:lockfreeIUnique}  contains the full
 details of the lockfree implementation of {\tt InsertUnique}.
-
-
-\subsection{Template hashmap} 
-As we described in ~\ref{ssec:bglist}, a hashmap
-needs to handle the case where two keys map to the same bucket. The way we chose
-to handle this scenarios was by using linked lists in each bucket. With
-that approach, implementing a concurrent hashmap becomes easy once we
-implemented the concurrent lists, since C++ allows to use templates in class
-definitions. We then defined the hashmap by way of parameterizing the bucket
-type. Figure~\ref{fig:hashmap} shows the hashmap interface implemented and
-tested in the benchmarks. The two relevant aspects are that the bucket type is
-parameterized by template {\tt TList}, and that the number of buckets can be
-configured at runtime. We used C++ {\tt std::hash} template to compute key
-hashes. Other than thin wrappers for TBB's and libcuckoo's hashmaps, we did not
-had to create any other hashmaps, since as mentioned before we were able to
-parameterize only one with all of the previously implemented concurrent lists.
-
-\begin{figure}
-\begin{center}
-\begin{lstlisting}[numbers=left]
-template <typename K, typename V, template <typename> class TList>
-struct HashMap {
-  std::unique_ptr<TList<Element>[]> buckets;
-  HashMap(size_t nBuckets)
-      : buckets(new TList<Element>[nBuckets]), nBuckets(nBuckets) {}
-  bool Insert(K key, V value);
-  bool Remove(K key);
-  bool Has(K key) const noexcept;
-};
-\end{lstlisting}
-\caption{Partial interface for serial hashmap.}
-\label{fig:hashmap}
-\end{center}
-\end{figure}
 
 
 \subsection{Correctness tests}
@@ -675,10 +674,10 @@ use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
 
 \subsection{Hashmap results}
 The benchmark profile for hashmaps was similar to the one for lists. We added the load factor parameter,
-were we basically modify the amount of buckets to create the hashmap with in relation to the 
+were we basically modify the amount of buckets to create the hashmap with in relation to the
 amount of numbers to insert.
-only increased the amount of 
-operations to perform, since there will not be only one list to perform operations 
+only increased the amount of
+operations to perform, since there will not be only one list to perform operations
 
 We tested the following profiles
 
