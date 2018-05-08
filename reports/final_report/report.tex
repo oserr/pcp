@@ -191,27 +191,37 @@ corrupted.
 We used C++11 because it would allow us to work at a high level of abstraction,
 making it easy for us to think about lists and nodes as objects, while also
 allowing us to work close to the metal, allowing us to control memory allocation
-and directly reference memory addresses. Furthermore, C++11 overloaded operators
-makes it easy to work with atomic primitives, and this proved useful for
-implementing a spinning-reader-writer lock, and the lock-free list.
+and directly reference memory addresses. C++11 overloaded operators makes it
+easy to work with atomic primitives, and this proved useful for implementing a
+spinning-reader-writer lock, and the lock-free list. It is also much easir to
+work with C++11's threads rather than pthreads, because C++11 allows you to
+supply the thread with any callable object, including pointers to member
+functions, and a variable number of arguments of any type.
 
 \subsection{Target machines}
-Our target machines were latedays cluster and GHC machines, because they are
-x86-64, use the Linux operating system, and support a decent number of threads,
-enough to see clear patterns in our experiment results.
-
-% Mention that we did not use a specific machine on the latedays cluster, and
-% Omar used ghc 28. Which one did Patricio use?
+Our target machines were latedays cluster and GHC machines. Clearly, they are
+convenient because we have access to them, but they are also a good choice
+because they are relatively modern in terms of architecture and CPU model, they
+are Linux machines, which is a system-level programming friendly OS, and they
+have a decent number of cores, enough to see clear patterns in our experiment
+results. Furthermore, the latedays cluster is ideal to run experiments because
+it allowed us to run multiple jobs on different machines simultaneously. Our
+initial plan was to use a single machine in the latedays cluster, but it became
+evident that we would need to split the jobs among the machines, otherwise the
+jobs would timeout, even with 8 hours of walltime. We conducted experiments on
+both the GHC and latedays cluster machines, but most of the results presented
+here are from the latedays cluster.
 
 \subsection{External libraries}
-In addition to comparing the different synchronization techniques we also wanted
-to compare our concurrent data structures with an external library to get an
-idea of the caliber of our implementation, and ofcourse for fun as well! We were
-not able to find in time a library that implemented a plain vanilla concurrent
-linked list (TBB implements concurrent deques and vectors, but not a list), but
-we did compare TBB's and libcukoo's concurrent hash map with ours.
-
-% Also used GoogleTest lib
+We used three external libraries: \href{https://github.com/google/googletest}
+{GoogleTest}, Intel's \href{https://github.com/01org/tbb}{Thread Building
+Blocks} (TBB), and Carnegie Mellon Efficient Computing's
+\href{https://github.com/efficient/libcuckoo}{libcuckoo}. We used GoogleTest to
+create unit tests, and we compared TBB's and libcuckoo's concurrent hash maps
+with ours, to get an idea of how our implementations stacked up. We also wanted
+to compare our lists, but we did not find one that contained lists. TBB contains
+concurrent vectors and deques, but they are based on arrays rather than linked
+lists.
 
 \section{Approach}
 
@@ -262,20 +272,22 @@ template <typename T> struct DlList {
 \end{center}
 \end{figure}
 
-\subsection{List with coarse-grained locks}
-To implement this, we created a list that inherited from {\tt DlList}, and
-overrode all of its functions by locking a {\tt std::mutex} before calling the
-base {\tt DlList}'s functions.
+\subsection{Concurrent linked lists}
 
-\subsection{List with fine-grained locks}
-To implement this, we created a node with a mutex lock, and also added a mutex
-to the list object, which essentially protects the head pointer. The technique
-we used is the hand-over-hand locking technique presented in lecture 17, which
-can be applied to all of the operations performed on the list. The idea behind
-hand-over-hand locking is to hold one lock as you move forward on the list. When
-the lock for the next node is acquired, the lock for the previous node is
-released, and then we try to acquire the next node's lock, and so on until we
-find the node we are looking for.
+\subsubsection{List with coarse-grained locks}
+To implement the list with coarse grained locks, we created a list that
+inherited from {\tt DlList}, and overrode all of its functions by locking a
+{\tt std::mutex} before calling the base {\tt DlList}'s functions.
+
+\subsubsection{List with fine-grained locks}
+To implement the list with fine-grained locks, we created a node with a mutex
+lock, and also added a mutex to the list object, which essentially protects the
+head pointer. The technique we used is the hand-over-hand locking technique
+presented in lecture 17, which can be applied to all of the operations performed
+on the list. The idea behind hand-over-hand locking is to hold one lock as you
+move forward on the list. When the lock for the next node is acquired, the lock
+for the previous node is released, and then we try to acquire the next node's
+lock, and so on until we find the node we are looking for.
 
 Figure~\ref{fig:finegrain} contains the full details of how hand-over-hand
 locking is used to implement {\tt Contains}. The first step is to acquire the
@@ -327,7 +339,7 @@ Full implementation of {\tt Contains} for list with fine-grained locks.}
 \end{center}
 \end{figure}
 
-\subsection{List with fine-grained spinning-reader-writer locks}
+\subsubsection{List with fine-grained spinning-reader-writer locks}
 The gist of traversing a list with fine-grained locks is fully encompassed in
 hand-over-hand locking, and so we were able to reuse the logic in our
 fine-grained list; however, we did have to implement a spinning-reader-writer
@@ -368,7 +380,7 @@ struct RwLock {
 \end{center}
 \end{figure}
 
-\subsection{Lock free list} 
+\subsubsection{Lock free list} 
 Lockfree lists were implemented based on
 \cite{Harris}.  If a list would only expose the Insert() and Contains() methods
 it would be trivial to implement without using locks. The only operation that we
@@ -439,8 +451,6 @@ adapted from \cite{Harris}. Figure~\ref{fig:lockfreeIUnique}  contains the full
 details of the lockfree implementation of {\tt InsertUnique}.
 
 
-
-
 \subsection{Template hashmap} 
 As we described in ~\ref{ssec:bglist}, a hashmap
 needs to handle the case where two keys map to the same bucket. The way we chose
@@ -473,6 +483,7 @@ struct HashMap {
 \label{fig:hashmap}
 \end{center}
 \end{figure}
+
 
 \subsection{Correctness tests}
 We used GoogleTest to create tests. Before running any benchmarks, we wanted to
@@ -531,14 +542,6 @@ work.
 {\bf Map load factor}. The load factor for the hash map.
 \end{itemize}
 
-
-%lateday_combined_list_insert_10_lookup_10_removal_80.png
-%lateday_combined_list_insert_10_lookup_80_removal_10.png
-%lateday_combined_list_insert_25_lookup_25_removal_50.png
-%lateday_combined_list_insert_25_lookup_50_removal_25.png
-%lateday_combined_list_insert_50_lookup_25_removal_25.png
-%lateday_combined_list_insert_80_lookup_10_removal_10.png
-
 The benchmarking harness takes in the parameters as input, and runs the
 simulation with all the list and hashmap types, from {\it min} to {\it max}
 threads, where the minimum number of threads is 1 by default, and the maximum
@@ -580,8 +583,8 @@ order, for both lists and hashmaps, from best performing to least performing:
 \begin{enumerate}
 \item Lock free
 \item Fine-grained spinning-reader-writer locks
-\item Fine-grained
-\item coarse-grained
+\item Fine-grained locks
+\item coarse-grained locks
 \end{enumerate}
 
 We were not expecting this order for all threads, but this is what we were
@@ -680,6 +683,13 @@ operations to perform, since there will not be only one list to perform operatio
 We tested the following profiles
 
 \section{Conclusion}
+For machines with 24 cores or less, our results suggest that:
+\begin{itemize}
+\item
+Lists with fine-grained locks don't provide an advantage over lists with
+coarse-grained locks. To get parallelism from a linked list, it is necessary to
+use a lock free list.
+\end{itemize}
 
 \section{Division of Work}
 Equal work was performed by both partners.
