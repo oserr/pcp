@@ -182,14 +182,15 @@ both the GHC and latedays cluster machines, but most of the results presented
 here are from the latedays cluster.
 
 \subsection{External libraries}
-In addition to comparing the different synchronization techniques we also wanted
-to compare our concurrent data structures with an external library to get an
-idea of the caliber of our implementation, and ofcourse for fun as well! We were
-not able to find in time a library that implemented a plain vanilla concurrent
-linked list (TBB implements concurrent deques and vectors, but not a list), but
-we did compare TBB's and libcukoo's concurrent hash map with ours.
-
-% Also used GoogleTest lib
+We used three external libraries: \href{https://github.com/google/googletest}
+{GoogleTest}, Intel's \href{https://github.com/01org/tbb}{Thread Building
+Blocks} (TBB), and Carnegie Mellon Efficient Computing's
+\href{https://github.com/efficient/libcuckoo}{libcuckoo}. We used GoogleTest to
+create unit tests, and we compared TBB's and libcuckoo's concurrent hash maps
+with ours, to get an idea of how our implementations stacked up. We also wanted
+to compare our lists, but we did not find one that contained lists. TBB contains
+concurrent vectors and deques, but they are based on arrays rather than linked
+lists.
 
 \section{Approach}
 
