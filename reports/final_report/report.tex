@@ -413,7 +413,7 @@ using the lock, and $-1$ meaning a writer is using the lock.
 
 \begin{figure}
 \begin{center}
-\begin{lstlisting}
+\begin{lstlisting}[numbers=left]
 struct RwLock {
   std::atomic_int counter{0};
   void ReadLock() noexcept {
@@ -454,9 +454,7 @@ wanted to test, and GoogleTest would generate the set of tests we defined for
 the type being registered. The only exception to this was the lock free list.
 Even though it supported the same interface, the internal representation of lock
 free lists used atomic pointers rather than raw pointers, and prevented us from
-reusing the same harness becuase it relied on pointer semantics. We could have
-overloaded the arrow operator for the node, i.e., {\tt operator->()}, but
-instead chose to create a new set of tests for the lock free list. We created
+reusing the same harness becuase it relied on pointer semantics. We created
 one set of tests that were single-threaded to test the lists' and hashmap's
 interface, and another set of tests that were multi-threaded to ensure that we
 did not get any deadlocks and that data structures remained in a consistent
@@ -506,7 +504,7 @@ threads, where the minimum number of threads is 1 by default, and the maximum
 number of threads used by default is the maximum number of threads supported by
 the machine. The only types that are not run with multiple threads are the
 serial list and hashmap. For example, running
-{\tt ./benchmark -i .8 -r .1 -l .1 -n 1000} on a GHC machine would would run the
+{\tt ./benchmark -i .8 -r .1 -l .1 -n 1000} on a GHC machine would run the
 benchmarks on the single list with one thread, then run the benchmark on the
 fine-grained list with 1 thread first, then 2 threads, and so on up to 16
 threads, collecting the run time in each case, and then proceed to the other
@@ -514,20 +512,20 @@ types, repeating the same process for each type, except the serial types which
 are only tested with one thread.
 
 To execute a use-profile, the harness chooses an operation between insertion,
-lookup, or removal, at random. We used C++11's {\tt std::default\_random\_engine}
-and {\tt std::uniform\_real\_distribution} to generate a real number, $x$, in
-$[0,1]$. If $x < i$, where $i$ is the percent of insertions, then the harness
-performs an insertion. If $x < i + r$, where $r$ is the percent of removals,
-then it performs a removal, otherwise it performs a lookup. For lists, we also
-flipped a coin to take turns doing insertions between {\tt Insert} and
-{\tt InsertUnique}. To select numbers for removal or lookup, we selected a
-number at random from a buffer of numbers that have been inserted into the list,
-either during preload or simply when an insert operation is executed.
+lookup, or removal, at random. We used C++11's {\tt
+std::uniform\_real\_distribution} to generate a real number, $x$, in $[0,1]$. If
+$x < i$, where $i$ is the percent of insertions, then the harness performs an
+insertion. If $i \le x < i + r$, where $r$ is the percent of removals, then it
+performs a removal, otherwise it performs a lookup. For lists, we also flipped a
+coin to take turns doing insertions between {\tt Insert} and {\tt InsertUnique}.
+To select numbers for removal or lookup, we selected a number at random from a
+buffer of numbers that have been inserted into the list, either during preload
+or simply when an insert operation is executed.
 
 The results are output in CSV format, with a header at the top, followed by
-lines where each line represents the the full results for a given type. An line
-generated for a benchmark run with default number of threads on the latedays
-cluster, for example, would contain 24 run times.
+lines where each line represents the the full set results for a given type. An
+line generated for a benchmark run with default number of threads on the
+latedays cluster, for example, would contain 24 run times.
 
 \section{Results}
 
