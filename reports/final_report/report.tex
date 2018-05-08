@@ -132,103 +132,28 @@ especially if different threads work on different nodes. Ideally, read-only
 operations should be completely parallel, but even modify operations can be
 parallel if nodes to be modified are not neighbors. Ultimately, to parallelize
 operations on a linked list we must use some kind of synchronization technique
-to avoid corrupting the list.
+to avoid corrupting the list. It is with this in mind that we decided to implement
+a set of concurrent lists and hashmaps using different synchronization techniques,
+including a lock free list, and lists with coarse-grained, fine-grained, and
+fine-grained spinning-reader-writer locks. Our goal was to learn to implement
+these techniques, and to learn how these techniques fare under different kind of
+workloads and use-profiles, i.e., the characteristics of how it is used, such as
+percent of insertions, lookups, and removals.
 
-Thus, we looked at the following techniques, each of which, in theory, has its
-own set of advantages and disadvantages:
-
-\begin{itemize}
-% Coarse grain locks
-\item Coarse grain locks
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item Eeasy to implement.
-\item Only one lock per list. From a resource perspective, this is an advantage.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item Locks the whole list, removing opportunities for parallelization.
-\end{itemize}
-\end{itemize}
-
-% Fine grain locks
-\item Fine grain locks
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item More opportunities for parallelization, since only nodes are locked.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item
-More difficult to implement than coarse-grain locks, because locking occurs on
-every node-hop.
-\item
-The number of locks is linear with the lenght of the list, requiring more
-resources.
-\item
-Traversing the list is more expensive and less efficient, because node-hops
-requires getting a hold of a lock.
-\end{itemize}
-\end{itemize}
-
-% Spinning locks
-\item Fine-grained spinning reader-writer locks
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item More opportunities for parallelization, since only nodes are locked.
-\item
-May lead to better performance if it is to the application's advantage to not
-have threads descheduled by the operating system, or if increased bus contention
-does not affect appliction adversely.
-\item
-Potentially greater parallelism than fine-grained locks because nodes can have
-multiple readers.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item
-More difficult to implement than coarse-grain locks, but same level of
-difficulty as plain fine-grained locks.
-\item
-The number of locks is linear with the lenght of the list, requiring more
-resources.
-\item
-Traversing the list is more expensive and less efficient, because node-hops
-requires getting a hold of a lock.
-\item
-May lead to worse performance if it is to the application's disadvantage to not
-have threads descheduled by the operating system, or if increased bus contention
-affects the appliction adversely.
-\item
-Potentially greater chance of starvation for writers if system has few writers
-and many readers.
-\end{itemize}
-\end{itemize}
-
-% Lock free
-\item Lock free
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item Best opportunities for parallelization, since nothing is locked.
-\item
-Potentially zero additional cost in terms of resources, since nodes do not
-require locks.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item
-More difficult to implement than fine-grained locks, because nothing is locked,
-and must use atomic CAS operations, which are difficult to reason about.
-\item
-Traversing the list is slightly more expensive than with coarse-grained locks,
-since atomic CAS must be used along the way.
-\end{itemize}
-\end{itemize}
-\end{itemize}
+In theory, each technique has it's own set of advantages and disadvantages.
+Coarse-grained locks are easy to implement and only require one lock per list,
+but each operation locks the whole list and prevents parallelism. Fine-grained
+locks offer more opportunity for parallelism, but are more difficult to
+implement than coarse-grain locks, require one lock per node, and increase the
+cost of traversing the list, because every hop requires locking a node.
+Fine-grained spinning-reader-writer locks have similar characteristics to
+regular fine-grained locks, with the difference being that they support multiple
+readers, bus contention becomes an issue, and fairness can become an issue for
+writers if there are only a few of them but there are many readers. Lock free
+lists, on the other hand, don't use locking. They rely on atomic
+compare-and-swap (CAS) operations, and for this reason are more difficult to
+implement, but offer the greatest degree of parallelism because no thread is
+prevented from making progress.
 
 \section{Technologies used}
 \subsection{Language}
@@ -534,13 +459,6 @@ Talk about use-profiles that we used. Machines that we used.
 
 \subsection{List results}
 
-%lateday_combined_list_insert_10_lookup_10_removal_80.png
-%lateday_combined_list_insert_10_lookup_80_removal_10.png
-%lateday_combined_list_insert_25_lookup_25_removal_50.png
-%lateday_combined_list_insert_25_lookup_50_removal_25.png
-%lateday_combined_list_insert_50_lookup_25_removal_25.png
-%lateday_combined_list_insert_80_lookup_10_removal_10.png
-
 \begin{figure}[h]
 \centering
 \includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
@@ -631,15 +549,6 @@ Talk about use-profiles that we used. Machines that we used.
 
 \section{Division of Work}
 Equal work was performed by both partners.
-
-%lateday_combined_map_insert_10_lookup_10_removal_80.png
-%lateday_combined_map_insert_10_lookup_80_removal_10.png
-%lateday_combined_map_insert_25_lookup_25_removal_50.png
-%lateday_combined_map_insert_25_lookup_50_removal_25.png
-%lateday_combined_map_insert_50_lookup_25_removal_25.png
-%lateday_combined_map_insert_80_lookup_10_removal_10.png
-
-
 
 \printbibliography
 
