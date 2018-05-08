@@ -125,113 +125,37 @@ the frontier, and to make them concurrent it may be necessary to start with the
 list. Note the emphasis on {\em list-like}, because in some cases it may be
 preferable to use an array.
 
-The main concern in making a list concurrent is making it thread-safe. Since
-multiple threads could be modifying the list simultaneously there is a potential
-the list could become corrupted, or even worse threads could access invalid data
-an crash. Synchronization among the threads can be easiliy accomplished by
-locking the whole list  for any operation, but this prevents us from exploiting
-parallelism.  Despite the lack of a parallel-friendly nature, there is still
-plenty of opportunity to parallelize operations on a linked list, especially if
-different threads work on different nodes. Ideally, read-only operations should
-be completely parallel, but even modify operations can be parallel if nodes to
-be modified are not neighbors. Ultimately, to parallelize operations on a linked
-list we must use some kind of synchronization technique to avoid corrupting the
-list.
+The first concern in making a list concurrent is making it thread-safe. This is
+easliy accomplished by locking the whole list for any operation, but prevents us
+from exploiting parallelism. Despite the lack of a parallel-friendly nature,
+there is still plenty of opportunity to parallelize operations on a linked list,
+especially if different threads work on different nodes. Ideally, read-only
+operations should be completely parallel, but even modify operations can be
+parallel if nodes to be modified are not neighbors. Ultimately, to parallelize
+operations on a linked list we must use some kind of synchronization technique
+to avoid corrupting the list. It is with this in mind that we decided to implement
+a set of concurrent lists and hashmaps using different synchronization techniques,
+including a lock free list, and lists with coarse-grained, fine-grained, and
+fine-grained spinning-reader-writer locks. Our goal was to learn to implement
+these techniques, and to learn how these techniques fare under different kind of
+workloads and use-profiles, i.e., the characteristics of how it is used, such as
+percent of insertions, lookups, and removals.
 
-Thus, we looked at the following techniques, each of which, in theory, has its
-own set of advantages and disadvantages:
+In theory, each technique has it's own set of advantages and disadvantages.
+Coarse-grained locks are easy to implement and only require one lock per list,
+but each operation locks the whole list and prevents parallelism. Fine-grained
+locks offer more opportunity for parallelism, but are more difficult to
+implement than coarse-grain locks, require one lock per node, and increase the
+cost of traversing the list, because every hop requires locking a node.
+Fine-grained spinning-reader-writer locks have similar characteristics to
+regular fine-grained locks, with the difference being that they support multiple
+readers, bus contention becomes an issue, and fairness can become an issue for
+writers if there are only a few of them but there are many readers. Lock free
+lists, on the other hand, don't use locking. They rely on atomic
+compare-and-swap (CAS) operations, and for this reason are more difficult to
+implement, but offer the greatest degree of parallelism because no thread is
+prevented from making progress.
 
-\begin{itemize}
-% Coarse grain locks
-\item Coarse grain locks
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item Eeasy to implement.
-\item Only one lock per list. From a resource perspective, this is an advantage.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item Locks the whole list, removing opportunities for parallelization.
-\end{itemize}
-\end{itemize}
-
-% Fine grain locks
-\item Fine grain locks
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item More opportunities for parallelization, since only nodes are locked.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item
-More difficult to implement than coarse-grain locks, because locking occurs on
-every node-hop.
-\item
-The number of locks is linear with the lenght of the list, requiring more
-resources.
-\item
-Traversing the list is more expensive and less efficient, because node-hops
-requires getting a hold of a lock.
-\end{itemize}
-\end{itemize}
-
-% Spinning locks
-\item Fine-grained spinning reader-writer locks
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item More opportunities for parallelization, since only nodes are locked.
-\item
-May lead to better performance if it is to the application's advantage to not
-have threads descheduled by the operating system, or if increased bus contention
-does not affect appliction adversely.
-\item
-Potentially greater parallelism than fine-grained locks because nodes can have
-multiple readers.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item
-More difficult to implement than coarse-grain locks, but same level of
-difficulty as plain fine-grained locks.
-\item
-The number of locks is linear with the lenght of the list, requiring more
-resources.
-\item
-Traversing the list is more expensive and less efficient, because node-hops
-requires getting a hold of a lock.
-\item
-May lead to worse performance if it is to the application's disadvantage to not
-have threads descheduled by the operating system, or if increased bus contention
-affects the appliction adversely.
-\item
-Potentially greater chance of starvation for writers if system has few writers
-and many readers.
-\end{itemize}
-\end{itemize}
-
-% Lock free
-\item Lock free
-\begin{itemize}
-\item Advantages
-\begin{itemize}
-\item Best opportunities for parallelization, since nothing is locked.
-\item
-Potentially zero additional cost in terms of resources, since nodes do not
-require locks.
-\end{itemize}
-\item Disadvantages
-\begin{itemize}
-\item
-More difficult to implement than fine-grained locks, because nothing is locked,
-and must use atomic CAS operations, which are difficult to reason about.
-\item
-Memory reclamation is hard to implement.
-\end{itemize}
-\end{itemize}
-\end{itemize}
 
 \subsection{Hash Maps} \label{ssec:bgmap} 
 Hash maps are associative data structures that map a
@@ -322,7 +246,7 @@ the end, and inserts an element at the tail of the list {\em only} if the
 element is not found. The purpose of {\tt InsertUnique} is to be used for
 hashmap insertion, thus preserving a hashmap's invariant of unique keys.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}[numbers=left]
 template <typename T> struct DlList {
@@ -362,7 +286,7 @@ attempting to acquire the next node's lock in line 18, and the same
 hand-over-hand locking continues in the while loop in line 27, where the
 previous lock is released, and line 18, where the next lock is acquired.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}[numbers=left]
 template <typename T> bool
@@ -416,9 +340,9 @@ as long as the lock counter is greater or equal to $0$, with $0$ meaning that
 that the lock is not in use, greater than $0$ meaning one or more readers are
 using the lock, and $-1$ meaning a writer is using the lock.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
-\begin{lstlisting}
+\begin{lstlisting}[numbers=left]
 struct RwLock {
   std::atomic_int counter{0};
   void ReadLock() noexcept {
@@ -439,7 +363,7 @@ struct RwLock {
   void WriteUnlock() noexcept { ++counter; }
 };
 \end{lstlisting}
-\caption{Spinning-writer-reader lock implemented with atomics.}
+\caption{Spinning-reader-writer lock implemented with atomics.}
 \label{fig:rwlock}
 \end{center}
 \end{figure}
@@ -563,35 +487,50 @@ wanted to test, and GoogleTest would generate the set of tests we defined for
 the type being registered. The only exception to this was the lock free list.
 Even though it supported the same interface, the internal representation of lock
 free lists used atomic pointers rather than raw pointers, and prevented us from
-reusing the same harness becuase it relied on pointer semantics. We could have
-overloaded the arrow operator for the node, i.e., {\tt operator->()}, but
-instead chose to create a new set of tests for the lock free list. We created
+reusing the same harness becuase it relied on pointer semantics. We created
 one set of tests that were single-threaded to test the lists' and hashmap's
 interface, and another set of tests that were multi-threaded to ensure that we
-did not get any deadlocks and that that data structures remained in a consistent
+did not get any deadlocks and that data structures remained in a consistent
 state.
 
 \subsection{Benchmarking harness}
+We implemented a benchmarking harness that allowed us to parametrize the
+benchmark in a variety of different ways, but we restricted ourselves to testing
+lists and hashmaps of {\tt int}s. The full list of paremters, along with their
+descriptions, is included below.
 
-Things to say about benchmark harness:
 \begin{itemize}
 \item
-How can test runner be parameterized? E.g., hashmap load factor, percentage of
-insertions vs removals, core affinity, etc.
+{\bf N}. This represents the size of the problem, which in our case is the
+number of items to be inserted, looked up, or removed from a list or hashmap.
 \item
-What use-profiles can harness emulate? Insertion heavy, lookup heavy.
+{\bf Insertions percent}. Out of the $N$ items, the number that should be
+inserted into the list.
 \item
-How does the benchmark handle the thread counts?
+{\bf Removal percent}. Out of the $N$ items, the number that should be removed
+into the list.
 \item
-How does the runner decide what operation to perform?
+{\bf Lookup percent}. Out of the $N$ items, the number that should be looked up.
+\item
+{\bf Preload percent}. Out of the $N$ items, the number that should be looked
+loaded into the list before beginning the benchmark. This would allow us, for
+example, to preload a list with all $N$ items and then run a benchmark with a
+use-profile of 100\% lookups.
+\item
+{\bf Scaling mode}. Determines whetheer the benchmark is run under problem or
+memory scaling. With problem scaling, the $N$ remains fixed as the number of
+threads are increased, and with memory scaling each thread gets $N$ items of
+work.
+\item
+{\bf Affinity}. If enabled, forces each thread to run in its own virtual core.
+\item
+{\bf Min threads}. The minimum number of threads to use for the benchmarks.
+\item
+{\bf Max threads}. The maximum number of threads to use for the benchmarks.
+\item
+{\bf Map load factor}. The load factor for the hash map.
 \end{itemize}
 
-\section{Results}
-
-\subsection{Benchmarking tests}
-Talk about use-profiles that we used. Machines that we used.
-
-\subsection{List results}
 
 %lateday_combined_list_insert_10_lookup_10_removal_80.png
 %lateday_combined_list_insert_10_lookup_80_removal_10.png
@@ -599,6 +538,137 @@ Talk about use-profiles that we used. Machines that we used.
 %lateday_combined_list_insert_25_lookup_50_removal_25.png
 %lateday_combined_list_insert_50_lookup_25_removal_25.png
 %lateday_combined_list_insert_80_lookup_10_removal_10.png
+
+The benchmarking harness takes in the parameters as input, and runs the
+simulation with all the list and hashmap types, from {\it min} to {\it max}
+threads, where the minimum number of threads is 1 by default, and the maximum
+number of threads used by default is the maximum number of threads supported by
+the machine. The only types that are not run with multiple threads are the
+serial list and hashmap. For example, running
+{\tt ./benchmark -i .8 -r .1 -l .1 -n 1000} on a GHC machine would run the
+benchmarks on the single list with one thread, then run the benchmark on the
+fine-grained list with 1 thread first, then 2 threads, and so on up to 16
+threads, collecting the run time in each case, and then proceed to the other
+types, repeating the same process for each type, except the serial types which
+are only tested with one thread.
+
+To execute a use-profile, the harness chooses an operation between insertion,
+lookup, or removal, at random. We used C++11's {\tt
+std::uniform\_real\_distribution} to generate a real number, $x$, in $[0,1]$. If
+$x < i$, where $i$ is the percent of insertions, then the harness performs an
+insertion. If $i \le x < i + r$, where $r$ is the percent of removals, then it
+performs a removal, otherwise it performs a lookup. For lists, we also flipped a
+coin to take turns between {\tt Insert} and {\tt InsertUnique} to do insertions.
+To select numbers for removal or lookup, we selected a number at random from a
+buffer of numbers that have been inserted into the list, either during preload
+or simply when an insert operation is executed.
+
+The results are output in CSV format, with a header at the top, followed by
+lines where each line represents the the full set results for a given type. An
+line generated for a benchmark run with default number of threads on the
+latedays cluster, for example, would contain 24 run times.
+
+\section{Results}
+Our project is more focused on learning to implement concurrent lists and
+hashmaps, and to gain an understanding of how these concurrent data structures
+behave under different use profiles and with different levels of concurrency,
+i.e., number of threads, and hence we did not set specific performance goals.
+However, we did have a set of hypothesis about how the lists would behave. In
+terms of performance, with speedup as its measure, we expected the following
+order, for both lists and hashmaps, from best performing to least performing:
+
+\begin{enumerate}
+\item Lock free
+\item Fine-grained spinning-reader-writer locks
+\item Fine-grained
+\item coarse-grained
+\end{enumerate}
+
+We were not expecting this order for all threads, but this is what we were
+expecting to see as the number of threads increased. Furthermore, we were
+expecting to see libcuckoo's and TBB's concurrent hashmaps obtain higher
+speedups, but not by a significant margin.
+
+\subsection{Results for list}
+To benchmark our lists, we used the latedays cluster, used problem scaling with
+$N=100000$, and selected six different use-profiles: insertion heavy, insertion
+medium, removal heavy, removal medium, lookup heavy, and lookup medium. {\it
+Heavy} use-profiles consist of an 80\%, 10\%, and 10\% split, while {\it
+medium} use-profiles consist of a 50\%, 25\%, and 25\% split. To compute the
+speedup, we divided the single-thread run time from {\tt DlList} by each of the
+run times obtained for the other lists, including single-thread run times.
+
+Figure~\ref{fig:listInsertHeavy} shows the behahvior for the lists under the
+insertion heavy workload. The dashed line represents the baseline, a speedup of
+1. We can see that the lists with fine-grained (green line) and
+spinning-reader-writer (yellow line) locks don't exhibit any speedup. The list
+with coarse-grained (blue line) locks starts a little higher than 2x speedup,
+and very gradually slows down to about a 2x speedup as the number of threads are
+increased. The lock-free list (magenta line), on the other hand, starts up slow,
+but its performance increases steadily as the number of threads are increased.
+Performance doesn't increase linearly for the lock-free list, but it does reach
+a more than 14x speedup.
+
+Figure~\ref{fig:manyLists} contains four more plots for different workloads, and
+the ineresting aspect is that they all look about the same, and exhibit a very
+similar pattern. It is clear that most of our expectatins were incorrect. The
+only correct hypothesis is that lock free lists would perform better than the
+other lists, but in all other respects we were incorrect. At least in our tests,
+in machines with 24 or less threads, using a list with regular fine-grained or
+spinning-reader-writer locks is no better than using a concurrent list with
+coars-grained locks, and it can actually be better to use lists with
+coarse-grained locks.
+
+The good news is that the lock free list's performance increases with the number
+of threads, and is able to achieve speedups of up to 10x on any type of workload.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
+
+\caption{
+Speedup for concurrent lists with $N=100000$ and an insertion heavy workload:
+80\% insertions, 10\% removals, and 10\% lookups.}
+\label{fig:listInsertHeavy}
+\end{figure}
+
+\begin{figure}[h]
+% ----- first row
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
+  \caption{Removal heavy workload.}
+  \label{fig:listRemovalHeavy}
+\end{subfigure}%
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
+  \caption{Lookup heavy workload.}
+  \label{fig:listLookupHeavy}
+\end{subfigure}
+\\ % ----- second row
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
+  \caption{Insert medium workload.}
+  \label{fig:listInsertMedium}
+\end{subfigure}%
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
+  \caption{Removal medium workload.}
+  \label{fig:listRemovalMedium}
+\end{subfigure}
+\caption{
+Concurrent list speedup with $N=100000$ and different use-profiles.
+\ref{fig:listRemovalHeavy} has a use-profile of 10\% inserts, 10\% lookups, and
+80\% removals. \ref{fig:listLookupHeavy} has a use-profile of 10\% inserts, 80\%
+lookups, and 10\% removals. \ref{fig:listInsertMedium} has a use-profile of 50\%
+inserts, 25\% lookups, and 25\% removals. \ref{fig:listRemovalMedium} has a
+use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
+}
+\label{fig:manyLists}
+\end{figure}
 
 \subsection{Hashmap results}
 The benchmark profile for hashmaps was similar to the one for lists. We added the load factor parameter,
@@ -609,128 +679,10 @@ operations to perform, since there will not be only one list to perform operatio
 
 We tested the following profiles
 
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_50_removal_25}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_10_lookup_80_removal_10}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_25_lookup_25_removal_50}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_25_lookup_50_removal_25}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_50_lookup_25_removal_25}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_80_lookup_10_removal_10}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
 \section{Conclusion}
 
 \section{Division of Work}
 Equal work was performed by both partners.
-
-%lateday_combined_map_insert_10_lookup_10_removal_80.png
-%lateday_combined_map_insert_10_lookup_80_removal_10.png
-%lateday_combined_map_insert_25_lookup_25_removal_50.png
-%lateday_combined_map_insert_25_lookup_50_removal_25.png
-%lateday_combined_map_insert_50_lookup_25_removal_25.png
-%lateday_combined_map_insert_80_lookup_10_removal_10.png
-
-
 
 \printbibliography
 

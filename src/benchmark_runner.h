@@ -41,6 +41,7 @@ struct RunnerParams {
   float mapLoadFactor{1};
   std::string outDirectory{""};
   std::string structs;
+  unsigned repeat{1};
 
   RunnerParams() = default;
   RunnerParams(size_t n, float inserts, float removals, float lookups)
@@ -124,15 +125,18 @@ template <template <typename> class TList>
 RunnerResults BenchmarkRunner::RunListSingle(const std::string &listName) {
   using namespace std::chrono;
   using ListType = TList<int>;
+  double runTime = 0.0;
+  for (unsigned r = 0; r < params.repeat; ++r) {
+    ListType lst;
+    auto buffers = PreloadList(lst, 1);
+    assert(buffers.size() == 1);
+    auto timeStart = steady_clock::now();
+    RunList(0, 1, lst, buffers[0]);
+    auto dur = steady_clock::now() - timeStart;
+    runTime += duration_cast<duration<double>>(dur).count();
+  }
   RunnerResults results(listName, params);
-  ListType lst;
-  auto buffers = PreloadList(lst, 1);
-  assert(buffers.size() == 1);
-  auto timeStart = steady_clock::now();
-  RunList(0, 1, lst, buffers[0]);
-  auto dur = steady_clock::now() - timeStart;
-  auto runTime = duration_cast<duration<double>>(dur).count();
-  results.runTimes.push_back(runTime);
+  results.runTimes.push_back(runTime / params.repeat);
   return results;
 }
 
@@ -143,19 +147,22 @@ RunnerResults BenchmarkRunner::RunList(const std::string &listName) {
   RunnerResults results(listName, params);
   std::thread threads[params.maxThreads];
   for (size_t c = params.minThreads; c <= params.maxThreads; ++c) {
-    ListType lst;
-    auto buffers = PreloadList(lst, c);
-    auto timeStart = steady_clock::now();
-    for (size_t t = 1; t < c; ++t) {
-      threads[t] = std::thread(&BenchmarkRunner::RunList<ListType>, this, t, c,
-                               std::ref(lst), std::ref(buffers[t]));
+    double runTime = 0.0;
+    for (unsigned r = 0; r < params.repeat; ++r) {
+      ListType lst;
+      auto buffers = PreloadList(lst, c);
+      auto timeStart = steady_clock::now();
+      for (size_t t = 1; t < c; ++t) {
+        threads[t] = std::thread(&BenchmarkRunner::RunList<ListType>, this, t,
+                                 c, std::ref(lst), std::ref(buffers[t]));
+      }
+      RunList(0, c, lst, buffers[0]);
+      for (size_t t = 1; t < c; ++t)
+        threads[t].join();
+      auto dur = steady_clock::now() - timeStart;
+      runTime += duration_cast<duration<double>>(dur).count();
     }
-    RunList(0, c, lst, buffers[0]);
-    for (size_t t = 1; t < c; ++t)
-      threads[t].join();
-    auto dur = steady_clock::now() - timeStart;
-    auto runTime = duration_cast<duration<double>>(dur).count();
-    results.runTimes.push_back(runTime);
+    results.runTimes.push_back(runTime / params.repeat);
   }
   return results;
 }
@@ -228,15 +235,18 @@ template <template <typename, typename> class TMap>
 RunnerResults BenchmarkRunner::RunMapSingle(const std::string &mapName) {
   using namespace std::chrono;
   using MapType = TMap<int, int>;
+  double runTime = 0.0;
+  for (unsigned r = 0; r < params.repeat; ++r) {
+    MapType hashMap((int)(params.n / params.mapLoadFactor));
+    auto buffers = PreloadMap(hashMap, 1);
+    assert(buffers.size() == 1);
+    auto timeStart = steady_clock::now();
+    RunMap(0, 1, hashMap, buffers[0]);
+    auto dur = steady_clock::now() - timeStart;
+    runTime += duration_cast<duration<double>>(dur).count();
+  }
   RunnerResults results(mapName, params);
-  MapType hashMap((int)(params.n / params.mapLoadFactor));
-  auto buffers = PreloadMap(hashMap, 1);
-  assert(buffers.size() == 1);
-  auto timeStart = steady_clock::now();
-  RunMap(0, 1, hashMap, buffers[0]);
-  auto dur = steady_clock::now() - timeStart;
-  auto runTime = duration_cast<duration<double>>(dur).count();
-  results.runTimes.push_back(runTime);
+  results.runTimes.push_back(runTime / params.repeat);
   return results;
 }
 
@@ -247,21 +257,24 @@ RunnerResults BenchmarkRunner::RunMap(const std::string &mapName) {
   RunnerResults results(mapName, params);
   std::thread threads[params.maxThreads];
   for (size_t c = params.minThreads; c <= params.maxThreads; ++c) {
-    MapType hashMap(params.scalingMode == ScalingMode::Problem
-                        ? (int)(params.n / params.mapLoadFactor)
-                        : (int)((params.n * c) / params.mapLoadFactor));
-    auto buffers = PreloadMap(hashMap, c);
-    auto timeStart = steady_clock::now();
-    for (size_t t = 1; t < c; ++t) {
-      threads[t] = std::thread(&BenchmarkRunner::RunMap<MapType>, this, t, c,
-                               std::ref(hashMap), std::ref(buffers[t]));
+    double runTime = 0.0;
+    for (unsigned r = 0; r < params.repeat; ++r) {
+      MapType hashMap(params.scalingMode == ScalingMode::Problem
+                          ? (int)(params.n / params.mapLoadFactor)
+                          : (int)((params.n * c) / params.mapLoadFactor));
+      auto buffers = PreloadMap(hashMap, c);
+      auto timeStart = steady_clock::now();
+      for (size_t t = 1; t < c; ++t) {
+        threads[t] = std::thread(&BenchmarkRunner::RunMap<MapType>, this, t, c,
+                                 std::ref(hashMap), std::ref(buffers[t]));
+      }
+      RunMap(0, c, hashMap, buffers[0]);
+      for (size_t t = 1; t < c; ++t)
+        threads[t].join();
+      auto dur = steady_clock::now() - timeStart;
+      runTime += duration_cast<duration<double>>(dur).count();
     }
-    RunMap(0, c, hashMap, buffers[0]);
-    for (size_t t = 1; t < c; ++t)
-      threads[t].join();
-    auto dur = steady_clock::now() - timeStart;
-    auto runTime = duration_cast<duration<double>>(dur).count();
-    results.runTimes.push_back(runTime);
+    results.runTimes.push_back(runTime / params.repeat);
   }
   return results;
 }
