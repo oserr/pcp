@@ -168,12 +168,18 @@ supply the thread with any callable object, including pointers to member
 functions, and a variable number of arguments of any type.
 
 \subsection{Target machines}
-Our target machines were latedays cluster and GHC machines, because they are
-x86-64, use the Linux operating system, and support a decent number of threads,
-enough to see clear patterns in our experiment results.
-
-% Mention that we did not use a specific machine on the latedays cluster, and
-% Omar used ghc 28. Which one did Patricio use?
+Our target machines were latedays cluster and GHC machines. Clearly, they are
+convenient because we have access to them, but they are also a good choice
+because they are relatively modern in terms of architecture and CPU model, they
+are Linux machines, which is a system-level programming friendly OS, and they
+have a decent number of cores, enough to see clear patterns in our experiment
+results. Furthermore, the latedays cluster is ideal to run experiments because
+it allowed us to run multiple jobs on different machines simultaneously. Our
+initial plan was to use a single machine in the latedays cluster, but it became
+evident that we would need to split the jobs among the machines, otherwise the
+jobs would timeout, even with 8 hours of walltime. We conducted experiments on
+both the GHC and latedays cluster machines, but most of the results presented
+here are from the latedays cluster.
 
 \subsection{External libraries}
 In addition to comparing the different synchronization techniques we also wanted
