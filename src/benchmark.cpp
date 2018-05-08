@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
       {"map-loadfactor", required_argument, nullptr, 'u'},
       {"outdir", required_argument, nullptr, 'o'},
       {"datastruct", required_argument, nullptr, 'd'},
+      {"repeat", required_argument, nullptr, 1002},
       {0, 0, 0, 0}};
   bool isPrettyFormat = false;
   bool isMapOnly = false;
@@ -157,6 +158,11 @@ int main(int argc, char *argv[]) {
       break;
     case 1001:
       isMapOnly = true;
+      break;
+    case 1002:
+      params.repeat = std::stoul(optarg);
+      if (params.repeat < 1)
+        usageErr(argv[0]);
       break;
     case '?':
     default:
