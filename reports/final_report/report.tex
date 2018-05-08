@@ -160,9 +160,12 @@ prevented from making progress.
 We used C++11 because it would allow us to work at a high level of abstraction,
 making it easy for us to think about lists and nodes as objects, while also
 allowing us to work close to the metal, allowing us to control memory allocation
-and directly reference memory addresses. Furthermore, C++11 overloaded operators
-makes it easy to work with atomic primitives, and this proved useful for
-implementing a spinning-reader-writer lock, and the lock-free list.
+and directly reference memory addresses. C++11 overloaded operators makes it
+easy to work with atomic primitives, and this proved useful for implementing a
+spinning-reader-writer lock, and the lock-free list. It is also much easir to
+work with C++11's threads rather than pthreads, because C++11 allows you to
+supply the thread with any callable object, including pointers to member
+functions, and a variable number of arguments of any type.
 
 \subsection{Target machines}
 Our target machines were latedays cluster and GHC machines, because they are
