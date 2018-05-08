@@ -414,28 +414,28 @@ struct RwLock {
 \end{figure}
 
 \subsubsection{Lock free list}
-Lockfree lists were implemented based on
-\cite{Harris}.  If a list would only expose the Insert() and Contains() methods
-it would be trivial to implement without using locks. The only operation that we
-would need to worry about in a concurrent environment is the Insert() one, for
-which we would only need to update a pointer atomically. This can be done using
-an atomic compare and swap instruction (CAS) that would retry the opertion in
-case the pointer to be updated happens to change in the middle of the operation.
-The real challenge with removing locks from the implementation of a list has to
-do with the Remove() operation. In order to guarantee that no extra nodes are
-inserted concurrently after a node being deleted, and thus corrupting the list,
-it would seem that we would need an atomic double compare and swap instruction
-(DCAS), i.e. an instruction that would simultaneously update the next pointer of
-the node being removed and the next pointer of its previous node. With the
-algorithm proposed by \cite{Harris} the Remove() operation can be accomplished
-with only a single CAS, by means of dividing the delete operation in a logical
-delete and a physical delete. The key idea is to use the unused lower bits in
-the value of the pointer to the next node to store a flag that would mark the
-node as deleted. Removing a node would first make a logical delete by marking
-its pointer to next node, and finally the actual physical delete from the list
-would be done. Since the logical delete just changes unused bits from the
-pointer of the deleted node other threads can still traverse the list ignoring
-logical deleted nodes, thus mantaining concurrency and correctness.
+Lockfree lists were implemented based on \cite{Harris}. If a list would only
+expose the {\tt Insert()} and {\tt Contains()} methods it would be trivial to
+implement without using locks. The only operation that we would need to worry
+about in a concurrent environment is {\tt Insert()}, for which we would only
+need to update a pointer atomically. This can be done using an atomic CAS that
+would retry the operation in case the pointer to be updated happens to change in
+the middle of the operation. The real challenge with removing locks from the
+implementation of a list has to do with the {\tt Remove()} operation. In order
+to guarantee that no extra nodes are inserted concurrently after a node is
+deleted, corrupting the list, it would seem that we would need an atomic double
+compare and swap instruction (DCAS), i.e. an instruction that would
+simultaneously update the next pointer of the node being removed and the next
+pointer of its previous node. With the algorithm in \cite{Harris}, the {\tt
+Remove()} operation can be accomplished with only a single CAS, by means of
+dividing the delete operation in a logical delete and a physical delete. The key
+idea is to use the unused lower bits in the value of the pointer to the next
+node to store a flag that would mark the node as deleted. Removing a node would
+first make a logical delete by marking its pointer to next node, and finally the
+actual physical delete from the list would be done. Since the logical delete
+just changes unused bits from the pointer of the deleted node other threads can
+still traverse the list ignoring logical deleted nodes, thus mantaining
+concurrency and correctness.
 
 \begin{figure}[h]
 \centering
@@ -627,7 +627,6 @@ of threads, and is able to achieve speedups of up to 10x on any type of workload
 \begin{figure}[h]
 \centering
 \includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
-
 \caption{
 Speedup for concurrent lists with $N=100000$ and an insertion heavy workload:
 80\% insertions, 10\% removals, and 10\% lookups.}
