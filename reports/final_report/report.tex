@@ -451,7 +451,7 @@ concurrency and correctness.
 \label{fig:physicallyDeleted}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}
 template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
@@ -482,7 +482,6 @@ similar to the previous  lists except no locks were defined, and the next
 pointer in the node definition was  declared as atomic. Much of the code was
 adapted from \cite{Harris}. Figure~\ref{fig:lockfreeIUnique}  contains the full
 details of the lockfree implementation of {\tt InsertUnique}.
-
 
 \subsection{Correctness tests}
 We used GoogleTest to create tests. Before running any benchmarks, we wanted to
@@ -611,6 +610,15 @@ but its performance increases steadily as the number of threads are increased.
 Performance doesn't increase linearly for the lock-free list, but it does reach
 a more than 14x speedup.
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
+\caption{
+Speedup for concurrent lists with $N=100000$ and an insertion heavy workload:
+80\% insertions, 10\% removals, and 10\% lookups.}
+\label{fig:listInsertHeavy}
+\end{figure}
+
 Figure~\ref{fig:manyLists} contains four more plots for different workloads, and
 the ineresting aspect is that they all look about the same, and exhibit a very
 similar pattern. It is clear that most of our expectatins were incorrect. The
@@ -620,18 +628,6 @@ in machines with 24 or less threads, using a list with regular fine-grained or
 spinning-reader-writer locks is no better than using a concurrent list with
 coars-grained locks, and it can actually be better to use lists with
 coarse-grained locks.
-
-The good news is that the lock free list's performance increases with the number
-of threads, and is able to achieve speedups of up to 10x on any type of workload.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
-\caption{
-Speedup for concurrent lists with $N=100000$ and an insertion heavy workload:
-80\% insertions, 10\% removals, and 10\% lookups.}
-\label{fig:listInsertHeavy}
-\end{figure}
 
 \begin{figure}[h]
 % ----- first row
@@ -670,6 +666,9 @@ use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
 }
 \label{fig:manyLists}
 \end{figure}
+
+The good news is that the lock free list's performance increases with the number
+of threads, and is able to achieve speedups of up to 10x on any type of workload.
 
 \subsection{Hashmap results}
 The benchmark profile for hashmaps was similar to the one for lists. We added the load factor parameter,
