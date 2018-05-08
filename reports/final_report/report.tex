@@ -568,6 +568,13 @@ use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
 \subsection{Hashmap results}
 
 \section{Conclusion}
+For machines with 24 cores or less, our results suggest that:
+\begin{itemize}
+\item
+Lists with fine-grained locks don't provide an advantage over lists with
+coarse-grained locks. To get parallelism from a linked list, it is necessary to
+use a lock free list.
+\end{itemize}
 
 \section{Division of Work}
 Equal work was performed by both partners.
