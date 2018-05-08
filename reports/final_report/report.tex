@@ -453,6 +453,25 @@ line generated for a benchmark run with default number of threads on the
 latedays cluster, for example, would contain 24 run times.
 
 \section{Results}
+Our project is more focused on learning to implement concurrent lists and
+hashmaps, and to gain an understanding of how these concurrent data structures
+behave under different use profiles and with different levels of concurrency,
+i.e., number of threads, and hence we did not set specific performance goals.
+However, we did have a set of hypothesis about how the lists would behave. In
+terms of performance, with speedup as its measure, we expected the following
+order, for both lists and hashmaps, from best performing to least performing:
+
+\begin{enumerate}
+\item Lock free
+\item Fine-grained spinning-reader-writer locks
+\item Fine-grained
+\item coarse-grained
+\end{enumerate}
+
+We were not expecting this order for all threads, but this is what we were
+expecting to see as the number of threads increased. Furthermore, we were
+expecting to see libcuckoo's and TBB's concurrent hashmaps obtain higher
+speedups, but not by a significant margin.
 
 \subsection{Benchmarking tests}
 Talk about use-profiles that we used. Machines that we used.
