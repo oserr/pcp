@@ -268,20 +268,22 @@ struct HashMap {
 \end{center}
 \end{figure}
 
-\subsection{List with coarse-grained locks}
-To implement this, we created a list that inherited from {\tt DlList}, and
-overrode all of its functions by locking a {\tt std::mutex} before calling the
-base {\tt DlList}'s functions.
+\subsection{Implementing concurrent lists}
 
-\subsection{List with fine-grained locks}
-To implement this, we created a node with a mutex lock, and also added a mutex
-to the list object, which essentially protects the head pointer. The technique
-we used is the hand-over-hand locking technique presented in lecture 17, which
-can be applied to all of the operations performed on the list. The idea behind
-hand-over-hand locking is to hold one lock as you move forward on the list. When
-the lock for the next node is acquired, the lock for the previous node is
-released, and then we try to acquire the next node's lock, and so on until we
-find the node we are looking for.
+\subsubsection{List with coarse-grained locks}
+To implement the list with coarse grained locks, we created a list that
+inherited from {\tt DlList}, and overrode all of its functions by locking a
+{\tt std::mutex} before calling the base {\tt DlList}'s functions.
+
+\subsubsection{List with fine-grained locks}
+To implement the list with fine-grained locks, we created a node with a mutex
+lock, and also added a mutex to the list object, which essentially protects the
+head pointer. The technique we used is the hand-over-hand locking technique
+presented in lecture 17, which can be applied to all of the operations performed
+on the list. The idea behind hand-over-hand locking is to hold one lock as you
+move forward on the list. When the lock for the next node is acquired, the lock
+for the previous node is released, and then we try to acquire the next node's
+lock, and so on until we find the node we are looking for.
 
 Figure~\ref{fig:finegrain} contains the full details of how hand-over-hand
 locking is used to implement {\tt Contains}. The first step is to acquire the
@@ -333,7 +335,7 @@ Full implementation of {\tt Contains} for list with fine-grained locks.}
 \end{center}
 \end{figure}
 
-\subsection{List with fine-grained spinning-reader-writer locks}
+\subsubsection{List with fine-grained spinning-reader-writer locks}
 The gist of traversing a list with fine-grained locks is fully encompassed in
 hand-over-hand locking, and so we were able to reuse the logic in our
 fine-grained list; however, we did have to implement a spinning-reader-writer
@@ -374,7 +376,7 @@ struct RwLock {
 \end{center}
 \end{figure}
 
-\subsection{Lock free list}
+\subsubsection{Lock free list}
 
 \subsection{Correctness tests}
 We used GoogleTest to create tests. Before running any benchmarks, we wanted to
