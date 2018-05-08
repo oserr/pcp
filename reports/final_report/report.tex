@@ -215,7 +215,7 @@ the end, and inserts an element at the tail of the list {\em only} if the
 element is not found. The purpose of {\tt InsertUnique} is to be used for
 hashmap insertion, thus preserving a hashmap's invariant of unique keys.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}[numbers=left]
 template <typename T> struct DlList {
@@ -240,7 +240,7 @@ hashes. Other than thin wrappers for TBB's and libcuckoo's hashmaps, we did not
 have to create any other hashmaps because we were able to parameterize the hash
 map with all of the concurrent lists we implemented.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}[numbers=left]
 template <typename K, typename V, template <typename> class TList>
@@ -282,7 +282,7 @@ attempting to acquire the next node's lock in line 18, and the same
 hand-over-hand locking continues in the while loop in line 27, where the
 previous lock is released, and line 18, where the next lock is acquired.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}[numbers=left]
 template <typename T> bool
@@ -336,7 +336,7 @@ as long as the lock counter is greater or equal to $0$, with $0$ meaning that
 that the lock is not in use, greater than $0$ meaning one or more readers are
 using the lock, and $-1$ meaning a writer is using the lock.
 
-\begin{figure}
+\begin{figure}[h]
 \begin{center}
 \begin{lstlisting}[numbers=left]
 struct RwLock {
@@ -359,7 +359,7 @@ struct RwLock {
   void WriteUnlock() noexcept { ++counter; }
 };
 \end{lstlisting}
-\caption{Spinning-writer-reader lock implemented with atomics.}
+\caption{Spinning-reader-writer lock implemented with atomics.}
 \label{fig:rwlock}
 \end{center}
 \end{figure}
@@ -442,7 +442,7 @@ std::uniform\_real\_distribution} to generate a real number, $x$, in $[0,1]$. If
 $x < i$, where $i$ is the percent of insertions, then the harness performs an
 insertion. If $i \le x < i + r$, where $r$ is the percent of removals, then it
 performs a removal, otherwise it performs a lookup. For lists, we also flipped a
-coin to take turns doing insertions between {\tt Insert} and {\tt InsertUnique}.
+coin to take turns between {\tt Insert} and {\tt InsertUnique} to do insertions.
 To select numbers for removal or lookup, we selected a number at random from a
 buffer of numbers that have been inserted into the list, either during preload
 or simply when an insert operation is executed.
@@ -473,96 +473,87 @@ expecting to see as the number of threads increased. Furthermore, we were
 expecting to see libcuckoo's and TBB's concurrent hashmaps obtain higher
 speedups, but not by a significant margin.
 
-\subsection{Benchmarking tests}
-Talk about use-profiles that we used. Machines that we used.
+\subsection{Results for list}
+To benchmark our lists, we used the latedays cluster, used problem scaling with
+$N=100000$, and selected six different use-profiles: insertion heavy, insertion
+medium, removal heavy, removal medium, lookup heavy, and lookup medium. {\it
+Heavy} use-profiles consist of an 80\%, 10\%, and 10\% split, while {\it
+medium} use-profiles consist of a 50\%, 25\%, and 25\% split. To compute the
+speedup, we divided the single-thread run time from {\tt DlList} by each of the
+run times obtained for the other lists, including single-thread run times.
 
-\subsection{List results}
+Figure~\ref{fig:listInsertHeavy} shows the behahvior for the lists under the
+insertion heavy workload. The dashed line represents the baseline, a speedup of
+1. We can see that the lists with fine-grained (green line) and
+spinning-reader-writer (yellow line) locks don't exhibit any speedup. The list
+with coarse-grained (blue line) locks starts a little higher than 2x speedup,
+and very gradually slows down to about a 2x speedup as the number of threads are
+increased. The lock-free list (magenta line), on the other hand, starts up slow,
+but its performance increases steadily as the number of threads are increased.
+Performance doesn't increase linearly for the lock-free list, but it does reach
+a more than 14x speedup.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
+Figure~\ref{fig:manyLists} contains four more plots for different workloads, and
+the ineresting aspect is that they all look about the same, and exhibit a very
+similar pattern. It is clear that most of our expectatins were incorrect. The
+only correct hypothesis is that lock free lists would perform better than the
+other lists, but in all other respects we were incorrect. At least in our tests,
+in machines with 24 or less threads, using a list with regular fine-grained or
+spinning-reader-writer locks is no better than using a concurrent list with
+coars-grained locks, and it can actually be better to use lists with
+coarse-grained locks.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_50_removal_25}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
-\caption{Fig.}
-\label{fig:fig1}
-\end{figure}
+The good news is that the lock free list's performance increases with the number
+of threads, and is able to achieve speedups of up to 10x on any type of workload.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
-\caption{Fig.}
-\label{fig:fig1}
+\caption{
+Speedup for concurrent lists with $N=100000$ and an insertion heavy workload:
+80\% insertions, 10\% removals, and 10\% lookups.}
+\label{fig:listInsertHeavy}
+\end{figure}
+
+\begin{figure}[h]
+% ----- first row
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
+  \caption{Removal heavy workload.}
+  \label{fig:listRemovalHeavy}
+\end{subfigure}%
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
+  \caption{Lookup heavy workload.}
+  \label{fig:listLookupHeavy}
+\end{subfigure}
+\\ % ----- second row
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
+  \caption{Insert medium workload.}
+  \label{fig:listInsertMedium}
+\end{subfigure}%
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
+  \caption{Removal medium workload.}
+  \label{fig:listRemovalMedium}
+\end{subfigure}
+\caption{
+Concurrent list speedup with $N=100000$ and different use-profiles.
+\ref{fig:listRemovalHeavy} has a use-profile of 10\% inserts, 10\% lookups, and
+80\% removals. \ref{fig:listLookupHeavy} has a use-profile of 10\% inserts, 80\%
+lookups, and 10\% removals. \ref{fig:listInsertMedium} has a use-profile of 50\%
+inserts, 25\% lookups, and 25\% removals. \ref{fig:listRemovalMedium} has a
+use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
+}
+\label{fig:manyLists}
 \end{figure}
 
 \subsection{Hashmap results}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_10_lookup_10_removal_80}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_10_lookup_80_removal_10}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_25_lookup_25_removal_50}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_25_lookup_50_removal_25}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_50_lookup_25_removal_25}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/lateday/combined/lateday_combined_map_insert_80_lookup_10_removal_10}
-\caption{Fig.}
-\label{fig:fig2}
-\end{figure}
 
 \section{Conclusion}
 
