@@ -273,7 +273,7 @@ template <typename T> struct DlList {
 \end{figure}
 
 \subsection{Template hashmap}
-As we described in ~\ref{ssec:bglist}, a hashmap
+As we described in ~\ref{ssec:bgmap}, a hashmap
 needs to handle the case where two keys map to the same bucket. The way we chose
 to handle this scenarios was by using linked lists in each bucket. With
 that approach, implementing a concurrent hashmap becomes easy once we
@@ -698,14 +698,85 @@ use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
 The good news is that the lock free list's performance increases with the number
 of threads, and is able to achieve speedups of up to 10x on any type of workload.
 
-\subsection{Hashmap results}
-The benchmark profile for hashmaps was similar to the one for lists. We added the load factor parameter,
-were we basically modify the amount of buckets to create the hashmap with in relation to the
-amount of numbers to insert.
-only increased the amount of
-operations to perform, since there will not be only one list to perform operations
+% \begin{figure}[!htb]
+% % ----- first row
+% \begin{subfigure}{1.0\textwidth}
+%   \centering
+%   \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy.jpg}
+%   \label{fig:mapInsertHeavy_1}
+% \end{subfigure}%
+% \\ % ----- second row
+% \begin{subfigure}{1.0\textwidth}
+%   \centering
+%   \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/lookups_heavy.jpg}
+%   \label{fig:mapLookupHeavy_1}
+% \end{subfigure}
+% \caption{
+% Concurrent list speedup with $N=100000$ and different use-profiles.
+% \ref{fig:mapInsertHeavy_1} has a use-profile of 80\% inserts, 10\% removals, and
+% 10\% lookups. \ref{fig:mapLookupHeavy_1} has a use-profile of 10\% inserts, 10\%
+% removals, and 80\% lookups.
+% }
+% \label{fig:mapsAnalyzed}
+% \end{figure}
 
-We tested the following profiles
+
+\subsection{Hashmap results} 
+We run the same 6 benchmark profiles we used for
+lists to benchmark hashmaps, i.e. we used heavy and medium use-profiles for inserts,
+removes and lookups. We added the load factor parameter, which modifies the
+amount of buckets to create the hashmap with respect to the amount of
+numbers to insert. We also used problem scaling but increased the number of
+operations from 100000 to 10000000. The reason for this is that previously we
+only had a single contended list used by all threads, whereas for hash maps we
+have an array of lists, and since threads will be mostly working on
+different buckets at any given point in time more work can be done in the same
+timespan.
+
+We will analyze first the heavy insert and heavy lookup workloads because we 
+think they are representative of the other profiles as well. In other words, 
+the analysis performed on those profiles can be extended to the
+other ones, which show similar behavior.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy.jpg}
+\caption{
+Speedup for concurrent maps with $N=10000000$ and an insertion heavy workload:
+80\% insertions, 10\% removals, and 10\% lookups.}
+\label{fig:mapInsertHeavy}
+\end{figure}
+
+Figure ~\ref{fig:mapInsertHeavy} shows the behavior of the hash maps under the
+heavy insertion workload with a load factor of 0.7. The dashed line represents
+the baseline, i.e. a speedup of 1.  
+
+The very first thing we notice from the plot is that except for the libcuckoo
+implementation, all the other ones achieve similar peformance. Even the Intel 
+Threading Building Block concurrent hash map, which we assumed would
+outperform ours by much, is giving similar results. We can therefore see that regardless of the
+type of list that we use to implement the buckets of the hash map, i.e. whether 
+is coarse-grain, fine-grain or lockfree, all display similar behaviour.
+The reason for this has to with the size and low contention of the lists in each bucket. 
+Since the load factor of the map was set to 0.7, most of the buckets 
+will either have zero, one or two elements. Also at any given point in time, all threads 
+will in general be operating on different buckets within the map. This lack
+of contention over a low sized list makes different synchronization mechanisms
+appear similar between each other. 
+
+% run a test with large high load factor
+
+The other important thing we notice is that speedups are really low considering
+that we  are using as high as 24 threads. Even the libcuckoo implementation
+which outperforms all the others, only achieves a 5x speedup. The rest of the
+hash maps bearly reach a 2x speedup. We think this has to do with the
+overhead of using locks or CAS instructions compared to the actual time required
+to complete each operation. As we described in ~\ref{ssec:bgmap} inserts,
+removes and lookups take all constant time on average for a hash map, so adding
+syncronization overhead on top of it masks out any gains achieved by dividing
+the work among more threads. In other words, although there are more workers,
+now each operation takes more time to complete. 
+
 
 \section{Conclusion}
 For machines with 24 cores or less, our results suggest the following:
