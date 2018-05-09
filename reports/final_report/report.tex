@@ -421,35 +421,61 @@ about in a concurrent environment is {\tt Insert()}, for which we would only
 need to update a pointer atomically. This can be done using an atomic CAS that
 would retry the operation in case the pointer to be updated happens to change in
 the middle of the operation. The real challenge with removing locks from the
-implementation of a list has to do with the {\tt Remove()} operation. In order
-to guarantee that no extra nodes are inserted concurrently after a node is
-deleted, corrupting the list, it would seem that we would need an atomic double
-compare and swap instruction (DCAS), i.e. an instruction that would
+implementation of a list has to do with the {\tt Remove()} operation.
+
+\begin{figure}[h]
+\begin{subfigure}{.4\textwidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/patricio/logicallyDeleted.jpg}
+  \caption{Logical deletion.}
+  \label{fig:logicallyDeleted}
+\end{subfigure}%
+\hspace*{\fill}
+\begin{subfigure}{.4\textwidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/patricio/physicallyDeleted.jpg}
+  \caption{Physical deletion.}
+  \label{fig:physicallyDeleted}
+\end{subfigure}
+\caption{
+Harris' \cite{Harris} approach to removing a node from a list consists of two
+steps. The first step, in \ref{fig:logicallyDeleted}, removes a node from the list
+{\em logically} by marking the least significant bit of the pointer. The second
+step, in \ref{fig:physicallyDeleted}, {\em physically} removes the node from the
+list.
+}
+\label{fig:lockFreeRemove}
+\end{figure}
+
+In order to guarantee that no extra nodes are inserted concurrently after a node is
+deleted, thus corrupting the list, it would seem that we would need an atomic
+double compare and swap (DCAS) instruction, i.e. an instruction that would
 simultaneously update the next pointer of the node being removed and the next
 pointer of its previous node. With the algorithm in \cite{Harris}, the {\tt
 Remove()} operation can be accomplished with only a single CAS, by means of
 dividing the delete operation in a logical delete and a physical delete. The key
 idea is to use the unused lower bits in the value of the pointer to the next
 node to store a flag that would mark the node as deleted. Removing a node would
-first make a logical delete by marking its pointer to next node, and finally the
-actual physical delete from the list would be done. Since the logical delete
-just changes unused bits from the pointer of the deleted node other threads can
-still traverse the list ignoring logical deleted nodes, thus mantaining
-concurrency and correctness.
+first make a logical delete by marking its pointer to next node, as depicted in
+figure~\ref{fig:logicallyDeleted}, and then subsequently the the node is
+pysically removed from the list, per figure~\ref{fig:physicallyDeleted}. Since
+the logical delete just changes unused bits from the pointer of the deleted
+node, other threads can still traverse the list ignoring logically deleted
+nodes, thus mantaining concurrency and correctness.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/patricio/logicallyDeleted.jpg}
-\caption{Node logically deleted but still part of the list. Other threads will still see it.}
-\label{fig:logicallyDeleted}
-\end{figure}
+%\begin{figure}[h]
+%\centering
+%\includegraphics[width=0.5\linewidth]{figs/patricio/logicallyDeleted.jpg}
+%\caption{Node logically deleted but still part of the list. Other threads will still see it.}
+%\label{fig:logicallyDeleted}
+%\end{figure}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\linewidth]{figs/patricio/physicallyDeleted.jpg}
-\caption{Node physically deleted.}
-\label{fig:physicallyDeleted}
-\end{figure}
+%\begin{figure}[h]
+%\centering
+%\includegraphics[width=0.5\linewidth]{figs/patricio/physicallyDeleted.jpg}
+%\caption{Node physically deleted.}
+%\label{fig:physicallyDeleted}
+%\end{figure}
 
 \begin{figure}[h]
 \begin{center}
