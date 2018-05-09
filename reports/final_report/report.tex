@@ -718,7 +718,8 @@ other ones, which show similar behavior.
 \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy.jpg}
 \caption{
 Speedup for concurrent maps with $N=10000000$ and an insertion heavy workload:
-80\% insertions, 10\% removals, 10\% lookups and 0.7 load.}
+80\% insertions, 10\% removals, 10\% lookups and 0.7 load. Note:
+{\tt NonBlockingListMap} refers to map with fine-grained spinning-reader-writer locks.}
 \label{fig:mapInsertHeavy}
 \end{figure}
 
@@ -747,7 +748,8 @@ is more variation among the different map implementations.
 \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy_highload.jpg}
 \caption{
 Speedup for concurrent maps with $N=10000000$ and an insertion heavy workload:
-80\% insertions, 10\% removals, 10\% lookups and 7.0 load.}
+80\% insertions, 10\% removals, 10\% lookups and 7.0 load. Note:
+{\tt NonBlockingListMap} refers to map with fine-grained spinning-reader-writer locks.}
 \label{fig:mapInsertHeavyBigLoad}
 \end{figure}
 
@@ -771,7 +773,8 @@ actually there or not) the overhead of using locks is partly reduced.
 \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/lookups_heavy.jpg}
 \caption{
 Speedup for concurrent maps with $N=10000000$ and an lookups heavy workload:
-10\% insertions, 10\% removals, 80\% lookups and 0.7 load}
+10\% insertions, 10\% removals, 80\% lookups and 0.7 load. Note:
+{\tt NonBlockingListMap} refers to map with fine-grained spinning-reader-writer locks.}
 \label{fig:mapLookupsHeavy}
 \end{figure}
 
@@ -785,6 +788,7 @@ couple of characteristics of the cuckoo hash map that makes it much more perform
 it uses a 4-element array instead of a list for each bucket making it more cache friendly and
 it uses a 1-byte tag to speedup the lookup process. For more references about its implementation refere
 to \cite{Andersen} and \cite{Andersen2}.
+
 For our own implementations of hashmaps the previous analysis done for heavy
 inserts still applies. Regardless of the list type for the bucket they mostly exhibit similar
 performance behaviour and the speedups are poor. One difference with the
@@ -832,7 +836,8 @@ Concurrent map speedup with $N=10000000$ and load 0.7 for different use-profiles
 25\% lookups. \ref{fig:mapLookupMedium} has a use-profile of 25\% inserts, 25\%
 removals, and 50\% lookups. \ref{fig:mapRemovalHeavy} has a use-profile of 10\%
 inserts, 80\% removals, and 10\% lookups. \ref{fig:mapRemoveMedium} has a
-use-profile of 25\% inserts, 50\% removals, and 25\% lookups.
+use-profile of 25\% inserts, 50\% removals, and 25\% lookups. Note:
+{\tt NonBlockingListMap} refers to map with fine-grained spinning-reader-writer locks.
 }
 \label{fig:restofMaps}
 \end{figure}
