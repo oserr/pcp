@@ -607,8 +607,8 @@ with coarse-grained (blue line) locks starts a little higher than 2x speedup,
 and very gradually slows down to about a 2x speedup as the number of threads are
 increased. The lock-free list (magenta line), on the other hand, starts up slow,
 but its performance increases steadily as the number of threads are increased.
-Performance doesn't increase linearly for the lock-free list, but it does reach
-a more than 14x speedup.
+Performance almost increases linearly for the lock-free list, and is able to
+reach a more than 14x speedup.
 
 \begin{figure}[h]
 \centering
@@ -680,13 +680,34 @@ operations to perform, since there will not be only one list to perform operatio
 We tested the following profiles
 
 \section{Conclusion}
-For machines with 24 cores or less, our results suggest that:
+For machines with 24 cores or less, our results suggest the following:
 \begin{itemize}
 \item
+Lock free lists can scale, almost linearly, with the number of threads, and
+hence they are a good choice for getting parallelism from a linked list.
+\item
 Lists with fine-grained locks don't provide an advantage over lists with
-coarse-grained locks. To get parallelism from a linked list, it is necessary to
-use a lock free list.
+coarse-grained locks.
+\item
+The type of synchronization mechanism used on a hashmap's bucket type does not
+make a difference if the bucket type is a linked list, not even if the list is
+lock free.
+\item
+To scale a hash map with the number of threads, it is necessary to use an array
+as the bucket type, and/or employ other techniques, such as
+\href{https://en.wikipedia.org/wiki/Cuckoo_hashing}{cuckoo hashing}, which is
+emloyed by libcuckoo's concurrent hashmap.
 \end{itemize}
+
+For us, one of the big lessons here, which really drives home what we've learned
+with the course assignments, is that linked lists are really not very well
+suited for parallel and high performance computing. In addition to being
+inherently serial, they are not cache friendly, because adjacent nodes may be
+scattered in memory, and thus every node hop is a potential cache miss. It is
+precisely for this reason that Intel's TBB does not support linked lists
+\cite{tbbNoList}. The performance we see with the lock free list is impressive, but
+ultimately it seems like one should first consider array-based solutions if one
+is engineering for performance.
 
 \section{Division of Work}
 Equal work was performed by both partners.
