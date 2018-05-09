@@ -170,9 +170,9 @@ place,  and lookup will just return the value stored in that bucket. In reality
 the hash function might map different keys to the same bucket and thus some
 technique must be use to differentiate distinct key-value pairs that fall in the
 same bucket. The most common technique is to use a list of key-value elements on
-each bucket. The previous described operations will have to traverse the list if
-there is one to check if the key is already in the list or not. In order to
-mantain the constant average runtime hashmaps are sized so that the load is not
+each bucket. The previous described operations will have to traverse the list, if
+there is one, to check if the key is already in the list or not. In order to
+mantain the constant average runtime, hashmaps are sized so that the load is not
 more than around 0.75, i.e. for every 75 elements stored there are at least 100 buckets
 in the list. If the hash has good mapping properties then on average only one
 element will be stored on each bucket.
@@ -457,7 +457,7 @@ dividing the delete operation in a logical delete and a physical delete. The key
 idea is to use the unused lower bits in the value of the pointer to the next
 node to store a flag that would mark the node as deleted. Removing a node would
 first make a logical delete by marking its pointer to next node, as depicted in
-figure~\ref{fig:logicallyDeleted}, and then subsequently the the node is
+figure~\ref{fig:logicallyDeleted}, and then subsequently the node is
 pysically removed from the list, per figure~\ref{fig:physicallyDeleted}. Since
 the logical delete just changes unused bits from the pointer of the deleted
 node, other threads can still traverse the list ignoring logically deleted
@@ -547,7 +547,7 @@ into the list.
 \item
 {\bf Lookup percent}. Out of the $N$ items, the number that should be looked up.
 \item
-{\bf Preload percent}. Out of the $N$ items, the number that should be looked
+{\bf Preload percent}. Out of the $N$ items, the number that should be pre
 loaded into the list before beginning the benchmark. This would allow us, for
 example, to preload a list with all $N$ items and then run a benchmark with a
 use-profile of 100\% lookups.
@@ -596,7 +596,7 @@ line generated for a benchmark run with default number of threads on the
 latedays cluster, for example, would contain 24 run times.
 
 \section{Results}
-Our project is more focused on learning to implement concurrent lists and
+Our project is more focused on learning how to implement concurrent lists and
 hashmaps, and to gain an understanding of how these concurrent data structures
 behave under different use profiles and with different levels of concurrency,
 i.e., number of threads, and hence we did not set specific performance goals.
@@ -616,7 +616,7 @@ expecting to see as the number of threads increased. Furthermore, we were
 expecting to see libcuckoo's and TBB's concurrent hashmaps obtain higher
 speedups, but not by a significant margin.
 
-\subsection{Results for list}
+\subsection{Linked List}
 To benchmark our lists, we used the latedays cluster, used problem scaling with
 $N=100000$, and selected six different use-profiles: insertion heavy, insertion
 medium, removal heavy, removal medium, lookup heavy, and lookup medium. {\it
@@ -636,6 +636,21 @@ but its performance increases steadily as the number of threads are increased.
 Performance almost increases linearly for the lock-free list, and is able to
 reach a more than 14x speedup.
 
+% explain why we see the previous results
+We believe the reason fine-grain locking is performing so poorly has to do with 
+the number of mutexes that actually have to be lock and unlocked while traversing
+the list. The benefits of allowing different threads to work in different parts
+of the list seems to be outweighted by all the synchronization overhead.
+Coarse-grain locking does not provide any significant performance, and as expected
+actually gets worse as the number of threads is increased, since now the single
+global mutex to lock the list will have contention among more number of threads.
+Lockfree lists performance was actually a good surprise. Although we were expecting
+it to outperform the other implementations we didn't expect it would scale as good
+as our measurements show. We can see that there is a small decrease on performance
+between 13 and 12 threads, which repeats for the other workloads as well. We believe
+this is were hyperthreading kicks in, since the machine is dual socket with 6 cores
+per processor and hyperthreading enabled.
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=1.0\linewidth]{figs/lateday/combined/lateday_combined_list_insert_80_lookup_10_removal_10}
@@ -646,41 +661,42 @@ Speedup for concurrent lists with $N=100000$ and an insertion heavy workload:
 \end{figure}
 
 Figure~\ref{fig:manyLists} contains four more plots for different workloads, and
-the ineresting aspect is that they all look about the same, and exhibit a very
-similar pattern. It is clear that most of our expectatins were incorrect. The
-only correct hypothesis is that lock free lists would perform better than the
-other lists, but in all other respects we were incorrect. At least in our tests,
+the interesting aspect is that they all look about the same, and exhibit a very
+similar pattern. It is clear that many of our expectations were incorrect. The
+actual correct hypothesis was that lock free lists would perform better than the
+other lists. At least in our tests,
 in machines with 24 or less threads, using a list with regular fine-grained or
 spinning-reader-writer locks is no better than using a concurrent list with
-coars-grained locks, and it can actually be better to use lists with
-coarse-grained locks.
+coarse-grained locks, and in some cases it can actually be better to use the latter.
+On the other hand, lock free list's performance increases with the number
+of threads and is able to achieve speedups of up to 10x on any type of workload.
 
 \begin{figure}[h]
 % ----- first row
-\begin{subfigure}{.5\textwidth}
+\begin{subfigure}{0.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
+  \includegraphics[width=1\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_10_removal_80}
   \caption{Removal heavy workload.}
   \label{fig:listRemovalHeavy}
 \end{subfigure}%
 \hspace*{\fill}
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
+  \includegraphics[width=1\linewidth]{figs/lateday/combined/lateday_combined_list_insert_10_lookup_80_removal_10}
   \caption{Lookup heavy workload.}
   \label{fig:listLookupHeavy}
 \end{subfigure}
 \\ % ----- second row
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
+  \includegraphics[width=1\linewidth]{figs/lateday/combined/lateday_combined_list_insert_50_lookup_25_removal_25}
   \caption{Insert medium workload.}
   \label{fig:listInsertMedium}
 \end{subfigure}%
 \hspace*{\fill}
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
+  \includegraphics[width=1\linewidth]{figs/lateday/combined/lateday_combined_list_insert_25_lookup_25_removal_50}
   \caption{Removal medium workload.}
   \label{fig:listRemovalMedium}
 \end{subfigure}
@@ -695,37 +711,11 @@ use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
 \label{fig:manyLists}
 \end{figure}
 
-The good news is that the lock free list's performance increases with the number
-of threads, and is able to achieve speedups of up to 10x on any type of workload.
-
-% \begin{figure}[!htb]
-% % ----- first row
-% \begin{subfigure}{1.0\textwidth}
-%   \centering
-%   \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy.jpg}
-%   \label{fig:mapInsertHeavy_1}
-% \end{subfigure}%
-% \\ % ----- second row
-% \begin{subfigure}{1.0\textwidth}
-%   \centering
-%   \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/lookups_heavy.jpg}
-%   \label{fig:mapLookupHeavy_1}
-% \end{subfigure}
-% \caption{
-% Concurrent list speedup with $N=100000$ and different use-profiles.
-% \ref{fig:mapInsertHeavy_1} has a use-profile of 80\% inserts, 10\% removals, and
-% 10\% lookups. \ref{fig:mapLookupHeavy_1} has a use-profile of 10\% inserts, 10\%
-% removals, and 80\% lookups.
-% }
-% \label{fig:mapsAnalyzed}
-% \end{figure}
-
-
-\subsection{Hashmap results} 
+\subsection{Hashmap} 
 We run the same 6 benchmark profiles we used for
 lists to benchmark hashmaps, i.e. we used heavy and medium use-profiles for inserts,
 removes and lookups. We added the load factor parameter, which modifies the
-amount of buckets to create the hashmap with respect to the amount of
+amount of buckets in the hashmap with respect to the amount of
 numbers to insert. We also used problem scaling but increased the number of
 operations from 100000 to 10000000. The reason for this is that previously we
 only had a single contended list used by all threads, whereas for hash maps we
@@ -735,7 +725,7 @@ timespan.
 
 We will analyze first the heavy insert and heavy lookup workloads because we 
 think they are representative of the other profiles as well. In other words, 
-the analysis performed on those profiles can be extended to the
+the analysis performed on these profiles can be extended to the
 other ones, which show similar behavior.
 
 \begin{figure}[!htb]
@@ -743,13 +733,13 @@ other ones, which show similar behavior.
 \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy.jpg}
 \caption{
 Speedup for concurrent maps with $N=10000000$ and an insertion heavy workload:
-80\% insertions, 10\% removals, and 10\% lookups.}
+80\% insertions, 10\% removals, 10\% lookups and 0.7 load.}
 \label{fig:mapInsertHeavy}
 \end{figure}
 
-Figure ~\ref{fig:mapInsertHeavy} shows the behavior of the hash maps under the
+Figure~\ref{fig:mapInsertHeavy} shows the behavior of the hash maps under the
 heavy insertion workload with a load factor of 0.7. The dashed line represents
-the baseline, i.e. a speedup of 1.  
+the baseline, i.e. a speedup of 1.
 
 The very first thing we notice from the plot is that except for the libcuckoo
 implementation, all the other ones achieve similar peformance. Even the Intel 
@@ -762,29 +752,106 @@ Since the load factor of the map was set to 0.7, most of the buckets
 will either have zero, one or two elements. Also at any given point in time, all threads 
 will in general be operating on different buckets within the map. This lack
 of contention over a low sized list makes different synchronization mechanisms
-appear similar between each other. 
+appear similar between each other. To show concrete measurements about our assumptions
+we run the same benchmark but increase by 10 the load factor of the map. 
+Figure~\ref{fig:mapInsertHeavyBigLoad} shows the results. We can clearly see that there
+is more variation among the different map implementations.
 
-% run a test with large high load factor
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_heavy_highload.jpg}
+\caption{
+Speedup for concurrent maps with $N=10000000$ and an insertion heavy workload:
+80\% insertions, 10\% removals, 10\% lookups and 7.0 load.}
+\label{fig:mapInsertHeavyBigLoad}
+\end{figure}
 
 The other important thing we notice is that speedups are really low considering
-that we  are using as high as 24 threads. Even the libcuckoo implementation
-which outperforms all the others, only achieves a 5x speedup. The rest of the
-hash maps bearly reach a 2x speedup. We think this has to do with the
-overhead of using locks or CAS instructions compared to the actual time required
-to complete each operation. As we described in ~\ref{ssec:bgmap} inserts,
-removes and lookups take all constant time on average for a hash map, so adding
+that we are using as high as 24 threads. Even the libcuckoo implementation which
+outperforms all the others, only achieves a 5x speedup. The rest of the hash
+maps bearly reach a 2x speedup. We think this has to do with the overhead of
+using locks or CAS instructions compared to the actual time required to complete
+each operation. As we described in ~\ref{ssec:bgmap}, inserts, removes and
+lookups take all constant time on average for a hash map, so adding
 syncronization overhead on top of it masks out any gains achieved by dividing
 the work among more threads. In other words, although there are more workers,
-now each operation takes more time to complete. 
+now each operation takes more time to complete. This analysis matches also the
+output that we saw previously from the high load map, where speedups went from
+the previous 1x to almost 4x. Since inserting an element in a bucket now takes more
+time (the whole list in the bucket has to be traversed to check the element is
+actually there or not) the overhead of using locks is partly reduced.
 
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/lookups_heavy.jpg}
 \caption{
 Speedup for concurrent maps with $N=10000000$ and an lookups heavy workload:
-10\% insertions, 10\% removals, and 80\% lookups.}
-\label{fig:mapInsertHeavy}
+10\% insertions, 10\% removals, 80\% lookups and 0.7 load}
+\label{fig:mapLookupsHeavy}
 \end{figure}
+
+Figure~\ref{fig:mapLookupsHeavy} shows the behavior of the hash maps under the
+heavy lookup workload with a load factor of 0.7. The dashed line represents
+the baseline, i.e. a speedup of 1.
+
+We see that the libcuckoo again outperforms all the other implementations. This characteristic
+is a constant in all the workloads and has to do with the way it is designed. The are a
+couple of characteristics of the cuckoo hash map that makes it much more performant, in particular
+it uses a 4-element array instead of a list for each bucket making it more cache friendly and 
+it uses a 1-byte tag to speedup the lookup process. For more references about its implementation refere 
+to \cite{Andersen} and \cite{Andersen2}.
+For our own implementations of hashmaps the previous analysis done for heavy 
+inserts still applies. Regardless of the list type for the bucket they mostly exhibit similar
+performance behaviour and the speedups are poor. One difference with the
+previous benchmark though is that this time speedups reach 4x compared to the previous 1x for
+heavy insert. We believe this has to do with the overhead of managing new nodes for the heavy
+insert case, i.e. calling new(), which also involves using locks for synchronization.
+In the lookup case instead, most operations involve computing a hash and traversing a list of a
+few elements at most.
+
+All the analysis done so far for these two workoads can also be applied to the remaining ones, 
+which are shown in Figure~\ref{fig:restofMaps}.
+
+\begin{figure}[h]
+% ----- first row
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/inserts_medium.jpg}
+  \caption{Insert medium workload.}
+  \label{fig:mapInsertMedium}
+\end{subfigure}%
+\hspace*{\fill}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/lookups_medium.jpg}
+  \caption{Lookup medium workload.}
+  \label{fig:mapLookupMedium}
+\end{subfigure}
+\\ % ----- second row
+\begin{subfigure}{0.5\textwidth}
+  \centering
+  \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/removals_heavy.jpg}
+  \caption{Removal heavy workload.}
+  \label{fig:mapRemovalHeavy}
+\end{subfigure}%
+\hspace*{\fill}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.0\linewidth]{figs/patricio/latedays/removals_medium.jpg}
+  \caption{Removal medium workload.}
+  \label{fig:mapRemoveMedium}
+\end{subfigure}
+\caption{
+Concurrent map speedup with $N=10000000$ and load 0.7 for different use-profiles.
+\ref{fig:mapInsertMedium} has a use-profile of 50\% inserts, 25\% removals, and
+25\% lookups. \ref{fig:mapLookupMedium} has a use-profile of 25\% inserts, 25\%
+removals, and 50\% lookups. \ref{fig:mapRemovalHeavy} has a use-profile of 10\%
+inserts, 80\% removals, and 10\% lookups. \ref{fig:mapRemoveMedium} has a
+use-profile of 25\% inserts, 50\% removals, and 25\% lookups.
+}
+\label{fig:restofMaps}
+\end{figure}
+
 
 \section{Conclusion}
 For machines with 24 cores or less, our results suggest the following:
@@ -793,20 +860,21 @@ For machines with 24 cores or less, our results suggest the following:
 Lock free lists can scale, almost linearly, with the number of threads, and
 hence they are a good choice for getting parallelism from a linked list.
 \item
-Lists with fine-grained locks don't provide an advantage over lists with
+Lists with fine-grained locks don't seem to provide an advantage over lists with
 coarse-grained locks.
 \item
-The type of synchronization mechanism used on a hashmap's bucket type does not
-make a difference if the bucket type is a linked list, not even if the list is
-lock free.
+The perfomance of a concurrent hashmap is independent of the list type used 
+for the buckets, even if the list is lock free, since for normal loads, the lists
+in each bucket will have very few elements and low contention.
 \item
-To scale a hash map with the number of threads, it is necessary to use an array
-as the bucket type, and/or employ other techniques, such as
+To have better scaling in a concurrent hashmap, it makes more sense to worry about
+cache access and/or employ other techniques such as
 \href{https://en.wikipedia.org/wiki/Cuckoo_hashing}{cuckoo hashing}, which is
-emloyed by libcuckoo's concurrent hashmap.
+emloyed by libcuckoo's concurrent hashmap, than to worry about fancy synchronization
+mechanisms.
 \end{itemize}
 
-For us, one of the big lessons here, which really drives home what we've learned
+For us, one of the big lessons learned here, which really drives home what we've learned
 with the course assignments, is that linked lists are really not very well
 suited for parallel and high performance computing. In addition to being
 inherently serial, they are not cache friendly, because adjacent nodes may be
@@ -815,6 +883,12 @@ precisely for this reason that Intel's TBB does not support linked lists
 \cite{tbbNoList}. The performance we see with the lock free list is impressive, but
 ultimately it seems like one should first consider array-based solutions if one
 is engineering for performance.
+We also learned that different data structures have different degrees of contention
+and thus synchronization techniques that work well for some of them do not
+provide great speedups in others. For instance, using lockfree lists for the buckets
+of a hashmap does not improve performance compare to other synchronization
+mechanisms, but has greater benefits if implemented for a simple linked list of thousands of elements.
+
 
 \section{Division of Work}
 Equal work was performed by both partners.
