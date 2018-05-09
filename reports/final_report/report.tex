@@ -777,6 +777,14 @@ syncronization overhead on top of it masks out any gains achieved by dividing
 the work among more threads. In other words, although there are more workers,
 now each operation takes more time to complete. 
 
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/patricio/latedays/lookups_heavy.jpg}
+\caption{
+Speedup for concurrent maps with $N=10000000$ and an lookups heavy workload:
+10\% insertions, 10\% removals, and 80\% lookups.}
+\label{fig:mapInsertHeavy}
+\end{figure}
 
 \section{Conclusion}
 For machines with 24 cores or less, our results suggest the following:
