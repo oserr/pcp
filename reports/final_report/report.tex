@@ -168,7 +168,7 @@ operation can be executed: insert will insert the value in that particular
 bucket, remove will remove it from the bucket if it was there in the first
 place,  and lookup will just return the value stored in that bucket. In reality
 the hash function might map different keys to the same bucket and thus some
-technique must be use to differentiate distinct key-value pairs that fall in the
+technique must be used to differentiate distinct key-value pairs that fall in the
 same bucket. The most common technique is to use a list of key-value elements on
 each bucket. The previous described operations will have to traverse the list, if
 there is one, to check if the key is already in the list or not. In order to
@@ -463,20 +463,6 @@ the logical delete just changes unused bits from the pointer of the deleted
 node, other threads can still traverse the list ignoring logically deleted
 nodes, thus mantaining concurrency and correctness.
 
-%\begin{figure}[h]
-%\centering
-%\includegraphics[width=0.5\linewidth]{figs/patricio/logicallyDeleted.jpg}
-%\caption{Node logically deleted but still part of the list. Other threads will still see it.}
-%\label{fig:logicallyDeleted}
-%\end{figure}
-
-%\begin{figure}[h]
-%\centering
-%\includegraphics[width=0.5\linewidth]{figs/patricio/physicallyDeleted.jpg}
-%\caption{Node physically deleted.}
-%\label{fig:physicallyDeleted}
-%\end{figure}
-
 \begin{figure}[h]
 \begin{center}
 \begin{lstlisting}
@@ -510,28 +496,27 @@ adapted from \cite{Harris}. Figure~\ref{fig:lockfreeIUnique}  contains the full
 details of the lockfree implementation of {\tt InsertUnique}.
 
 \subsection{Correctness tests}
-We used GoogleTest to create tests. Before running any benchmarks, we wanted to
-make sure that our implementations were correct with respect to the invariants
-of the data structures, and that they behaved correctly in an asynchronous
-environment. For this, we used GoogleTest, and relied on type-parametrized
-fixtures to create a set of tests for the lists and hashmaps. The GoogleTest
-type-parametrized fixture allowed us to use the same set of tests for any list
-or hashmap that supported the interface we created. Thus, after creating the
-tests, it was simply a matter of adding a line to register the type that we
-wanted to test, and GoogleTest would generate the set of tests we defined for
-the type being registered. The only exception to this was the lock free list.
-Even though it supported the same interface, the internal representation of lock
-free lists used atomic pointers rather than raw pointers, and prevented us from
-reusing the same harness becuase it relied on pointer semantics. We created
-one set of tests that were single-threaded to test the lists' and hashmap's
-interface, and another set of tests that were multi-threaded to ensure that we
-did not get any deadlocks and that data structures remained in a consistent
-state.
+Before running any benchmarks, we wanted to make sure that our implementations
+were correct with respect to the invariants of the data structures, and that
+they behaved correctly in an asynchronous environment. For this, we used
+GoogleTest, and relied on type-parametrized fixtures to create a set of tests
+for the lists and hashmaps. The GoogleTest type-parametrized fixture allowed us
+to use the same set of tests for any list or hashmap that supported the
+interface we created. Thus, after creating the tests, it was simply a matter of
+adding a line to register the type that we wanted to test, and GoogleTest would
+generate the set of tests we defined for the type being registered. The only
+exception to this was the lock free list. Even though it supported the same
+interface, the internal representation of lock free lists used atomic pointers
+rather than raw pointers, and prevented us from reusing the same harness becuase
+it relied on pointer semantics. We created one set of tests that were
+single-threaded to test the lists' and hashmap's interface, and another set of
+tests that were multi-threaded to ensure that we did not get any deadlocks and
+that data structures remained in a consistent state.
 
 \subsection{Benchmarking harness}
-We implemented a benchmarking harness that allowed us to parametrize the
+We implemented a benchmarking harness that allowed us to parameterize the
 benchmark in a variety of different ways, but we restricted ourselves to testing
-lists and hashmaps of {\tt int}s. The full list of paremters, along with their
+lists and hashmaps of {\tt int}s. The full list of parameters, along with their
 descriptions, is included below.
 
 \begin{itemize}
@@ -552,7 +537,7 @@ loaded into the list before beginning the benchmark. This would allow us, for
 example, to preload a list with all $N$ items and then run a benchmark with a
 use-profile of 100\% lookups.
 \item
-{\bf Scaling mode}. Determines whetheer the benchmark is run under problem or
+{\bf Scaling mode}. Determines whether the benchmark is run under problem or
 memory scaling. With problem scaling, the $N$ remains fixed as the number of
 threads are increased, and with memory scaling each thread gets $N$ items of
 work.
@@ -596,7 +581,7 @@ line generated for a benchmark run with default number of threads on the
 latedays cluster, for example, would contain 24 run times.
 
 \section{Results}
-Our project is more focused on learning how to implement concurrent lists and
+The purpose of our project was to learn how to implement concurrent lists and
 hashmaps, and to gain an understanding of how these concurrent data structures
 behave under different use profiles and with different levels of concurrency,
 i.e., number of threads, and hence we did not set specific performance goals.
@@ -627,9 +612,9 @@ run times obtained for the other lists, including single-thread run times.
 
 Figure~\ref{fig:listInsertHeavy} shows the behahvior for the lists under the
 insertion heavy workload. The dashed line represents the baseline, a speedup of
-1. We can see that the lists with fine-grained (green line) and
-spinning-reader-writer (yellow line) locks don't exhibit any speedup. The list
-with coarse-grained (blue line) locks starts a little higher than 2x speedup,
+1. We can see that the lists with fine-grained locks (green line) and
+spinning-reader-writer locks (yellow line) don't exhibit any speedup. The list
+with coarse-grained locks (blue line) starts a little higher than 2x speedup,
 and very gradually slows down to about a 2x speedup as the number of threads are
 increased. The lock-free list (magenta line), on the other hand, starts up slow,
 but its performance increases steadily as the number of threads are increased.
@@ -637,19 +622,19 @@ Performance almost increases linearly for the lock-free list, and is able to
 reach a more than 14x speedup.
 
 % explain why we see the previous results
-We believe the reason fine-grain locking is performing so poorly has to do with 
-the number of mutexes that actually have to be lock and unlocked while traversing
+We believe the reason fine-grain locking is performing so poorly has to do with
+the number of mutexes that actually have to be locked and unlocked while traversing
 the list. The benefits of allowing different threads to work in different parts
-of the list seems to be outweighted by all the synchronization overhead.
-Coarse-grain locking does not provide any significant performance, and as expected
+of the list seems to be outweighed by all the synchronization overhead.
+Coarse-grained locking does not provide any significant performance, and as expected
 actually gets worse as the number of threads is increased, since now the single
 global mutex to lock the list will have contention among more number of threads.
 Lockfree lists performance was actually a good surprise. Although we were expecting
-it to outperform the other implementations we didn't expect it would scale as good
-as our measurements show. We can see that there is a small decrease on performance
+it to outperform the other implementations we didn't expect it to scale as well
+as it did in our experiments. We can see that there is a small decrease on performance
 between 13 and 12 threads, which repeats for the other workloads as well. We believe
 this is were hyperthreading kicks in, since the machine is dual socket with 6 cores
-per processor and hyperthreading enabled.
+per processor with hyperthreading support.
 
 \begin{figure}[h]
 \centering
@@ -711,7 +696,7 @@ use-profile of 25\% inserts, 25\% lookups, and 50\% removals.
 \label{fig:manyLists}
 \end{figure}
 
-\subsection{Hashmap} 
+\subsection{Hashmap}
 We run the same 6 benchmark profiles we used for
 lists to benchmark hashmaps, i.e. we used heavy and medium use-profiles for inserts,
 removes and lookups. We added the load factor parameter, which modifies the
@@ -723,8 +708,8 @@ have an array of lists, and since threads will be mostly working on
 different buckets at any given point in time more work can be done in the same
 timespan.
 
-We will analyze first the heavy insert and heavy lookup workloads because we 
-think they are representative of the other profiles as well. In other words, 
+We will analyze first the heavy insert and heavy lookup workloads because we
+think they are representative of the other profiles as well. In other words,
 the analysis performed on these profiles can be extended to the
 other ones, which show similar behavior.
 
@@ -742,18 +727,18 @@ heavy insertion workload with a load factor of 0.7. The dashed line represents
 the baseline, i.e. a speedup of 1.
 
 The very first thing we notice from the plot is that except for the libcuckoo
-implementation, all the other ones achieve similar peformance. Even the Intel 
+implementation, all the other ones achieve similar peformance. Even the Intel
 Threading Building Block concurrent hash map, which we assumed would
-outperform ours by much, is giving similar results. We can therefore see that regardless of the
-type of list that we use to implement the buckets of the hash map, i.e. whether 
-is coarse-grain, fine-grain or lockfree, all display similar behaviour.
-The reason for this has to with the size and low contention of the lists in each bucket. 
-Since the load factor of the map was set to 0.7, most of the buckets 
-will either have zero, one or two elements. Also at any given point in time, all threads 
+outperform ours, is giving similar results. We can therefore see that regardless of the
+type of list that we use to implement the buckets of the hash map, i.e. whether
+it is coarse-grain, fine-grain or lockfree, all display similar behaviour.
+The reason for this has to do with the size and low contention of the lists in each bucket.
+Since the load factor of the map was set to 0.7, most of the buckets
+will either have zero, one or two elements. Also at any given point in time, all threads
 will in general be operating on different buckets within the map. This lack
 of contention over a low sized list makes different synchronization mechanisms
 appear similar between each other. To show concrete measurements about our assumptions
-we run the same benchmark but increase by 10 the load factor of the map. 
+we run the same benchmark but increase by 10 the load factor of the map.
 Figure~\ref{fig:mapInsertHeavyBigLoad} shows the results. We can clearly see that there
 is more variation among the different map implementations.
 
@@ -795,21 +780,21 @@ heavy lookup workload with a load factor of 0.7. The dashed line represents
 the baseline, i.e. a speedup of 1.
 
 We see that the libcuckoo again outperforms all the other implementations. This characteristic
-is a constant in all the workloads and has to do with the way it is designed. The are a
+is a constant in all the workloads and has to do with the way it is designed. There are a
 couple of characteristics of the cuckoo hash map that makes it much more performant, in particular
-it uses a 4-element array instead of a list for each bucket making it more cache friendly and 
-it uses a 1-byte tag to speedup the lookup process. For more references about its implementation refere 
+it uses a 4-element array instead of a list for each bucket making it more cache friendly and
+it uses a 1-byte tag to speedup the lookup process. For more references about its implementation refere
 to \cite{Andersen} and \cite{Andersen2}.
-For our own implementations of hashmaps the previous analysis done for heavy 
+For our own implementations of hashmaps the previous analysis done for heavy
 inserts still applies. Regardless of the list type for the bucket they mostly exhibit similar
 performance behaviour and the speedups are poor. One difference with the
 previous benchmark though is that this time speedups reach 4x compared to the previous 1x for
 heavy insert. We believe this has to do with the overhead of managing new nodes for the heavy
-insert case, i.e. calling new(), which also involves using locks for synchronization.
+insert case, i.e. calling {\tt new()}, which also involves using locks for synchronization.
 In the lookup case instead, most operations involve computing a hash and traversing a list of a
 few elements at most.
 
-All the analysis done so far for these two workoads can also be applied to the remaining ones, 
+All the analysis done so far for these two workoads can also be applied to the remaining ones,
 which are shown in Figure~\ref{fig:restofMaps}.
 
 \begin{figure}[h]
@@ -863,14 +848,14 @@ hence they are a good choice for getting parallelism from a linked list.
 Lists with fine-grained locks don't seem to provide an advantage over lists with
 coarse-grained locks.
 \item
-The perfomance of a concurrent hashmap is independent of the list type used 
+The perfomance of a concurrent hashmap is independent of the list type used
 for the buckets, even if the list is lock free, since for normal loads, the lists
 in each bucket will have very few elements and low contention.
 \item
 To have better scaling in a concurrent hashmap, it makes more sense to worry about
 cache access and/or employ other techniques such as
 \href{https://en.wikipedia.org/wiki/Cuckoo_hashing}{cuckoo hashing}, which is
-emloyed by libcuckoo's concurrent hashmap, than to worry about fancy synchronization
+employed by libcuckoo's concurrent hashmap, than to worry about fancy synchronization
 mechanisms.
 \end{itemize}
 
