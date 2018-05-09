@@ -465,7 +465,7 @@ nodes, thus mantaining concurrency and correctness.
 
 \begin{figure}[h]
 \begin{center}
-\begin{lstlisting}
+\begin{lstlisting}[numbers=left]
 template <typename T> bool LockFreeList<T>::InsertUnique(T value) {
   LockFreeNode<T> *right_node, *left_node;
   LockFreeNode<T> *new_node = new LockFreeNode<T>(value, nullptr, nullptr);
